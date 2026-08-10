@@ -1,0 +1,30 @@
+# Anything not needed to install dependencies or build the app.
+# Keeping this tight matters twice: smaller context uploads, and a stale local
+# node_modules can never leak into the image.
+
+node_modules
+**/node_modules
+dist
+coverage
+.git
+.github
+.vscode
+.idea
+.claude
+
+# Docs are not part of the build.
+docs
+*.md
+!README.md
+
+# Local env and logs
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+# Test output
+.vitest
+playwright-report
+test-results

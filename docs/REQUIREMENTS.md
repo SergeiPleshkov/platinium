@@ -59,7 +59,7 @@ decision-making, overall software craftsmanship — not only "does it work".
 - [x] Pinia **or** Vuex — Pinia registered in `src/app/main.ts`; stores land with the slices
 - [x] Vue Router — `src/app/router/`, lazy-loaded routes
 - [x] TypeScript — `tsconfig.base.json`, strict + `exactOptionalPropertyTypes`
-- [ ] Docker
+- [x] Docker — multi-stage build, non-root nginx runtime, verified running
 
 ### Mock API
 - [x] Data fixtures simulating backend data — `src/mocks/fixtures/`, deterministic:
@@ -89,7 +89,7 @@ decision-making, overall software craftsmanship — not only "does it work".
 ## Deliverables
 
 - [ ] Fully functional Vue 3 application
-- [ ] Docker configuration
+- [x] Docker — multi-stage build, non-root nginx runtime, verified running configuration
 - [ ] Mock API implementation
 - [ ] Unit tests
 - [ ] Integration tests

@@ -126,7 +126,7 @@ if time runs out the cut is clean):
 **Exit:** each shipped bonus has tests (import gets happy path, partial-reject, and
 malformed-file cases); none of them destabilise the core flows.
 
-## Phase 9 — Docker & CI
+## Phase 9 — Docker & CI ✅ (done)
 
 Multi-stage Dockerfile (deps → build → nginx runtime, non-root, SPA fallback, gzip,
 healthcheck) and a dev-server stage with HMR. `docker-compose.yml` with `dev` and `prod`

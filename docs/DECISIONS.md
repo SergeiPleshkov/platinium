@@ -99,6 +99,23 @@ so the browser and Vitest use the same transport rather than XHR and Node's `htt
 **Revisit if:** bundle size becomes a real constraint — `ky` is a drop-in behind this same
 wrapper, which is the point of having the wrapper.
 
+## 2026-08-10 — nginx runtime: unprivileged image, headers per location
+
+**Chose:** `nginxinc/nginx-unprivileged` (uid 101, port 8080) for the runtime stage, with the
+security headers in an include pulled into every `location` block.
+**Over:** stock `nginx:alpine` with a hand-rolled user, and server-level `add_header`.
+**Because:** the unprivileged image needs no root anywhere in the runtime, and nothing in a
+static-file server justifies it. The header placement is not stylistic: nginx inherits
+`add_header` from an outer level *only* when the inner level declares none of its own. Every
+location here sets `Cache-Control`, so the server-level security headers were silently served
+on nothing. Verified against a running container rather than read off the config.
+**Also found by running it:** `COPY a b /dest/` keeps the original filenames, so the site
+config landed as `conf.d/nginx.conf` beside the base image's `conf.d/default.conf` — which
+kept winning, 404ing every client-side route while `/` still worked via the directory index.
+Two separate `COPY` lines. Both defects were invisible in the Dockerfile and obvious the
+moment the image was started and curled, which is why CI smoke-tests the running container
+rather than just building it.
+
 ## 2026-08-10 — Relation pickers load up to 200 options (accepted debt)
 
 **Chose:** `fetchOptions()` on the events and categories stores, loading up to 200 `{id, name}`

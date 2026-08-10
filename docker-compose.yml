@@ -1,0 +1,41 @@
+# Two services, one image, different targets.
+#
+#   docker compose up prod   → the built app behind nginx, on http://localhost:8080
+#   docker compose up dev    → the Vite dev server with HMR, on http://localhost:5173
+#
+# `prod` is the default so `docker compose up` gives a reviewer the running
+# application without needing to know which service to name.
+
+services:
+  prod:
+    build:
+      context: .
+      target: production
+    image: ticket-admin-portal:latest
+    ports:
+      - '8080:8080'
+    restart: unless-stopped
+    # The image's own HEALTHCHECK reports here; `docker compose ps` shows it.
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://127.0.0.1:8080/healthz']
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  dev:
+    build:
+      context: .
+      target: development
+    ports:
+      - '5173:5173'
+    # Source is mounted so edits reload; node_modules stays the container's own,
+    # because the host's may be built for a different platform.
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      # Vite's file watcher misses bind-mounted changes on some hosts without this.
+      CHOKIDAR_USEPOLLING: 'true'
+    profiles:
+      - dev
