@@ -74,7 +74,7 @@ docker run --rm -p 8080:8080 ticket-admin-portal
 | `pnpm typecheck` | `vue-tsc` across app, test and config projects |
 | `pnpm lint` | ESLint, including the architectural boundary rules |
 | `pnpm format` / `pnpm format:check` | Prettier |
-| `pnpm test` | Full suite — 357 tests |
+| `pnpm test` | Full suite — 386 tests |
 | `pnpm test:unit` | Unit and component tests only (`src/`) |
 | `pnpm test:integration` | Integration flows only (`tests/integration/`) |
 | `pnpm test:watch` | Vitest in watch mode |
@@ -199,7 +199,7 @@ assert on specific rows and page boundaries.
 
 ### Testing strategy
 
-357 tests across five kinds, each with a distinct job:
+386 tests across six kinds, each with a distinct job:
 
 | Kind | Job |
 |---|---|

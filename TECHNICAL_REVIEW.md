@@ -72,10 +72,11 @@ the same request path the application does — there is no second set of stubs t
 
 1. **Server-backed relation pickers.** The one piece of debt that becomes a correctness bug
    rather than a slowness (see §3). Half a day including tests.
-2. **The four scoped-but-unbuilt bonuses**, in value order: bulk actions with partial-failure
-   reporting, CSV export of the *current filtered query* (server-streamed, not the visible
-   page), CSV import with per-row validation and a preview of accepted vs rejected rows, then
-   RBAC enforced in the UI *and* re-checked at the API boundary.
+2. **The three scoped-but-unbuilt bonuses**, in value order: bulk actions with
+   partial-failure reporting, CSV import with per-row validation and a preview of accepted vs
+   rejected rows, then RBAC enforced in the UI *and* re-checked at the API boundary. (CSV
+   export shipped, and `applyQuery` — split out of `runQuery` for it — is the seam the
+   import would write back through.)
 3. **A `useEntityPage` composable.** The three list pages are ~200 lines each and about 60% of
    that is identical (dialog state, delete confirmation, refresh-and-adopt-page). Now that
    there are three real consumers, the abstraction is justified — which it was not when I had
@@ -257,7 +258,7 @@ This codebase was built with heavy AI assistance, so I can be specific rather th
 - **Volume with a fixed shape.** Once the first entity slice existed, the second and third
   were mostly mechanical. The third slice cost a fraction of the first — that is the pattern
   AI accelerates best.
-- **Tests.** Writing 357 tests by hand is where fatigue produces shallow assertions. AI is
+- **Tests.** Writing 386 tests by hand is where fatigue produces shallow assertions. AI is
   good at enumerating boundary cases, which is exactly what a schema or a money utility needs.
 - **Investigative grunt work.** Auditing the assessment PDF for hidden content, checking
   PrimeVue 5's licence and reading the actual `LICENSE.md`, diffing `@vee-validate/zod`'s
