@@ -176,6 +176,8 @@ export interface RequestOptions {
   signal?: AbortSignal
   headers?: Record<string, string>
   timeoutMs?: number
+  /** For downloads. `blob` skips JSON parsing entirely. */
+  responseType?: 'blob' | 'text'
 }
 
 function toAxiosConfig(options: RequestOptions): AxiosRequestConfig {
@@ -184,6 +186,7 @@ function toAxiosConfig(options: RequestOptions): AxiosRequestConfig {
     ...(options.signal ? { signal: options.signal } : {}),
     ...(options.headers ? { headers: options.headers } : {}),
     ...(options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs }),
+    ...(options.responseType === undefined ? {} : { responseType: options.responseType }),
   }
 }
 
@@ -198,6 +201,9 @@ export async function request<T>(
     ...toAxiosConfig(options),
     ...(options.body === undefined ? {} : { data: options.body }),
   })
+
+  // A Blob response is the payload; the emptiness checks below do not apply to it.
+  if (options.responseType === 'blob') return response.data
 
   /*
    * A 204 arrives as an empty string. Handing that to a caller typed `Promise<void>` would

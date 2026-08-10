@@ -1,7 +1,7 @@
 import type { TicketPayload, TicketWithRelations } from '@/features/tickets/types'
 import { http, serialiseListQuery } from '@/shared/api'
 import { withSignal, type Resource } from '@/shared/api/types'
-import type { ListResponse } from '@/shared/types/api'
+import type { ListQuery, ListResponse } from '@/shared/types/api'
 
 const BASE = '/tickets'
 
@@ -13,7 +13,23 @@ const BASE = '/tickets'
  * request per row, or loading every event up front — stops working at the scale this
  * application is meant to represent.
  */
-export const ticketsApi: Resource<TicketWithRelations, TicketPayload> = {
+export const ticketsApi: Resource<TicketWithRelations, TicketPayload> & {
+  exportCsv(query: ListQuery, signal?: AbortSignal): Promise<Blob>
+} = {
+  /**
+   * Downloads every row matching the *current query*, not the current page.
+   *
+   * Requested as a Blob: the file is saved, never inspected, so parsing it in the browser
+   * would be pure waste — and at export scale, expensive waste.
+   */
+  exportCsv: (query, signal) =>
+    http.get<Blob>('/tickets/export', {
+      ...withSignal(signal),
+      query: serialiseListQuery(query),
+      responseType: 'blob',
+      headers: { accept: 'text/csv' },
+    }),
+
   list: (query, signal) =>
     http.get<ListResponse<TicketWithRelations>>(BASE, {
       ...withSignal(signal),

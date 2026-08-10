@@ -6,6 +6,7 @@ import type { TicketPayload, TicketWithRelations } from '@/features/tickets/type
 import { ApiError, isAbortError } from '@/shared/api'
 import { useCollectionState } from '@/shared/composables/useCollectionState'
 import type { ListQuery } from '@/shared/types/api'
+import { downloadBlob, timestampedFilename } from '@/shared/utils/download'
 
 /** The single source of truth for ticket data. */
 export const useTicketsStore = defineStore('tickets', () => {
@@ -37,6 +38,21 @@ export const useTicketsStore = defineStore('tickets', () => {
     }
   }
 
+  /**
+   * Downloads every ticket matching `query` as CSV.
+   *
+   * Rethrows so the page can tell the admin the export failed — a download that silently does
+   * nothing is indistinguishable from a browser blocking it.
+   */
+  async function exportCsv(query: ListQuery): Promise<void> {
+    try {
+      const blob = await ticketsApi.exportCsv(query)
+      downloadBlob(blob, timestampedFilename('tickets', 'csv'))
+    } catch (caught) {
+      throw asApiError(caught)
+    }
+  }
+
   async function create(payload: TicketPayload): Promise<TicketWithRelations> {
     try {
       return await ticketsApi.create(payload)
@@ -64,7 +80,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     }
   }
 
-  return { ...collection, pageValueByCurrency, fetchList, create, update, remove }
+  return { ...collection, pageValueByCurrency, fetchList, exportCsv, create, update, remove }
 })
 
 function asApiError(caught: unknown): ApiError {

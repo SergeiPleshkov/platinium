@@ -94,6 +94,23 @@ async function onSaved(): Promise<void> {
   await table.refresh()
 }
 
+/* ---- export ---- */
+
+const exporting = ref(false)
+
+async function exportCsv(): Promise<void> {
+  exporting.value = true
+  try {
+    // The *current* query, not the current page: what you filtered is what you get.
+    await store.exportCsv(table.query.value)
+    notifications.success('Export ready', `${store.meta.total} tickets downloaded as CSV.`)
+  } catch (caught) {
+    notifications.fromError(caught, 'Could not export the tickets. Try again.')
+  } finally {
+    exporting.value = false
+  }
+}
+
 /* ---- delete ---- */
 
 const deleting = ref<TicketWithRelations | null>(null)
@@ -140,7 +157,16 @@ async function confirmDelete(): Promise<void> {
         <h1 class="text-2xl font-semibold text-content">Tickets</h1>
         <p class="mt-1 text-sm text-content-muted">Pricing, inventory and availability.</p>
       </div>
-      <BaseButton icon="pi pi-plus" label="New ticket" @click="openCreate" />
+      <div class="flex gap-2">
+        <BaseButton
+          variant="secondary"
+          icon="pi pi-download"
+          label="Export CSV"
+          :loading="exporting"
+          @click="exportCsv"
+        />
+        <BaseButton icon="pi pi-plus" label="New ticket" @click="openCreate" />
+      </div>
     </header>
 
     <div class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_10rem_14rem_12rem]">

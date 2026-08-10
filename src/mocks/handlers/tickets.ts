@@ -4,7 +4,8 @@ import { ticketSchema } from '@/features/tickets/schema'
 import type { Ticket, TicketWithRelations } from '@/features/tickets/types'
 import { db, nextId, nowIso, syncDerivedCounts } from '@/mocks/db'
 import { API_BASE } from '@/mocks/handlers/base'
-import { runQuery } from '@/mocks/query'
+import { toCsv } from '@/mocks/csv'
+import { applyQuery, runQuery } from '@/mocks/query'
 import type { EntityRef } from '@/shared/types/entity'
 import { errorResponse, notFound, parseBody, preflight, requireAuth, touch } from '@/mocks/support'
 
@@ -48,7 +49,84 @@ function findTicket(id: string): Ticket | undefined {
   return db.tickets.find((ticket) => ticket.id === id)
 }
 
+/**
+ * The query configuration, shared by the list and export endpoints.
+ *
+ * Declared once on purpose: an export that filtered differently from the table it was
+ * launched from would be worse than no export at all, and that divergence is invisible until
+ * someone reconciles a spreadsheet by hand.
+ */
+const ticketQueryConfig = {
+  searchable: (ticket: TicketWithRelations) => [
+    ticket.name,
+    ticket.event.name,
+    ticket.category.name,
+  ],
+  filters: {
+    status: (ticket: TicketWithRelations, value: string) => ticket.status === value,
+    eventId: (ticket: TicketWithRelations, value: string) => ticket.eventId === value,
+    categoryId: (ticket: TicketWithRelations, value: string) => ticket.categoryId === value,
+    currency: (ticket: TicketWithRelations, value: string) => ticket.currency === value,
+    minPrice: (ticket: TicketWithRelations, value: string) => ticket.priceMinor >= Number(value),
+    maxPrice: (ticket: TicketWithRelations, value: string) => ticket.priceMinor <= Number(value),
+  },
+  sortable: {
+    name: (ticket: TicketWithRelations) => ticket.name,
+    priceMinor: (ticket: TicketWithRelations) => ticket.priceMinor,
+    quantity: (ticket: TicketWithRelations) => ticket.quantity,
+    status: (ticket: TicketWithRelations) => ticket.status,
+    event: (ticket: TicketWithRelations) => ticket.event.name,
+    category: (ticket: TicketWithRelations) => ticket.category.name,
+    createdAt: (ticket: TicketWithRelations) => ticket.createdAt,
+    updatedAt: (ticket: TicketWithRelations) => ticket.updatedAt,
+  },
+  defaultSort: 'createdAt',
+}
+
 export const ticketHandlers: RequestHandler[] = [
+  /**
+   * CSV export of the *current query*, not the current page.
+   *
+   * Declared before `/:id` so `export` is not captured as an id. The client sends the same
+   * filters it is displaying and gets every matching row back — the point being that the
+   * browser never has to hold them.
+   */
+  http.get(`${RESOURCE}/export`, async ({ request }) => {
+    const failure = await preflight(request)
+    if (failure) return failure
+    const auth = requireAuth(request)
+    if (!auth.ok) return auth.response
+
+    /*
+     * `applyQuery`, not `runQuery`: the list endpoint caps `perPage` at 100 so a client cannot
+     * dump the table through it, and this endpoint is the sanctioned way to get everything
+     * matching. Same search, filters and sort; no pagination.
+     */
+    const rows = applyQuery(db.tickets.map(expand), new URL(request.url), ticketQueryConfig)
+
+    const csv = toCsv(rows, [
+      { header: 'ID', value: (ticket) => ticket.id },
+      { header: 'Name', value: (ticket) => ticket.name },
+      { header: 'Event', value: (ticket) => ticket.event.name },
+      { header: 'Category', value: (ticket) => ticket.category.name },
+      // Minor units and currency as separate columns: a spreadsheet can compute on a number,
+      // not on "€25.50".
+      { header: 'Price (minor units)', value: (ticket) => ticket.priceMinor },
+      { header: 'Currency', value: (ticket) => ticket.currency },
+      { header: 'Quantity', value: (ticket) => ticket.quantity },
+      { header: 'Status', value: (ticket) => ticket.status },
+      { header: 'Created', value: (ticket) => ticket.createdAt },
+    ])
+
+    return new HttpResponse(csv, {
+      status: 200,
+      headers: {
+        'content-type': 'text/csv; charset=utf-8',
+        'content-disposition': `attachment; filename="tickets-${new Date().toISOString().slice(0, 10)}.csv"`,
+      },
+    })
+  }),
+
   http.get(RESOURCE, async ({ request }) => {
     const failure = await preflight(request)
     if (failure) return failure
@@ -60,29 +138,7 @@ export const ticketHandlers: RequestHandler[] = [
      * event and category names — an admin searching "Summer Gala" expects to find its tickets.
      */
     const expanded = db.tickets.map(expand)
-
-    const result = runQuery(expanded, new URL(request.url), {
-      searchable: (ticket) => [ticket.name, ticket.event.name, ticket.category.name],
-      filters: {
-        status: (ticket, value) => ticket.status === value,
-        eventId: (ticket, value) => ticket.eventId === value,
-        categoryId: (ticket, value) => ticket.categoryId === value,
-        currency: (ticket, value) => ticket.currency === value,
-        minPrice: (ticket, value) => ticket.priceMinor >= Number(value),
-        maxPrice: (ticket, value) => ticket.priceMinor <= Number(value),
-      },
-      sortable: {
-        name: (ticket) => ticket.name,
-        priceMinor: (ticket) => ticket.priceMinor,
-        quantity: (ticket) => ticket.quantity,
-        status: (ticket) => ticket.status,
-        event: (ticket) => ticket.event.name,
-        category: (ticket) => ticket.category.name,
-        createdAt: (ticket) => ticket.createdAt,
-        updatedAt: (ticket) => ticket.updatedAt,
-      },
-      defaultSort: 'createdAt',
-    })
+    const result = runQuery(expanded, new URL(request.url), ticketQueryConfig)
 
     return HttpResponse.json({ data: result.data, meta: result.meta })
   }),

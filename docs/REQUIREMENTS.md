@@ -111,7 +111,7 @@ Selected for this submission (phase 8, in build order — all after mandatory wo
 - [x] Dashboard statistics — aggregated server-side via `/api/stats`; the browser never
       loads a collection to count it
 - [ ] Bulk actions (multi-select delete / status change, partial-failure reporting)
-- [ ] CSV export (of the current filtered query, not just the visible page)
+- [x] CSV export — of the current filtered query, server-rendered; 27 tests
 - [ ] CSV import (per-row validation, preview, error report)
 - [ ] Optimistic UI updates (with rollback)
 - [ ] Role-based permissions (enforced in UI *and* at the mock API boundary)

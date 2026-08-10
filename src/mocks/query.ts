@@ -56,20 +56,20 @@ function compare(a: SortValue, b: SortValue): number {
   return String(a).localeCompare(String(b), 'en', { numeric: true, sensitivity: 'base' })
 }
 
-export function runQuery<T>(
-  items: readonly T[],
-  url: URL,
-  config: QueryConfig<T>,
-): ListResponse<T> & { query: ParsedQuery } {
+/**
+ * Search → filter → sort, with no pagination.
+ *
+ * Split out so the export endpoints can reuse the *exact* selection the table is showing.
+ * An export that filtered differently from the grid it was launched from is worse than no
+ * export, and the divergence only surfaces when somebody reconciles a spreadsheet by hand.
+ */
+export function applyQuery<T>(items: readonly T[], url: URL, config: QueryConfig<T>): T[] {
   const params = url.searchParams
 
   const search = (params.get('search') ?? '').trim().toLowerCase()
   const requestedSort = params.get('sort') ?? config.defaultSort
-  // An unknown sort key falls back to the default rather than 400ing: a stale bookmark
-  // should still render a sensible list.
   const sort = requestedSort in config.sortable ? requestedSort : config.defaultSort
   const order: SortOrder = params.get('order') === 'asc' ? 'asc' : 'desc'
-  const perPage = parsePositiveInt(params.get('perPage'), DEFAULT_PER_PAGE, MAX_PER_PAGE)
 
   // 1. Search
   let result = search
@@ -102,6 +102,27 @@ export function runQuery<T>(
       return fallback ? compare(fallback(a), fallback(b)) : 0
     })
   }
+
+  return result
+}
+
+export function runQuery<T>(
+  items: readonly T[],
+  url: URL,
+  config: QueryConfig<T>,
+): ListResponse<T> & { query: ParsedQuery } {
+  const params = url.searchParams
+
+  const search = (params.get('search') ?? '').trim().toLowerCase()
+  const requestedSort = params.get('sort') ?? config.defaultSort
+  // An unknown sort key falls back to the default rather than 400ing: a stale bookmark
+  // should still render a sensible list.
+  const sort = requestedSort in config.sortable ? requestedSort : config.defaultSort
+  const order: SortOrder = params.get('order') === 'asc' ? 'asc' : 'desc'
+  const perPage = parsePositiveInt(params.get('perPage'), DEFAULT_PER_PAGE, MAX_PER_PAGE)
+
+  // Steps 1–3: search, filter, sort — shared with the export endpoints.
+  const result = applyQuery(items, url, config)
 
   // 4. Paginate — after filtering, so `total` describes what the user is actually looking at.
   const total = result.length
