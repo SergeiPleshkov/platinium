@@ -48,9 +48,10 @@ decision-making, overall software craftsmanship — not only "does it work".
 - [x] Success / error notifications — `useNotifications` queue rendered by `BaseToaster`
 
 ### Responsive
-- [ ] Desktop
-- [ ] Mobile
-- [ ] Tablet
+- [x] Desktop (1280) — sidebar, full grid; verified in a browser
+- [x] Tablet (768) — grid retained, nav becomes a drawer, no horizontal scroll; verified
+- [x] Mobile (375) — table becomes a card list, off-canvas drawer; verified, and the card
+      branch is covered by `BaseDataTable.spec.ts`
 
 ## Technical
 
@@ -88,19 +89,14 @@ decision-making, overall software craftsmanship — not only "does it work".
 
 ## Deliverables
 
-- [ ] Fully functional Vue 3 application
+- [x] Fully functional Vue 3 application — all three entities, verified in a browser and
+      in the Docker image
 - [x] Docker — multi-stage build, non-root nginx runtime, verified running configuration
-- [ ] Mock API implementation
-- [ ] Unit tests
-- [ ] Integration tests
-- [ ] `README.md` — project overview, installation, Docker setup, development commands,
-      build commands, testing commands, project structure, architecture overview,
-      technical decisions, assumptions and trade-offs
-- [ ] `TECHNICAL_REVIEW.md` — main architectural decisions; what you'd improve with two
-      more days; technical debt intentionally accepted; what you'd refactor first; how
-      you'd scale to hundreds of thousands of tickets and many concurrent admins; coding
-      standards and quality checks you'd introduce for the team; how AI fits your daily
-      development workflow on this project
+- [x] Mock API implementation — MSW, `src/mocks/`, 51 endpoint tests
+- [x] Unit tests — utilities, schemas, composables, stores, components, architecture
+- [x] Integration tests — 4 journeys through the real router and mock backend
+- [x] `README.md` — all ten bullets covered
+- [x] `TECHNICAL_REVIEW.md` — all seven questions answered
 - [ ] Pushed to a public Git repository, URL shared
 
 ## Bonus (optional, "if time permits")

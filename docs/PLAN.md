@@ -135,7 +135,7 @@ docker build.
 
 **Exit:** `docker compose up prod` serves the working app on a clean machine; CI green.
 
-## Phase 10 — Documentation & submission
+## Phase 10 — Documentation & submission ✅ (done, except the push)
 
 `README.md` covering all ten bullets the brief lists (overview, install, Docker, dev, build,
 test, structure, architecture, decisions, assumptions & trade-offs) with screenshots.
