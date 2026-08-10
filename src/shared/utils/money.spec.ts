@@ -46,16 +46,30 @@ describe('money', () => {
   })
 
   describe('formatMoney', () => {
-    it('formats in each currency’s own convention', () => {
-      // Intl uses non-breaking spaces; normalise before asserting.
-      expect(formatMoney(2550, 'USD').replace(/[\u00A0\u202F]/g, ' ')).toBe('$25.50')
-      expect(formatMoney(2550, 'GBP').replace(/[\u00A0\u202F]/g, ' ')).toBe('£25.50')
-      expect(formatMoney(2550, 'EUR').replace(/[\u00A0\u202F]/g, ' ')).toBe('25,50 €')
+    it('uses one number format for every currency, distinguished by symbol', () => {
+      /*
+       * Not each currency's home convention: side by side in a list, mixed separators make
+       * the reader re-parse every row. Same separators, different symbol.
+       */
+      expect(formatMoney(2550, 'EUR')).toBe('€25.50')
+      expect(formatMoney(2550, 'USD')).toBe('$25.50')
+      expect(formatMoney(2550, 'GBP')).toBe('£25.50')
+    })
+
+    it('renders the plain symbol, not a currency-code prefix', () => {
+      // en-GB would otherwise render USD as "US$25.50".
+      expect(formatMoney(2550, 'USD')).not.toContain('US$')
+    })
+
+    it('groups thousands the same way in every currency', () => {
+      expect(formatMoney(206157295, 'EUR')).toBe('€2,061,572.95')
+      expect(formatMoney(206157295, 'GBP')).toBe('£2,061,572.95')
     })
 
     it('always shows the minor unit digits', () => {
-      expect(formatMoney(2500, 'USD').replace(/[\u00A0\u202F]/g, ' ')).toBe('$25.00')
-      expect(formatMoney(0, 'USD').replace(/[\u00A0\u202F]/g, ' ')).toBe('$0.00')
+      expect(formatMoney(2500, 'USD')).toBe('$25.00')
+      expect(formatMoney(0, 'USD')).toBe('$0.00')
+      expect(formatMoney(0, 'EUR')).toBe('€0.00')
     })
   })
 

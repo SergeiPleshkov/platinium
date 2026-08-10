@@ -99,6 +99,21 @@ so the browser and Vitest use the same transport rather than XHR and Node's `htt
 **Revisit if:** bundle size becomes a real constraint — `ky` is a drop-in behind this same
 wrapper, which is the point of having the wrapper.
 
+## 2026-08-10 — One display locale for every currency
+
+**Chose:** format all amounts with `en-GB` and `currencyDisplay: 'narrowSymbol'`, so the
+currency is carried by the symbol and the number format never changes.
+**Over:** formatting each currency in its home locale (`de-DE` for EUR, `en-US` for USD).
+**Because:** the per-currency version looks considered in isolation and falls apart in a list.
+The dashboard showed `20.615.729,57 €` directly above `£4,609,191.61`, and the ticket table
+put `17,00 €` beside `£97.99` in the *same column* — the reader has to switch number-format
+conventions between adjacent rows to compare two prices. Separators are a property of the
+interface; the symbol is what identifies the currency.
+**Costs:** a German-speaking admin sees English separators. That is the correct trade until
+the locale follows the signed-in user, which is the real fix.
+**Revisit if:** the portal gains per-user locale — `APP_LOCALE` is the single place it would
+be read from.
+
 ## 2026-08-10 — nginx runtime: unprivileged image, headers per location
 
 **Chose:** `nginxinc/nginx-unprivileged` (uid 101, port 8080) for the runtime stage, with the

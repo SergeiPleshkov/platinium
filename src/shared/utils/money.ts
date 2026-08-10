@@ -18,11 +18,19 @@ const MINOR_UNIT_DIGITS: Record<CurrencyCode, number> = {
   GBP: 2,
 }
 
-const CURRENCY_LOCALES: Record<CurrencyCode, string> = {
-  EUR: 'de-DE',
-  USD: 'en-US',
-  GBP: 'en-GB',
-}
+/**
+ * One locale for every currency, deliberately.
+ *
+ * Formatting each currency in its *home* locale looks thoughtful in isolation and is wrong in
+ * a list: `20.615.729,57 €` next to `£4,609,191.61` makes the reader switch number-format
+ * conventions between adjacent rows, and the same ticket table showed `17,00 €` beside
+ * `£97.99` in one column. Separators should be a property of the interface, not of the
+ * amount; the symbol is what distinguishes the currency.
+ *
+ * This is the app's display locale. Making it follow the signed-in user is the next step —
+ * see TECHNICAL_REVIEW.md — and this constant is the single place it would come from.
+ */
+const APP_LOCALE = 'en-GB'
 
 export function isCurrencyCode(value: unknown): value is CurrencyCode {
   return typeof value === 'string' && (CURRENCIES as readonly string[]).includes(value)
@@ -60,15 +68,18 @@ export function toMinorUnits(major: number, currency: CurrencyCode): number {
 }
 
 /**
- * Formats minor units for display, in the currency's own convention:
- * `2550, 'EUR'` → `25,50 €`, `2550, 'USD'` → `$25.50`.
+ * Formats minor units for display: `2550, 'EUR'` → `€25.50`, `2550, 'USD'` → `$25.50`.
+ *
+ * One number format across every currency — see `APP_LOCALE`.
  */
 export function formatMoney(minor: number, currency: CurrencyCode): string {
   const digits = MINOR_UNIT_DIGITS[currency]
 
-  return new Intl.NumberFormat(CURRENCY_LOCALES[currency], {
+  return new Intl.NumberFormat(APP_LOCALE, {
     style: 'currency',
     currency,
+    // `symbol` renders USD as "US$" in en-GB; `narrowSymbol` gives the plain $ £ €.
+    currencyDisplay: 'narrowSymbol',
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   }).format(toMajorUnits(minor, currency))
