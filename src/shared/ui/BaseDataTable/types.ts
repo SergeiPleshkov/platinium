@@ -9,6 +9,15 @@ export interface TableColumn {
   field: string
   header: string
   sortable?: boolean | undefined
+  /**
+   * Fixed track width, e.g. `'12rem'`. Columns without one share what is left over.
+   *
+   * Only consulted in virtual mode, which lays the table out with `table-layout: fixed`.
+   * Automatic layout sizes columns from the rows currently in the DOM — and virtual scrolling
+   * keeps replacing those, so the columns visibly resize as you scroll. Declaring the widths
+   * is what makes them hold still.
+   */
+  width?: string | undefined
   /** Extra classes for the cell, e.g. `text-right` for numeric columns. */
   cellClass?: string | undefined
   /**

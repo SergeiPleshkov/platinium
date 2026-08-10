@@ -26,7 +26,7 @@ import {
 const store = useCategoriesStore()
 const notifications = useNotifications()
 
-const { table, viewMode, virtual, onRangeChange } = useListView({
+const { table, viewMode, onRangeChange } = useListView({
   fetchList: (query, signal) => store.fetchList(query, signal),
   fetchWindow: (query, signal) => store.fetchWindow(query, signal),
   resetBuffer: () => store.resetBuffer(),
@@ -34,10 +34,21 @@ const { table, viewMode, virtual, onRangeChange } = useListView({
   defaultOrder: 'asc',
 })
 
+/*
+ * `width` is only read in virtual mode, which lays out with `table-layout: fixed` so the
+ * columns stop resizing as rows recycle. The two text columns declare none and share what is
+ * left, which is what they want anyway.
+ */
 const columns: TableColumn[] = [
-  { field: 'name', header: 'Name', sortable: true, priority: 'primary' },
+  { field: 'name', header: 'Name', sortable: true, priority: 'primary', width: '18rem' },
   { field: 'description', header: 'Description' },
-  { field: 'ticketCount', header: 'Tickets', sortable: true, cellClass: 'text-right' },
+  {
+    field: 'ticketCount',
+    header: 'Tickets',
+    sortable: true,
+    cellClass: 'text-right',
+    width: '7rem',
+  },
 ]
 
 /* ---- create / edit ---- */
@@ -135,7 +146,6 @@ async function confirmDelete(): Promise<void> {
       :sort-order="table.sortOrder.value"
       :mode="viewMode.mode.value"
       :virtual-rows="store.buffer"
-      :virtual-loading="virtual.isLoading.value"
       label="Categories"
       empty-title="No categories yet"
       empty-description="Ticket tiers group tickets across events. Create the first one."

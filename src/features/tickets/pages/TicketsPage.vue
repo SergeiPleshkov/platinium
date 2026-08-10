@@ -37,7 +37,7 @@ const eventsStore = useEventsStore()
 const categoriesStore = useCategoriesStore()
 const notifications = useNotifications()
 
-const { table, viewMode, virtual, onRangeChange } = useListView({
+const { table, viewMode, onRangeChange } = useListView({
   fetchList: (query, signal) => store.fetchList(query, signal),
   fetchWindow: (query, signal) => store.fetchWindow(query, signal),
   resetBuffer: () => store.resetBuffer(),
@@ -51,13 +51,26 @@ onMounted(() => {
   void categoriesStore.fetchOptions()
 })
 
+/* Widths are for virtual mode's fixed layout — see the note in CategoriesPage. */
 const columns: TableColumn[] = [
   { field: 'name', header: 'Name', sortable: true, priority: 'primary' },
   { field: 'event', header: 'Event', sortable: true },
-  { field: 'category', header: 'Category', sortable: true },
-  { field: 'priceMinor', header: 'Price', sortable: true, cellClass: 'text-right' },
-  { field: 'quantity', header: 'Quantity', sortable: true, cellClass: 'text-right' },
-  { field: 'status', header: 'Status', sortable: true },
+  { field: 'category', header: 'Category', sortable: true, width: '11rem' },
+  {
+    field: 'priceMinor',
+    header: 'Price',
+    sortable: true,
+    cellClass: 'text-right',
+    width: '7rem',
+  },
+  {
+    field: 'quantity',
+    header: 'Quantity',
+    sortable: true,
+    cellClass: 'text-right',
+    width: '7rem',
+  },
+  { field: 'status', header: 'Status', sortable: true, width: '8rem' },
 ]
 
 function filterModel(key: string) {
@@ -219,7 +232,6 @@ async function confirmDelete(): Promise<void> {
       :sort-order="table.sortOrder.value"
       :mode="viewMode.mode.value"
       :virtual-rows="store.buffer"
-      :virtual-loading="virtual.isLoading.value"
       label="Tickets"
       empty-title="No tickets yet"
       empty-description="Create a ticket against an event to start selling."

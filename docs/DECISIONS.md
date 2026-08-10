@@ -438,3 +438,35 @@ a chunk that 404s after a deploy rejects without ever completing.
 inside a container that is *also* one announces the same wait twice. It grew a `decorative`
 prop so the outer region wins; the test asserts `getAllByRole('status')` has length one,
 because "announced twice" is invisible in a screenshot and obvious to a screen reader.
+
+## 2026-08-10 — Virtual mode lays out with `table-layout: fixed`
+
+**Chose:** fixed table layout for the virtual grid, with widths declared on `TableColumn`.
+**Over:** the browser's automatic layout, which every other table in the app still uses.
+**Because:** automatic layout sizes each column from the rows *currently in the DOM* — and
+virtual scrolling exists precisely to keep replacing those. Scrolling past a long venue name
+widened the Venue column; scrolling past short ones narrowed it again. The columns visibly
+shifted back and forth, which is worse than the pagination it was meant to improve on.
+
+Fixed layout takes its widths from the header row alone, so they are settled once and hold
+for the whole scroll. Measured across six samples while scrolling all 250 rows: one distinct
+set of column widths, where before it changed with the visible window. It also fixed a second
+symptom nobody had named yet — the Actions column was being pushed off the right edge, because
+automatic layout had no reason to respect it.
+
+**What we give up:** widths must be declared rather than discovered, and long values now
+truncate instead of widening their column. Both are the honest trade: a column that resizes
+while you read it is not a feature. Columns that declare no width share the remainder, which
+is the right default for the text-heavy ones.
+**Not applied to paginated mode**, which re-renders a whole page at a time and does not have
+the symptom. Changing it there would be scope creep with real regression risk.
+
+## 2026-08-10 — The virtual grid has no loading banner
+
+**Chose:** skeleton cells in the rows being fetched, and nothing else.
+**Over:** the "Loading rows…" overlay shipped an hour earlier.
+**Because:** it said the same thing twice. The placeholder rows already mark exactly which
+rows are arriving, exactly where they will appear, at the row's own height — so nothing moves
+when the data lands. A banner on top of that added no information and covered rows the user
+could otherwise have been reading. The route-navigation overlay stays, because there the old
+page is still on screen and genuinely nothing else indicates a wait.

@@ -28,7 +28,7 @@ import {
 const store = useEventsStore()
 const notifications = useNotifications()
 
-const { table, viewMode, virtual, onRangeChange } = useListView({
+const { table, viewMode, onRangeChange } = useListView({
   fetchList: (query, signal) => store.fetchList(query, signal),
   fetchWindow: (query, signal) => store.fetchWindow(query, signal),
   resetBuffer: () => store.resetBuffer(),
@@ -42,13 +42,20 @@ onMounted(() => {
   void store.fetchCountries()
 })
 
+/* Widths are for virtual mode's fixed layout — see the note in CategoriesPage. */
 const columns: TableColumn[] = [
   { field: 'name', header: 'Name', sortable: true, priority: 'primary' },
-  { field: 'startDate', header: 'Dates', sortable: true },
+  { field: 'startDate', header: 'Dates', sortable: true, width: '13rem' },
   { field: 'venue', header: 'Venue', sortable: true },
-  { field: 'country', header: 'Country', sortable: true },
-  { field: 'status', header: 'Status', sortable: true },
-  { field: 'ticketCount', header: 'Tickets', sortable: true, cellClass: 'text-right' },
+  { field: 'country', header: 'Country', sortable: true, width: '10rem' },
+  { field: 'status', header: 'Status', sortable: true, width: '8rem' },
+  {
+    field: 'ticketCount',
+    header: 'Tickets',
+    sortable: true,
+    cellClass: 'text-right',
+    width: '7rem',
+  },
 ]
 
 const statusFilter = computed({
@@ -173,7 +180,6 @@ async function confirmDelete(): Promise<void> {
       :sort-order="table.sortOrder.value"
       :mode="viewMode.mode.value"
       :virtual-rows="store.buffer"
-      :virtual-loading="virtual.isLoading.value"
       label="Events"
       empty-title="No events yet"
       empty-description="Create an event before adding tickets to it."

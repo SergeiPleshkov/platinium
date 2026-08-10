@@ -12,7 +12,6 @@ import type { ListMeta, SortOrder } from '@/shared/types/api'
 import type { TableColumn, TableViewMode } from '@/shared/ui/BaseDataTable/types'
 import BaseButton from '@/shared/ui/BaseButton/BaseButton.vue'
 import BaseEmptyState from '@/shared/ui/BaseEmptyState/BaseEmptyState.vue'
-import BaseSpinner from '@/shared/ui/BaseSpinner/BaseSpinner.vue'
 
 /**
  * The application's data table.
@@ -51,8 +50,6 @@ interface Props {
   mode?: TableViewMode | undefined
   /** Length-`meta.total` buffer, unfetched pages standing in as placeholders. Virtual mode only. */
   virtualRows?: ReadonlyArray<BufferRow<TRow>> | undefined
-  /** A page is in flight. Shows the overlay without disturbing the rows already on screen. */
-  virtualLoading?: boolean | undefined
   /** Height of the virtual viewport. Fixed by necessity: the scroller needs a known box. */
   scrollHeight?: string | undefined
 }
@@ -66,7 +63,6 @@ const props = withDefaults(defineProps<Props>(), {
   rowsPerPageOptions: () => [10, 25, 50, 100],
   mode: 'paginated',
   virtualRows: () => [],
-  virtualLoading: false,
   scrollHeight: '32rem',
 })
 
@@ -148,9 +144,6 @@ const showEmptyState = computed(
  */
 const useVirtualGrid = computed(() => props.mode === 'virtual' && !isMobile.value)
 
-/** Drives the non-blocking overlay while pages are being fetched behind the current scroll. */
-const isFetchingRows = computed(() => useVirtualGrid.value && props.virtualLoading === true)
-
 const virtualScrollerOptions = computed(() => ({
   lazy: true,
   itemSize: VIRTUAL_ROW_HEIGHT,
@@ -164,6 +157,22 @@ const virtualScrollerOptions = computed(() => ({
     emit('rangeChange', Number(event.first), Number(event.last))
   },
 }))
+
+/**
+ * Fixed layout, not automatic.
+ *
+ * Automatic layout measures the rows *currently in the DOM* — and virtual scrolling exists
+ * precisely to keep swapping those. Every recycle re-measured, so the columns jittered back
+ * and forth as the user scrolled. Fixed layout derives its widths from the header row alone,
+ * so they are decided once and hold for the whole scroll.
+ *
+ * The cost is that widths must be declared rather than discovered. Columns that declare none
+ * share whatever is left over, which is the right default for the text-heavy ones.
+ */
+const virtualTableStyle = { tableLayout: 'fixed', width: '100%' } as const
+
+/** Two icon buttons, and it must not absorb the slack the text columns need. */
+const VIRTUAL_ACTIONS_WIDTH = '6rem'
 
 /**
  * Vertical padding is removed and the height fixed, so a row is exactly `VIRTUAL_ROW_HEIGHT`
@@ -280,82 +289,67 @@ function asRow(row: unknown): TRow {
       Tablet and up, virtual mode: one scroll surface over the whole result set. No paginator —
       the scrollbar *is* the position indicator — and pages arrive as their rows come into view.
     -->
-    <div v-else-if="useVirtualGrid" class="relative">
-      <!--
-        The overlay sits *over* the rows rather than replacing them, and takes no pointer
-        events, so scrolling continues while a page is in flight. Emptying the grid to show a
-        loading state would undo the point of the whole mode.
-
-        Anchored to the bottom, not the top: at the top it covered the sortable column headers,
-        which are the one part of the grid the user might be reaching for while it is up.
-      -->
-      <Transition
-        enter-active-class="transition-opacity duration-150"
-        leave-active-class="transition-opacity duration-150"
-        enter-from-class="opacity-0"
-        leave-to-class="opacity-0"
+    <!--
+      No loading overlay here. The placeholder rows already say "this is arriving" exactly
+      where it is arriving, and a banner on top of them said the same thing a second time
+      while covering rows the user could otherwise read.
+    -->
+    <DataTable
+      v-else-if="useVirtualGrid"
+      :value="virtualRows"
+      scrollable
+      :scroll-height="scrollHeight"
+      :virtual-scroller-options="virtualScrollerOptions"
+      :table-style="virtualTableStyle"
+      :sort-field="sortField"
+      :sort-order="primeSortOrder"
+      :aria-label="label"
+      data-key="id"
+      lazy
+      removable-sort
+      @sort="onSort"
+    >
+      <Column
+        v-for="column in columns"
+        :key="column.field"
+        :field="column.field"
+        :header="column.header"
+        :sortable="column.sortable ?? false"
+        :body-class="column.cellClass"
+        :body-style="virtualCellStyle"
+        :style="column.width ? { width: column.width } : undefined"
       >
-        <div
-          v-if="isFetchingRows"
-          class="pointer-events-none absolute inset-0 z-10 flex items-end justify-center bg-surface-0/40 pb-6 dark:bg-surface-900/40"
-        >
-          <span
-            role="status"
-            class="flex items-center gap-2 rounded-full border border-border bg-surface-0 px-3 py-1.5 text-xs font-medium text-content shadow-md dark:bg-surface-800"
-          >
-            <BaseSpinner size="sm" decorative />
-            Loading rows…
-          </span>
-        </div>
-      </Transition>
-
-      <DataTable
-        :value="virtualRows"
-        scrollable
-        :scroll-height="scrollHeight"
-        :virtual-scroller-options="virtualScrollerOptions"
-        :sort-field="sortField"
-        :sort-order="primeSortOrder"
-        :aria-label="label"
-        data-key="id"
-        lazy
-        removable-sort
-        @sort="onSort"
-      >
-        <Column
-          v-for="column in columns"
-          :key="column.field"
-          :field="column.field"
-          :header="column.header"
-          :sortable="column.sortable ?? false"
-          :body-class="column.cellClass"
-          :body-style="virtualCellStyle"
-        >
-          <template #body="{ data }">
-            <div class="flex h-full items-center overflow-hidden whitespace-nowrap">
-              <Skeleton v-if="pending(data as BufferRow<TRow>)" width="70%" height="1rem" />
-              <slot v-else :name="`cell-${column.field}`" :row="asRow(data)">
+        <template #body="{ data }">
+          <div class="flex h-full items-center overflow-hidden whitespace-nowrap">
+            <!--
+              The one loading affordance in this mode: a skeleton in the cell whose page has
+              not arrived. It appears exactly where the row will be, at the row's own height,
+              so nothing moves when the data lands.
+            -->
+            <Skeleton v-if="pending(data as BufferRow<TRow>)" width="70%" height="1rem" />
+            <span v-else class="truncate">
+              <slot :name="`cell-${column.field}`" :row="asRow(data)">
                 {{ cellValue(asRow(data), column.field) }}
               </slot>
-            </div>
-          </template>
-        </Column>
+            </span>
+          </div>
+        </template>
+      </Column>
 
-        <Column
-          v-if="$slots.actions"
-          header="Actions"
-          :style="{ width: '1%' }"
-          :body-style="virtualCellStyle"
-        >
-          <template #body="{ data }">
-            <div class="flex h-full items-center">
-              <Skeleton v-if="pending(data as BufferRow<TRow>)" width="4rem" height="1rem" />
-              <slot v-else name="actions" :row="asRow(data)" />
-            </div>
-          </template>
-        </Column>
-      </DataTable>
-    </div>
+      <Column
+        v-if="$slots.actions"
+        header="Actions"
+        :style="{ width: VIRTUAL_ACTIONS_WIDTH }"
+        :body-style="virtualCellStyle"
+      >
+        <template #body="{ data }">
+          <div class="flex h-full items-center justify-end">
+            <Skeleton v-if="pending(data as BufferRow<TRow>)" width="4rem" height="1rem" />
+            <slot v-else name="actions" :row="asRow(data)" />
+          </div>
+        </template>
+      </Column>
+    </DataTable>
 
     <!-- Tablet and up: a real grid, with server-driven paging and sorting. -->
     <DataTable
