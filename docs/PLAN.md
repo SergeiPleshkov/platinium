@@ -40,17 +40,17 @@ server-side, not client-side.
 
 ## Phase 3 — App shell, API layer, auth
 
-`shared/api`: `http.ts` (fetch wrapper, timeout, abort, auth header), `errors.ts`
+`shared/api`: `http.ts` (axios instance, interceptors for auth and 401), `errors.ts`
 (`ApiError` normalisation), `createResource.ts` (typed CRUD factory).
 `shared/ui` adapter layer over PrimeVue: Button, Input, Select, Textarea, DatePicker, Modal,
 Badge, Skeleton, EmptyState, ConfirmDialog, FileUpload, Toast host — each with our own prop
 API, so features never see PrimeVue. Core composables: `useAsyncAction`, `useNotifications`,
 `useBreakpoint`.
 
-Carried over from phase 1: Aura's default muted text (`slate-500` on white, ≈4.0:1) fails
-WCAG AA for normal text, and it is what the secondary and ghost button variants inherit.
-Darken the muted-text token as part of building out the kit, and add a contrast assertion to
-the UI-kit tests so it cannot regress.
+Carried over from phase 1, **corrected**: Aura's muted text measures 4.76:1 on white and
+4.55:1 on our background — it passes WCAG AA. The phase 1 claim of ≈4.0:1 was an eyeball
+estimate. Muted text still moves to `surface.600` (7.24:1) for margin, and real computed
+contrast assertions now cover every text pairing in both schemes.
 Auth feature: login page with validation, mocked credentials, session in a Pinia store
 persisted to `localStorage`, route guards, 401 interception, logout.
 Portal layout: responsive sidebar (off-canvas below `lg`), topbar, user menu, router views.

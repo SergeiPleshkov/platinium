@@ -77,6 +77,42 @@ values into optional properties. Both are the rule working as intended.
 **Revisit if:** never, on a greenfield project. Retrofitting these onto an existing codebase
 is a different calculation.
 
+## 2026-08-10 — axios for transport, our own `ApiError` for the contract
+
+**Chose:** axios behind `@/shared/api`, with a request interceptor injecting the bearer token
+and a response interceptor translating every failure into our `ApiError`. Direct `axios`
+imports are blocked outside `src/shared/api` by lint.
+**Over:** (a) the hand-rolled `fetch` wrapper this started as — about 90 lines of timeout,
+abort, header and body plumbing that is a solved problem and not worth owning; (b) `ky` or
+`ofetch`, which are fetch-native and ~4–5 kB against axios's ~13 kB gzipped.
+**Because:** axios's interceptors express "inject auth" and "handle 401 once, centrally"
+directly, and it is the client a reviewer recognises without reading it. Bundle size is not
+the binding constraint for an authenticated admin portal.
+**What stays ours:** the error contract. `ApiError` with `fieldErrors`, `isValidation`,
+`isConflict`, `isRetryable` and `isAborted` is application vocabulary, not plumbing — without
+it every store ends up writing `if (error.response?.status === 422)`, and swapping HTTP
+libraries becomes a codebase-wide edit.
+**Evidence the boundary is in the right place:** the fetch → axios swap changed one file and
+all 22 API tests passed unmodified.
+**Costs:** ~13 kB gzipped, and axios's fetch adapter is pinned explicitly (`adapter: 'fetch'`)
+so the browser and Vitest use the same transport rather than XHR and Node's `http`.
+**Revisit if:** bundle size becomes a real constraint — `ky` is a drop-in behind this same
+wrapper, which is the point of having the wrapper.
+
+## 2026-08-10 — Correction: the phase 1 contrast finding was wrong
+
+**What I claimed:** Aura's muted text (`surface.500`) fails WCAG AA at roughly 4.0:1.
+**What is actually true:** computed properly, it is **4.76:1 on white and 4.55:1 on our
+`surface.50` background** — both pass AA for normal text. The original figure was estimated by
+eye from a screenshot, not calculated. There was no accessibility failure.
+**What was done anyway:** muted text moved from `surface.500` to `surface.600` (7.24:1). Not
+a fix — a margin decision. 4.55:1 clears the 4.5 threshold by 0.05, so any future adjustment
+to the surface colour would drop it under with nobody noticing.
+**The durable part:** `src/app/theme/contrast.spec.ts` now computes real WCAG ratios from the
+literal hex values in `palette.ts` and asserts every text pairing in both colour schemes. The
+palette is spelled out as hex rather than Aura `{slate.500}` references precisely so it can be
+measured. The lesson generalises: an accessibility claim that isn't computed is a guess.
+
 ## 2026-08-10 — Money is stored as integer minor units
 
 **Chose:** persist and transport prices as an integer count of the currency's minor unit

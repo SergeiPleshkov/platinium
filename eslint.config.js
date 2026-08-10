@@ -34,6 +34,20 @@ const uiKitRestriction = {
     'Feature code must use the Base* wrappers in @/shared/ui so the UI kit stays swappable.',
 }
 
+/**
+ * Axios is transport, not architecture.
+ *
+ * It may only be imported by `shared/api`, which wraps it and normalises every failure into
+ * an `ApiError`. Callers elsewhere would bypass auth injection, timeout handling and the
+ * central 401 hook — and would couple the whole app to one HTTP library.
+ */
+const httpClientRestriction = {
+  group: ['axios', 'axios/*'],
+  message:
+    'Import the typed client from @/shared/api instead of axios directly, so every request ' +
+    'gets consistent auth headers, cancellation and ApiError normalisation.',
+}
+
 /** Layering: app → features → shared. Arrows never point the other way. */
 const layerRestrictions = {
   sharedImportingUpward: [
@@ -71,6 +85,7 @@ const crossFeatureConfigs = features.map((feature) => ({
       {
         patterns: [
           uiKitRestriction,
+          httpClientRestriction,
           ...layerRestrictions.featureImportingApp,
           {
             group: features
@@ -196,19 +211,22 @@ export default defineConfigWithVueTs(
     },
   },
 
-  {
-    name: 'boundaries/ui-kit-isolation',
-    files: ['src/**/*.{ts,vue}'],
-    ignores: ['src/shared/ui/**', 'src/app/**'],
-    rules: {
-      'no-restricted-imports': ['error', { patterns: [uiKitRestriction] }],
-    },
-  },
+  /*
+   * The `no-restricted-imports` configs below are deliberately **disjoint** — every one
+   * carries an `ignores` that prevents it matching a file another one already covers.
+   *
+   * This is not stylistic. Flat config *replaces* a rule's options when a later entry
+   * configures the same rule, it does not merge them, so two overlapping blocks silently
+   * disable the earlier one's patterns. That exact bug shipped in phase 1 and left the
+   * PrimeVue boundary unenforced while lint stayed green. Overlap is the hazard; disjointness
+   * removes it. `tests/architecture/boundaries.spec.ts` proves each rule still fires.
+   */
 
   {
-    name: 'boundaries/shared-is-domain-agnostic',
-    files: ['src/shared/**/*.{ts,vue}'],
+    name: 'boundaries/api-layer',
+    files: ['src/shared/api/**/*.ts'],
     rules: {
+      // The one place axios is allowed; still may not reach upward or touch the UI kit.
       'no-restricted-imports': [
         'error',
         { patterns: [...layerRestrictions.sharedImportingUpward, uiKitRestriction] },
@@ -216,12 +234,50 @@ export default defineConfigWithVueTs(
     },
   },
 
-  // `shared/ui` is the one place PrimeVue is allowed — re-grant it after the rule above.
   {
-    name: 'boundaries/shared-ui-may-use-primevue',
+    name: 'boundaries/ui-layer',
     files: ['src/shared/ui/**/*.{ts,vue}'],
     rules: {
-      'no-restricted-imports': ['error', { patterns: layerRestrictions.sharedImportingUpward }],
+      // The one place PrimeVue is allowed.
+      'no-restricted-imports': [
+        'error',
+        { patterns: [...layerRestrictions.sharedImportingUpward, httpClientRestriction] },
+      ],
+    },
+  },
+
+  {
+    name: 'boundaries/shared-is-domain-agnostic',
+    files: ['src/shared/**/*.{ts,vue}'],
+    ignores: ['src/shared/api/**', 'src/shared/ui/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            ...layerRestrictions.sharedImportingUpward,
+            uiKitRestriction,
+            httpClientRestriction,
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    name: 'boundaries/app-layer',
+    files: ['src/app/**/*.{ts,vue}'],
+    rules: {
+      // The bootstrap registers PrimeVue, so it is exempt from that rule but not from this one.
+      'no-restricted-imports': ['error', { patterns: [httpClientRestriction] }],
+    },
+  },
+
+  {
+    name: 'boundaries/mocks',
+    files: ['src/mocks/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [uiKitRestriction, httpClientRestriction] }],
     },
   },
 

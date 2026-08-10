@@ -71,6 +71,64 @@ const probes: Probe[] = [
     expectedRule: 'no-restricted-globals',
     expectedMessage: 'Use the typed client in @/shared/api',
   },
+  {
+    description: 'a feature importing axios directly',
+    relativePath: `src/features/${PROBE_ALPHA}/probe-axios.ts`,
+    code: `import axios from 'axios'\nexport const probe = axios\n`,
+    expectedRule: 'no-restricted-imports',
+    expectedMessage: 'Import the typed client from @/shared/api instead of axios',
+  },
+  {
+    description: 'shared (non-api) code importing axios',
+    relativePath: 'src/shared/zz-probe-axios.ts',
+    code: `import axios from 'axios'\nexport const probe = axios\n`,
+    expectedRule: 'no-restricted-imports',
+    expectedMessage: 'Import the typed client from @/shared/api instead of axios',
+  },
+  {
+    description: 'the UI layer importing axios',
+    relativePath: 'src/shared/ui/zz-probe-axios.ts',
+    code: `import axios from 'axios'\nexport const probe = axios\n`,
+    expectedRule: 'no-restricted-imports',
+    expectedMessage: 'Import the typed client from @/shared/api instead of axios',
+  },
+  {
+    description: 'the API layer importing PrimeVue',
+    relativePath: 'src/shared/api/zz-probe-primevue.ts',
+    code: `import Button from 'primevue/button'\nexport const probe = Button\n`,
+    expectedRule: 'no-restricted-imports',
+    expectedMessage: 'PrimeVue may only be imported from src/shared/ui',
+  },
+  {
+    description: 'the app layer importing axios',
+    relativePath: 'src/app/zz-probe-axios.ts',
+    code: `import axios from 'axios'\nexport const probe = axios\n`,
+    expectedRule: 'no-restricted-imports',
+    expectedMessage: 'Import the typed client from @/shared/api instead of axios',
+  },
+]
+
+/**
+ * The inverse assertions: each layer's *sanctioned* dependency must still be allowed.
+ *
+ * Without these, tightening a rule until everything is forbidden would look like a pass.
+ */
+const permitted: Array<{ description: string; relativePath: string; code: string }> = [
+  {
+    description: 'the API layer may import axios',
+    relativePath: 'src/shared/api/zz-probe-allowed-axios.ts',
+    code: `import axios from 'axios'\nexport const probe = axios\n`,
+  },
+  {
+    description: 'the UI layer may import PrimeVue',
+    relativePath: 'src/shared/ui/zz-probe-allowed-primevue.ts',
+    code: `import Button from 'primevue/button'\nexport const probe = Button\n`,
+  },
+  {
+    description: 'a feature may import from shared',
+    relativePath: `src/features/${PROBE_ALPHA}/probe-allowed-shared.ts`,
+    code: `import { createResource } from '@/shared/api'\nexport const probe = createResource\n`,
+  },
 ]
 
 /** A support file the cross-feature probes import. Not itself a violation. */
@@ -90,7 +148,7 @@ let resultsByPath: Map<string, ESLint.LintResult>
 
 beforeAll(async () => {
   writeProbe(probeBetaStore.relativePath, probeBetaStore.code)
-  const paths = probes.map((probe) => writeProbe(probe.relativePath, probe.code))
+  const paths = [...probes, ...permitted].map((probe) => writeProbe(probe.relativePath, probe.code))
 
   // A fresh instance so the config's filesystem-driven feature discovery sees the probes.
   const eslint = new ESLint({ cwd: repoRoot })
@@ -102,8 +160,11 @@ beforeAll(async () => {
 afterAll(() => {
   rmSync(join(repoRoot, 'src/features', PROBE_ALPHA), { recursive: true, force: true })
   rmSync(join(repoRoot, 'src/features', PROBE_BETA), { recursive: true, force: true })
-  rmSync(join(repoRoot, 'src/shared/zz-probe-upward.ts'), { force: true })
-  rmSync(join(repoRoot, 'src/shared/zz-probe-fetch.ts'), { force: true })
+
+  for (const { relativePath } of [...probes, ...permitted]) {
+    if (relativePath.includes(PROBE_ALPHA)) continue
+    rmSync(join(repoRoot, relativePath), { force: true })
+  }
 })
 
 describe('architectural boundaries are enforced by lint', () => {
@@ -119,5 +180,20 @@ describe('architectural boundaries are enforced by lint', () => {
     ).not.toHaveLength(0)
     expect(messages.map((message) => message.message).join('\n')).toContain(expectedMessage)
     expect(messages.every((message) => message.severity === 2)).toBe(true)
+  })
+
+  it.each(permitted)('allows $description', ({ relativePath }) => {
+    const result = resultsByPath.get(join(repoRoot, relativePath))
+    expect(result, `no lint result for ${relativePath}`).toBeDefined()
+
+    const boundaryViolations = result!.messages.filter(
+      (message) =>
+        message.ruleId === 'no-restricted-imports' || message.ruleId === 'no-restricted-globals',
+    )
+
+    expect(
+      boundaryViolations.map((message) => message.message),
+      'a sanctioned dependency was rejected — the rules are too broad',
+    ).toEqual([])
   })
 })

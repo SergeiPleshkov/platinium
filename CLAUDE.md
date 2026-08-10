@@ -26,6 +26,7 @@ strategy and craftsmanship count as much as features.
 | Language | TypeScript, `strict: true` |
 | State | Pinia (setup stores) |
 | Routing | Vue Router 4, lazy-loaded route components |
+| HTTP | axios, **only** inside `shared/api`; callers see our `ApiError` |
 | Mock API | MSW — shared handlers for browser **and** tests |
 | UI kit | PrimeVue 4 (Aura preset, custom tokens) — **always behind our own `shared/ui` wrappers** |
 | Styling | Tailwind CSS for layout; PrimeVue design tokens for components |
