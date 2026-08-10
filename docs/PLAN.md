@@ -17,12 +17,14 @@ Git repo, `CLAUDE.md`, requirements traceability, skills (`crud-entity`, `vue-fe
 ## Phase 1 — Project skeleton & toolchain
 
 Scaffold Vite + Vue 3 + TS (`strict`, `noUncheckedIndexedAccess`), path alias `@ → src`.
-Tailwind + design tokens (colour scale, spacing, radii, dark-mode-ready CSS variables).
-ESLint 9 flat config (`vue`, `@typescript-eslint`, `vue-a11y`, import boundaries) +
-Prettier. Vitest with jsdom, coverage, Testing Library setup file. The folder tree from
-`CLAUDE.md`, real not empty. `package.json` scripts matching the command table.
+PrimeVue 4 with a custom Aura preset (our own colour/spacing tokens, `darkModeSelector: '.dark'`)
++ Tailwind for layout. ESLint 9 flat config (`vue`, `@typescript-eslint`, `vue-a11y`) with
+two hard boundary rules: no cross-feature imports, and **`primevue/*` importable only from
+`src/shared/ui/**`**. Prettier. Vitest with jsdom, coverage, Testing Library setup. The
+folder tree from `CLAUDE.md`, real not empty. `package.json` scripts matching the command table.
 
-**Exit:** `pnpm dev` serves a shell page; typecheck, lint, an empty test run and build all pass.
+**Exit:** `pnpm dev` serves a shell page; the boundary lint rules provably fail on a
+deliberate violation; typecheck, lint, an empty test run and build all pass.
 
 ## Phase 2 — Mock API & domain model
 
@@ -40,8 +42,9 @@ server-side, not client-side.
 
 `shared/api`: `http.ts` (fetch wrapper, timeout, abort, auth header), `errors.ts`
 (`ApiError` normalisation), `createResource.ts` (typed CRUD factory).
-`shared/ui` primitives: Button, Input, Select, Textarea, Modal, Badge, Skeleton, EmptyState,
-ConfirmDialog, Toast host. Core composables: `useAsyncAction`, `useNotifications`,
+`shared/ui` adapter layer over PrimeVue: Button, Input, Select, Textarea, DatePicker, Modal,
+Badge, Skeleton, EmptyState, ConfirmDialog, FileUpload, Toast host — each with our own prop
+API, so features never see PrimeVue. Core composables: `useAsyncAction`, `useNotifications`,
 `useBreakpoint`.
 Auth feature: login page with validation, mocked credentials, session in a Pinia store
 persisted to `localStorage`, route guards, 401 interception, logout.
@@ -53,15 +56,18 @@ returns to login; all covered by an integration test.
 ## Phase 4 — Data table engine
 
 The piece the three entity slices are built on, so it's built once and built well.
-`useTable` composable: debounced search, typed filters, multi-column sort, pagination —
-all two-way synced with the URL query, so any view is shareable and reload-safe, with
-superseded requests aborted. `BaseDataTable`: typed column definitions, sortable headers,
-row actions, selection (groundwork for bulk actions), loading skeleton, empty state,
-no-results-for-filters state, error state with retry, and a card layout below `md`.
-`BasePagination` with page-size control.
+`useTable` composable — debounced search, typed filters, multi-column sort, pagination, all
+two-way synced with the URL query so any view is shareable and reload-safe, with superseded
+requests aborted. **`useTable` is ours and knows nothing about PrimeVue**; it is the part
+that survives a UI-kit swap intact.
+`BaseDataTable` wraps PrimeVue `DataTable` in lazy mode (server-driven paging/sorting/
+filtering), exposing our own typed column definitions, row actions, selection (groundwork
+for bulk actions), loading skeleton, empty state, no-results-for-filters state, error state
+with retry, and a stacked card layout below `md`.
 
 **Exit:** unit tests for `useTable` (debounce, URL round-trip, abort) and component tests
-for every table state.
+for every table state, written against roles and text so they survive the wrapper's
+internals changing.
 
 ## Phase 5 — Categories slice
 
@@ -90,15 +96,29 @@ server-side querying had to be real — it carries ~250 rows.
 
 ## Phase 8 — Dashboard & bonus features
 
-Dashboard overview: KPI tiles (events, tickets, inventory value, sold-out count), tickets
-per event, upcoming events, recent activity — computed server-side in MSW, not by pulling
-every row to the client.
-Bonus features, in the order they demonstrate the most: **dark mode** (tokens already in
-place from phase 1), **dashboard statistics**, **bulk actions** (multi-select delete /
-status change), **CSV export**, then **optimistic updates** and **role-based permissions**
-if time allows.
+All six bonus tracks are in scope, built in this order (each is independently shippable, so
+if time runs out the cut is clean):
 
-**Exit:** each shipped bonus has a test; none of them destabilise the core flows.
+1. **Dark mode** — `darkModeSelector` is wired in phase 1, so this is a token pass, a
+   toggle, `prefers-color-scheme` as the default, and persistence.
+2. **Dashboard statistics** — KPI tiles (events, tickets, inventory value, sold-out count),
+   tickets per event, upcoming events, recent activity. Aggregated **server-side in MSW**
+   via a dedicated `/api/stats` endpoint — never by pulling every row to the client, which
+   is the whole point of the scaling question in the review doc.
+3. **Bulk actions** — multi-select delete and status change, with a batch endpoint,
+   partial-failure reporting, and a confirm step showing the affected count.
+4. **CSV export** — exports the *current filtered query*, not just the visible page;
+   streamed from a server-side endpoint so it stays correct at 250k rows.
+5. **CSV import** — file upload → parse → per-row zod validation → preview table showing
+   valid and rejected rows with reasons → commit only the valid ones → downloadable error
+   report. Rejects malformed files and oversized uploads with a clear message. This is the
+   most failure-prone bonus, so it gets the most test attention.
+6. **Optimistic updates + RBAC** — optimistic create/update/delete with rollback on failure
+   and a toast explaining the revert; `admin` / `editor` / `viewer` roles gating actions in
+   the UI *and* re-checked at the mock API boundary, so it isn't security theatre.
+
+**Exit:** each shipped bonus has tests (import gets happy path, partial-reject, and
+malformed-file cases); none of them destabilise the core flows.
 
 ## Phase 9 — Docker & CI
 
@@ -139,5 +159,7 @@ after-the-fact narrative.
 |---|---|
 | Table engine over-abstracted before its third consumer exists | Build it against Categories, refactor when Tickets reveals the real requirements |
 | Three entity slices become copy-paste | The `crud-entity` skill fixes the shape; `/audit-brief` explicitly checks duplication |
-| Bonus features eat time owed to tests | Phase 8 sits after all mandatory work; it's the cut line if time runs short |
+| PrimeVue leaks into features, making the planned swap expensive | ESLint `no-restricted-imports` blocks `primevue/*` outside `shared/ui`; tests query by role/label, never PrimeVue internals |
+| Wrapping PrimeVue turns into a thin pointless re-export | Wrappers own their prop API and their states; a wrapper that just spreads `$attrs` into a Prime component is a review finding |
+| Six bonus tracks eat time owed to mandatory work | Phase 8 sits entirely after phases 1–7; tracks are ordered cheapest-and-most-visible first and each is independently cuttable |
 | Docker left to the end and fails on a clean machine | Phase 9 builds from scratch with no local cache |

@@ -27,7 +27,8 @@ strategy and craftsmanship count as much as features.
 | State | Pinia (setup stores) |
 | Routing | Vue Router 4, lazy-loaded route components |
 | Mock API | MSW — shared handlers for browser **and** tests |
-| Styling | Tailwind CSS + in-house UI primitives |
+| UI kit | PrimeVue 4 (Aura preset, custom tokens) — **always behind our own `shared/ui` wrappers** |
+| Styling | Tailwind CSS for layout; PrimeVue design tokens for components |
 | Forms | vee-validate + zod (schemas shared with the API layer) |
 | Testing | Vitest, @vue/test-utils, @testing-library/vue, MSW |
 | Quality | ESLint (flat config), Prettier, vue-tsc |
@@ -57,6 +58,13 @@ tests/            # integration tests + shared test utilities
 Dependency rule, enforced by review and lint: `app → features → shared`. A feature never
 imports from another feature's internals — cross-feature needs go through `shared/` or an
 explicit public `index.ts` barrel.
+
+**PrimeVue is a replaceable dependency, not the architecture.** It may only be imported
+inside `src/shared/ui/**` and the app bootstrap. Everything else consumes our own `Base*`
+components. This is enforced by an ESLint `no-restricted-imports` rule, not by good
+intentions — the intent is that swapping PrimeVue for in-house components later is a change
+to one directory, and the test suite (which asserts on roles and labels, never on PrimeVue
+internals) should stay green through it.
 
 ## Conventions
 

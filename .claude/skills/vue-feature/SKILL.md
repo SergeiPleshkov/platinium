@@ -51,17 +51,32 @@ doing a component's job.
 
 ## Shared UI primitives (`shared/ui`)
 
-`BaseButton`, `BaseInput`, `BaseSelect`, `BaseTextarea`, `BaseModal`, `BaseDataTable`,
-`BasePagination`, `BaseBadge`, `BaseSkeleton`, `BaseEmptyState`, `BaseConfirmDialog`.
+`BaseButton`, `BaseInput`, `BaseSelect`, `BaseTextarea`, `BaseDatePicker`, `BaseModal`,
+`BaseDataTable`, `BasePagination`, `BaseBadge`, `BaseSkeleton`, `BaseEmptyState`,
+`BaseConfirmDialog`, `BaseFileUpload`.
 
-Rules for every primitive:
+These are **adapters over PrimeVue**, not re-exports. The point of the layer is that the
+rest of the app is written against our API, so PrimeVue can be replaced by in-house
+components later without touching a single feature.
+
+- `import ... from 'primevue/*'` is allowed **only** inside `src/shared/ui/**` and the app
+  bootstrap. ESLint enforces this. If a feature needs a PrimeVue capability, the answer is
+  a new or extended `shared/ui` component, never a direct import.
+- Our prop API is ours. Don't pass PrimeVue prop bags straight through, don't leak PrimeVue
+  types into feature code, and don't expose PrimeVue slot names as our contract. Where a
+  PrimeVue escape hatch is genuinely needed, expose it as a named prop/slot of our own so
+  the coupling stays inside the wrapper.
 - Zero domain knowledge, zero store access, zero router access.
-- Forwards `$attrs` to the meaningful root element (`inheritAttrs: false` where needed) so
+- Forwards `$attrs` to the meaningful element (`inheritAttrs: false` where needed) so
   callers can pass `aria-*`, `data-testid`, `type`, etc.
 - Variants via a typed `variant` / `size` prop, resolved through a lookup map — never a
   chain of ternaries in the template.
 - Accessible by construction: labels tied to inputs, `aria-invalid` + `aria-describedby`
   on error, focus trap and `Esc` in modals, focus restored on close, visible focus ring.
+  PrimeVue gives most of this; verify it rather than assuming it.
+
+Tests target roles, labels and visible text — never PrimeVue's internal classnames or DOM
+structure. A test that would break when the UI kit is swapped is testing the wrong thing.
 
 ## Composables
 

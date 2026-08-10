@@ -96,6 +96,19 @@ decision-making, overall software craftsmanship — not only "does it work".
 
 ## Bonus (optional, "if time permits")
 
-Dark mode · Bulk actions · CSV import/export · Dashboard statistics · Role-based
-permissions · Optimistic UI updates · Drag & drop ordering · Infinite scrolling · anything
-else that demonstrates engineering skill.
+Brief's list: Dark mode · Bulk actions · CSV import/export · Dashboard statistics ·
+Role-based permissions · Optimistic UI updates · Drag & drop ordering · Infinite scrolling ·
+anything else that demonstrates engineering skill.
+
+Selected for this submission (phase 8, in build order — all after mandatory work is green):
+
+- [ ] Dark mode
+- [ ] Dashboard statistics (aggregated server-side)
+- [ ] Bulk actions (multi-select delete / status change, partial-failure reporting)
+- [ ] CSV export (of the current filtered query, not just the visible page)
+- [ ] CSV import (per-row validation, preview, error report)
+- [ ] Optimistic UI updates (with rollback)
+- [ ] Role-based permissions (enforced in UI *and* at the mock API boundary)
+
+Not selected: drag & drop ordering, infinite scrolling — both conflict with the mandated
+sortable, paginated table, and neither adds signal the above don't already provide.
