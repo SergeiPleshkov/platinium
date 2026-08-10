@@ -125,6 +125,11 @@ const permitted: Array<{ description: string; relativePath: string; code: string
     code: `import Button from 'primevue/button'\nexport const probe = Button\n`,
   },
   {
+    description: "a feature may import another feature's public barrel",
+    relativePath: `src/features/${PROBE_ALPHA}/probe-allowed-barrel.ts`,
+    code: `import { useEventsStore } from '@/features/events'\nexport const probe = useEventsStore\n`,
+  },
+  {
     description: 'a feature may import from shared',
     relativePath: `src/features/${PROBE_ALPHA}/probe-allowed-shared.ts`,
     code: `import { http } from '@/shared/api'\nexport const probe = http\n`,

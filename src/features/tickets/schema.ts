@@ -28,8 +28,8 @@ export const ticketSchema = z.object({
     .min(0, 'Quantity cannot be negative')
     .max(1_000_000, 'Quantity must be 1,000,000 or fewer'),
   status: z.enum(TICKET_STATUSES, { message: 'Select a status' }),
-  eventId: z.string().trim().min(1, 'Select an event'),
-  categoryId: z.string().trim().min(1, 'Select a category'),
+  eventId: z.string().trim().min(1, 'Choose the event this ticket belongs to'),
+  categoryId: z.string().trim().min(1, 'Choose a category for this ticket'),
 })
 
 export type TicketFormValues = z.infer<typeof ticketSchema>

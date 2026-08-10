@@ -99,6 +99,23 @@ so the browser and Vitest use the same transport rather than XHR and Node's `htt
 **Revisit if:** bundle size becomes a real constraint — `ky` is a drop-in behind this same
 wrapper, which is the point of having the wrapper.
 
+## 2026-08-10 — Relation pickers load up to 200 options (accepted debt)
+
+**Chose:** `fetchOptions()` on the events and categories stores, loading up to 200 `{id, name}`
+pairs sorted by name, filtered client-side inside the picker.
+**Over:** a server-backed type-ahead that queries as the user types.
+**Because:** with 30 events and 10 categories this returns everything, and the type-ahead is
+meaningfully more work (debounce, in-flight cancellation, preserving the selected option when
+it falls outside the current result page) for no benefit at this size.
+**Costs — stated plainly:** it does not scale. Past ~200 events the picker silently stops
+showing some of them, which is worse than being slow. This is the clearest piece of
+intentional debt in the codebase and belongs in `TECHNICAL_REVIEW.md` as such. The fix is
+localised: `BaseSelect` already supports `filterable`, so it is a matter of making the filter
+server-backed and keeping the selected option pinned.
+**Note:** the options live in a *separate* store slice from `items`. Reusing the list state
+would mean opening the ticket form silently replaced whichever page the events screen was
+showing — a cross-screen bug that would be very hard to attribute.
+
 ## 2026-08-10 — `BaseFormField` distinguishes labellable from composite controls
 
 **Chose:** a `labellable` flag on `BaseFormField`. Native inputs get `<label for>`; composite

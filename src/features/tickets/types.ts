@@ -44,3 +44,16 @@ export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
   paused: 'Paused',
   sold_out: 'Sold out',
 }
+
+/** Status → badge tone. The label always carries the meaning; colour only reinforces it. */
+export const TICKET_STATUS_TONES = {
+  draft: 'neutral',
+  on_sale: 'success',
+  paused: 'warning',
+  sold_out: 'danger',
+} as const satisfies Record<TicketStatus, 'neutral' | 'success' | 'info' | 'warning' | 'danger'>
+
+export const TICKET_STATUS_OPTIONS = TICKET_STATUSES.map((status) => ({
+  value: status,
+  label: TICKET_STATUS_LABELS[status],
+}))

@@ -17,6 +17,7 @@ export { default as BaseEmptyState } from '@/shared/ui/BaseEmptyState/BaseEmptyS
 export { default as BaseFormField } from '@/shared/ui/BaseFormField/BaseFormField.vue'
 export { default as BaseInput } from '@/shared/ui/BaseInput/BaseInput.vue'
 export { default as BaseModal } from '@/shared/ui/BaseModal/BaseModal.vue'
+export { default as BaseMoneyInput } from '@/shared/ui/BaseMoneyInput/BaseMoneyInput.vue'
 export { default as BaseSearchInput } from '@/shared/ui/BaseSearchInput/BaseSearchInput.vue'
 export { default as BaseSelect } from '@/shared/ui/BaseSelect/BaseSelect.vue'
 export { default as BaseTextarea } from '@/shared/ui/BaseTextarea/BaseTextarea.vue'

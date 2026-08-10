@@ -56,6 +56,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: 'Events' },
       },
       {
+        path: 'tickets',
+        name: RouteName.Tickets,
+        component: () => import('@/features/tickets/pages/TicketsPage.vue'),
+        meta: { title: 'Tickets' },
+      },
+      {
         path: 'dashboard',
         name: RouteName.Dashboard,
         component: () => import('@/features/dashboard/pages/DashboardPage.vue'),
@@ -81,5 +87,6 @@ export interface NavigationItem {
 export const NAVIGATION: NavigationItem[] = [
   { name: RouteName.Dashboard, label: 'Dashboard', icon: 'pi pi-chart-bar' },
   { name: RouteName.Events, label: 'Events', icon: 'pi pi-calendar' },
+  { name: RouteName.Tickets, label: 'Tickets', icon: 'pi pi-ticket' },
   { name: RouteName.Categories, label: 'Categories', icon: 'pi pi-tags' },
 ]

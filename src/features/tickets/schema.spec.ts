@@ -39,8 +39,8 @@ describe('ticketSchema', () => {
   it.each([
     ['name', '', 'Enter a ticket name'],
     ['name', 'x'.repeat(121), 'Ticket name must be 120 characters or fewer'],
-    ['eventId', '', 'Select an event'],
-    ['categoryId', '', 'Select a category'],
+    ['eventId', '', 'Choose the event this ticket belongs to'],
+    ['categoryId', '', 'Choose a category for this ticket'],
   ])('rejects %s = %j', (field, value, expected) => {
     expect(messageFor(validTicket({ [field]: value }), field)).toBe(expected)
   })

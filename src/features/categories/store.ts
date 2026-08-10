@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
 import { categoriesApi } from '@/features/categories/api'
 import type { Category, CategoryPayload } from '@/features/categories/types'
 import { ApiError, isAbortError } from '@/shared/api'
 import { useCollectionState } from '@/shared/composables/useCollectionState'
-import type { ListQuery } from '@/shared/types/api'
+import { createListQuery, type ListQuery } from '@/shared/types/api'
+import type { EntityRef } from '@/shared/types/entity'
 
 /**
  * The single source of truth for category data.
@@ -18,6 +20,12 @@ import type { ListQuery } from '@/shared/types/api'
  */
 export const useCategoriesStore = defineStore('categories', () => {
   const collection = useCollectionState<Category>()
+
+  /**
+   * Lightweight `{ id, name }` pairs for relation pickers elsewhere. Kept separate from
+   * `items` so loading them cannot disturb the page the categories screen is showing.
+   */
+  const options = ref<EntityRef[]>([])
 
   /**
    * Loads a page.
@@ -35,6 +43,18 @@ export const useCategoriesStore = defineStore('categories', () => {
       // A superseded request is not a failure; leave the previous rows and status alone.
       if (isAbortError(caught)) return
       collection.setError(caught, 'Could not load categories. Try again.')
+    }
+  }
+
+  /** Loads relation-picker options. See the note on the events store about scale. */
+  async function fetchOptions(): Promise<void> {
+    try {
+      const response = await categoriesApi.list(
+        createListQuery({ sort: 'name', order: 'asc', perPage: 200 }),
+      )
+      options.value = response.data.map((category) => ({ id: category.id, name: category.name }))
+    } catch {
+      options.value = []
     }
   }
 
@@ -74,6 +94,8 @@ export const useCategoriesStore = defineStore('categories', () => {
 
   return {
     ...collection,
+    options,
+    fetchOptions,
     fetchList,
     create,
     update,

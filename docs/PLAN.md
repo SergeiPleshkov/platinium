@@ -91,7 +91,7 @@ tickets (with a clear explanatory error).
 
 **Exit:** CRUD + filtering + sorting + pagination green; date validation covered.
 
-## Phase 7 — Tickets slice
+## Phase 7 — Tickets slice ✅ (done)
 
 The relational one. Adds: event and category relations rendered as names (not ids), price +
 currency with correct formatting, quantity, status, filtering by event / category / status /

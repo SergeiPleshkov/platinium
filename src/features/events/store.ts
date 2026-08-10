@@ -5,7 +5,8 @@ import { eventsApi } from '@/features/events/api'
 import type { Event, EventPayload } from '@/features/events/types'
 import { ApiError, isAbortError } from '@/shared/api'
 import { useCollectionState } from '@/shared/composables/useCollectionState'
-import type { ListQuery } from '@/shared/types/api'
+import { createListQuery, type ListQuery } from '@/shared/types/api'
+import type { EntityRef } from '@/shared/types/entity'
 
 /**
  * The single source of truth for event data.
@@ -19,6 +20,16 @@ export const useEventsStore = defineStore('events', () => {
 
   /** Distinct countries currently in use, for the filter control. */
   const countries = ref<string[]>([])
+
+  /**
+   * Lightweight `{ id, name }` pairs for relation pickers elsewhere (the ticket form, the
+   * ticket filters).
+   *
+   * Deliberately a *separate* slice from `items`: they are the same entity but not the same
+   * query. Reusing the list state would mean opening the ticket form silently replaced
+   * whatever page of events the events screen was showing.
+   */
+  const options = ref<EntityRef[]>([])
 
   async function fetchList(query: ListQuery, signal?: AbortSignal): Promise<void> {
     collection.beginLoad()
@@ -42,6 +53,24 @@ export const useEventsStore = defineStore('events', () => {
       countries.value = await eventsApi.listCountries()
     } catch {
       countries.value = []
+    }
+  }
+
+  /**
+   * Loads relation-picker options.
+   *
+   * Capped at 200 by name. With 30 seeded events this returns everything; at real scale the
+   * picker would need a server-backed type-ahead instead. Recorded as accepted debt in
+   * docs/DECISIONS.md rather than pretended away.
+   */
+  async function fetchOptions(): Promise<void> {
+    try {
+      const response = await eventsApi.list(
+        createListQuery({ sort: 'name', order: 'asc', perPage: 200 }),
+      )
+      options.value = response.data.map((event) => ({ id: event.id, name: event.name }))
+    } catch {
+      options.value = []
     }
   }
 
@@ -72,7 +101,17 @@ export const useEventsStore = defineStore('events', () => {
     }
   }
 
-  return { ...collection, countries, fetchList, fetchCountries, create, update, remove }
+  return {
+    ...collection,
+    countries,
+    options,
+    fetchList,
+    fetchCountries,
+    fetchOptions,
+    create,
+    update,
+    remove,
+  }
 })
 
 function asApiError(caught: unknown): ApiError {

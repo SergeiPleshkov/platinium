@@ -29,14 +29,14 @@ decision-making, overall software craftsmanship — not only "does it work".
 ### Dashboard
 - [x] Manage Events
 - [x] Manage Categories
-- [ ] Manage Tickets
+- [x] Manage Tickets
 - [x] Search — debounced, server-side, URL-synced
 - [x] Filtering — status and country on events; all server-side
 - [x] Sorting — every sortable column, across the whole collection
 - [x] Pagination — server-side, page size configurable, clamped by the server
 
 ### CRUD — complete Create / Read / Update / Delete for all three entities
-- [ ] Ticket — Name, Price, Currency, Quantity, Status, Event, Category
+- [x] Ticket — Name, Price, Currency, Quantity, Status, Event, Category
 - [x] Event — Name, Country, Venue, Start Date, End Date, Status
 - [x] Category — Name, Description
 
@@ -79,11 +79,12 @@ decision-making, overall software craftsmanship — not only "does it work".
 - [x] Reusable API layer — `shared/api`: axios behind our `ApiError` contract, with token
       injection, timeouts, cancellation and one central 401 hook; `serialiseListQuery` shared
       by every list call
-- [ ] Maintainable project structure
+- [x] Maintainable project structure — three slices on one shape; the third cost a fraction
+      of the first
 
 ### Testing
-- [ ] Unit tests — components, stores, composables, utilities
-- [ ] Integration tests — complete user interactions and business flows
+- [x] Unit tests — components, stores, composables, utilities, schemas, architecture
+- [x] Integration tests — auth, categories, events and tickets journeys through the router
 
 ## Deliverables
 
