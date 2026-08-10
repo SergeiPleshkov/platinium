@@ -6,6 +6,7 @@ import type { Event, EventPayload } from '@/features/events/types'
 import { ApiError, isAbortError } from '@/shared/api'
 import { useCollectionState } from '@/shared/composables/useCollectionState'
 import { createListQuery, type ListQuery } from '@/shared/types/api'
+import type { BulkRequest, BulkResult } from '@/shared/types/bulk'
 import type { EntityRef } from '@/shared/types/entity'
 
 /**
@@ -100,6 +101,15 @@ export const useEventsStore = defineStore('events', () => {
     }
   }
 
+  /** Applies one action to many records. See the categories store for the contract. */
+  async function bulk(payload: BulkRequest): Promise<BulkResult> {
+    try {
+      return await eventsApi.bulk(payload)
+    } catch (caught) {
+      throw asApiError(caught)
+    }
+  }
+
   async function remove(id: string): Promise<void> {
     try {
       await eventsApi.remove(id)
@@ -120,6 +130,7 @@ export const useEventsStore = defineStore('events', () => {
     create,
     update,
     remove,
+    bulk,
   }
 })
 

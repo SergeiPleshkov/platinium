@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import { useCategoriesStore } from '@/features/categories'
 import { useEventsStore } from '@/features/events'
@@ -13,10 +13,11 @@ import {
 } from '@/features/tickets/types'
 import { usePermissions } from '@/features/auth'
 import { ApiError } from '@/shared/api'
-import { useListView, useNotifications } from '@/shared/composables'
+import { useBulkAction, useListView, useNotifications, useRowSelection } from '@/shared/composables'
 import { formatMoney } from '@/shared/utils/money'
 import {
   BaseBadge,
+  BaseBulkBar,
   BaseButton,
   BaseConfirmDialog,
   BaseDataTable,
@@ -56,6 +57,45 @@ onMounted(() => {
   void eventsStore.fetchOptions()
   void categoriesStore.fetchOptions()
 })
+
+/* ---- bulk actions ---- */
+
+const selection = useRowSelection()
+
+/*
+ * A selection is meaningful only against the query that produced it. Ticking three rows and
+ * then filtering to a different set would leave those ids selected but invisible — and the
+ * next "delete selected" would hit records the user can no longer see.
+ */
+watch(
+  () => table.query.value,
+  () => selection.clear(),
+)
+
+const bulk = useBulkAction({
+  run: (payload) => store.bulk(payload),
+  refresh: () => table.refresh(),
+  clearSelection: selection.clear,
+  // Rows may have been re-fetched since selection, so resolve from what is on screen now.
+  labelFor: (id) => store.items.find((ticket) => ticket.id === id)?.name ?? id,
+  entityLabel: 'tickets',
+})
+
+const bulkDeleteOpen = ref(false)
+
+const bulkDeleteMessage = computed(
+  () =>
+    `${selection.count.value} ticket${selection.count.value === 1 ? '' : 's'} will be permanently deleted. This cannot be undone.`,
+)
+
+async function confirmBulkDelete(): Promise<void> {
+  bulkDeleteOpen.value = false
+  await bulk.execute({ action: 'delete', ids: selection.selectedIds.value }, 'deleted')
+}
+
+async function applyBulkStatus(status: string): Promise<void> {
+  await bulk.execute({ action: 'status', ids: selection.selectedIds.value, status }, 'updated')
+}
 
 /* Widths are for virtual mode's fixed layout — see the note in CategoriesPage. */
 const columns: TableColumn[] = [
@@ -235,6 +275,54 @@ async function confirmDelete(): Promise<void> {
       <TableViewModeSwitch />
     </div>
 
+    <BaseBulkBar
+      :count="selection.count.value"
+      :status-options="TICKET_STATUS_OPTIONS"
+      :can-update="permissions.canUpdate.value"
+      :can-delete="permissions.canDelete.value"
+      :busy="bulk.busy.value"
+      entity-label="tickets"
+      @apply-status="applyBulkStatus"
+      @delete-selected="bulkDeleteOpen = true"
+      @clear="selection.clear"
+    />
+
+    <!--
+      The per-record refusals, on screen rather than in a toast: this is a list to be read and
+      acted on, and a toast that auto-dismisses is the wrong container for it.
+    -->
+    <div
+      v-if="bulk.hasFailures.value"
+      class="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/40"
+      role="alert"
+      aria-label="Bulk action failures"
+    >
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-sm font-medium text-content">
+            {{ bulk.failures.value.length }} could not be changed
+          </p>
+          <ul class="mt-2 space-y-1">
+            <li
+              v-for="failure in bulk.failures.value"
+              :key="failure.id"
+              class="text-sm text-content-muted"
+            >
+              <span class="font-medium text-content">{{ failure.label }}</span>
+              — {{ failure.reason }}
+            </li>
+          </ul>
+        </div>
+        <BaseButton
+          variant="ghost"
+          size="sm"
+          icon="pi pi-times"
+          aria-label="Dismiss failure report"
+          @click="bulk.dismissFailures"
+        />
+      </div>
+    </div>
+
     <BaseDataTable
       :rows="store.items"
       :columns="columns"
@@ -248,6 +336,8 @@ async function confirmDelete(): Promise<void> {
       :sort-order="table.sortOrder.value"
       :mode="viewMode.mode.value"
       :virtual-rows="store.buffer"
+      :selectable="permissions.canUpdate.value || permissions.canDelete.value"
+      :selected-ids="selection.selectedIds.value"
       label="Tickets"
       empty-title="No tickets yet"
       empty-description="Create a ticket against an event to start selling."
@@ -257,6 +347,8 @@ async function confirmDelete(): Promise<void> {
       @retry="table.refresh"
       @clear-filters="table.clearFilters"
       @range-change="onRangeChange"
+      @toggle-row="selection.toggle"
+      @toggle-all="selection.setMany"
     >
       <!-- Relations render as names, embedded by the API. No id ever reaches the screen. -->
       <template #cell-event="{ row }">
@@ -323,6 +415,16 @@ async function confirmDelete(): Promise<void> {
     </BaseDataTable>
 
     <TicketFormDialog v-model:open="formOpen" :ticket="editing" @saved="onSaved" />
+
+    <BaseConfirmDialog
+      :open="bulkDeleteOpen"
+      title="Delete selected tickets"
+      :message="bulkDeleteMessage"
+      confirm-label="Delete tickets"
+      :busy="bulk.busy.value"
+      @update:open="bulkDeleteOpen = false"
+      @confirm="confirmBulkDelete"
+    />
 
     <BaseConfirmDialog
       :open="deleting !== null"

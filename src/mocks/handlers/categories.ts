@@ -4,6 +4,7 @@ import { categorySchema } from '@/features/categories/schema'
 import type { Category } from '@/features/categories/types'
 import { db, nextId, nowIso, syncDerivedCounts } from '@/mocks/db'
 import { API_BASE } from '@/mocks/handlers/base'
+import { handleBulk } from '@/mocks/bulk'
 import { runQuery } from '@/mocks/query'
 import {
   errorResponse,
@@ -29,7 +30,48 @@ function findDuplicateName(name: string, exceptId?: string): Category | undefine
   )
 }
 
+/**
+ * Deletes one category, or explains why not.
+ *
+ * The same referential-integrity rule the single-record endpoint applies — stated once, used
+ * by both, so a bulk delete cannot become a way around it.
+ */
+function dependentTicketCount(categoryId: string): number {
+  return db.tickets.filter((ticket) => ticket.categoryId === categoryId).length
+}
+
+function deleteOneCategory(id: string): string | null {
+  const category = findCategory(id)
+  if (!category) return 'No longer exists.'
+
+  const ticketCount = dependentTicketCount(id)
+  if (ticketCount > 0) {
+    return `Still has ${ticketCount} ticket${ticketCount === 1 ? '' : 's'}.`
+  }
+
+  db.categories = db.categories.filter((candidate) => candidate.id !== id)
+  return null
+}
+
 export const categoryHandlers: RequestHandler[] = [
+  /**
+   * Bulk operations.
+   *
+   * Declared before `/:id` so `bulk` is not captured as an id — the same ordering trap the
+   * tickets export endpoint has.
+   */
+  http.post(`${RESOURCE}/bulk`, async ({ request }) => {
+    const failure = await preflight(request)
+    if (failure) return failure
+    const auth = requireAuth(request)
+    if (!auth.ok) return auth.response
+
+    return handleBulk(request, auth.user, {
+      deleteOne: deleteOneCategory,
+      afterChange: syncDerivedCounts,
+    })
+  }),
+
   http.get(RESOURCE, async ({ request }) => {
     const failure = await preflight(request)
     if (failure) return failure
@@ -135,7 +177,7 @@ export const categoryHandlers: RequestHandler[] = [
      * out from under its tickets would orphan them; the client turns this into an actionable
      * message.
      */
-    const ticketCount = db.tickets.filter((ticket) => ticket.categoryId === id).length
+    const ticketCount = dependentTicketCount(id)
     if (ticketCount > 0) {
       return errorResponse(
         409,

@@ -6,6 +6,7 @@ import type { Category, CategoryPayload } from '@/features/categories/types'
 import { ApiError, isAbortError } from '@/shared/api'
 import { useCollectionState } from '@/shared/composables/useCollectionState'
 import { createListQuery, type ListQuery } from '@/shared/types/api'
+import type { BulkRequest, BulkResult } from '@/shared/types/bulk'
 import type { EntityRef } from '@/shared/types/entity'
 
 /**
@@ -100,6 +101,25 @@ export const useCategoriesStore = defineStore('categories', () => {
     }
   }
 
+  /**
+   * Applies one action to many records in a single request.
+   *
+   * Rethrows like the other mutations, but note what is *not* an error here: a response where
+   * some records were refused resolves normally, carrying the per-record detail. Treating a
+   * partial success as a throw would discard the list of what did work — which is most of the
+   * value of doing it in bulk.
+   *
+   * The caller re-queries afterwards rather than patching state: several rows changed, some
+   * may no longer match the current filter, and the totals moved.
+   */
+  async function bulk(payload: BulkRequest): Promise<BulkResult> {
+    try {
+      return await categoriesApi.bulk(payload)
+    } catch (caught) {
+      throw asApiError(caught)
+    }
+  }
+
   async function remove(id: string): Promise<void> {
     try {
       await categoriesApi.remove(id)
@@ -118,6 +138,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     create,
     update,
     remove,
+    bulk,
   }
 })
 

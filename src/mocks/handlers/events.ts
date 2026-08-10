@@ -1,9 +1,10 @@
 import { http, HttpResponse, type RequestHandler } from 'msw'
 
 import { eventSchema } from '@/features/events/schema'
-import type { Event } from '@/features/events/types'
+import { EVENT_STATUSES, type Event, type EventStatus } from '@/features/events/types'
 import { db, nextId, nowIso, syncDerivedCounts } from '@/mocks/db'
 import { API_BASE } from '@/mocks/handlers/base'
+import { handleBulk } from '@/mocks/bulk'
 import { runQuery } from '@/mocks/query'
 import {
   errorResponse,
@@ -21,7 +22,49 @@ function findEvent(id: string): Event | undefined {
   return db.events.find((event) => event.id === id)
 }
 
+/** One delete, with the same ticket guard the single-record endpoint enforces. */
+function dependentTicketCount(eventId: string): number {
+  return db.tickets.filter((ticket) => ticket.eventId === eventId).length
+}
+
+function deleteOneEvent(id: string): string | null {
+  const event = findEvent(id)
+  if (!event) return 'No longer exists.'
+
+  const ticketCount = dependentTicketCount(id)
+  if (ticketCount > 0) {
+    return `Still has ${ticketCount} ticket${ticketCount === 1 ? '' : 's'}.`
+  }
+
+  db.events = db.events.filter((candidate) => candidate.id !== id)
+  return null
+}
+
+function setOneEventStatus(id: string, status: string): string | null {
+  const event = findEvent(id)
+  if (!event) return 'No longer exists.'
+
+  event.status = status as EventStatus
+  touch(event, nowIso())
+  return null
+}
+
 export const eventHandlers: RequestHandler[] = [
+  // Before `/:id`, so `bulk` is not captured as an id.
+  http.post(`${RESOURCE}/bulk`, async ({ request }) => {
+    const failure = await preflight(request)
+    if (failure) return failure
+    const auth = requireAuth(request)
+    if (!auth.ok) return auth.response
+
+    return handleBulk(request, auth.user, {
+      deleteOne: deleteOneEvent,
+      setStatus: setOneEventStatus,
+      isValidStatus: (status) => EVENT_STATUSES.includes(status as EventStatus),
+      afterChange: syncDerivedCounts,
+    })
+  }),
+
   http.get(RESOURCE, async ({ request }) => {
     const failure = await preflight(request)
     if (failure) return failure
@@ -144,7 +187,7 @@ export const eventHandlers: RequestHandler[] = [
      * An event with tickets cannot be deleted. Cascading would silently destroy inventory,
      * so the server refuses and says exactly what stands in the way.
      */
-    const ticketCount = db.tickets.filter((ticket) => ticket.eventId === id).length
+    const ticketCount = dependentTicketCount(id)
     if (ticketCount > 0) {
       return errorResponse(
         409,

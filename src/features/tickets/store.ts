@@ -6,6 +6,7 @@ import type { TicketPayload, TicketWithRelations } from '@/features/tickets/type
 import { ApiError, isAbortError } from '@/shared/api'
 import { useCollectionState } from '@/shared/composables/useCollectionState'
 import type { ListQuery } from '@/shared/types/api'
+import type { BulkRequest, BulkResult } from '@/shared/types/bulk'
 import { downloadBlob, timestampedFilename } from '@/shared/utils/download'
 
 /** The single source of truth for ticket data. */
@@ -79,6 +80,15 @@ export const useTicketsStore = defineStore('tickets', () => {
     }
   }
 
+  /** Applies one action to many records. See the categories store for the contract. */
+  async function bulk(payload: BulkRequest): Promise<BulkResult> {
+    try {
+      return await ticketsApi.bulk(payload)
+    } catch (caught) {
+      throw asApiError(caught)
+    }
+  }
+
   async function remove(id: string): Promise<void> {
     try {
       await ticketsApi.remove(id)
@@ -97,6 +107,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     create,
     update,
     remove,
+    bulk,
   }
 })
 

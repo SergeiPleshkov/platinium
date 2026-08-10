@@ -38,6 +38,23 @@ async function waitForLoadedRows(): Promise<void> {
   })
 }
 
+/**
+ * Reads one column's cells by its *header*, not by position.
+ *
+ * Indexing `row.children[3]` broke the moment a selection checkbox column was added in front
+ * of it — and it would have broken silently if the neighbouring column happened to contain
+ * something that also matched. Resolving through the header keeps these tests about the data.
+ */
+function columnCells(header: string): string[] {
+  const headers = [...document.querySelectorAll('thead th')]
+  const index = headers.findIndex((cell) => cell.textContent?.trim().startsWith(header))
+  expect(index).toBeGreaterThanOrEqual(0)
+
+  return [...document.querySelectorAll('tbody tr')].map(
+    (row) => row.children[index]?.textContent?.trim() ?? '',
+  )
+}
+
 beforeEach(() => {
   localStorage.clear()
 })
@@ -60,9 +77,7 @@ describe('tickets', () => {
     await waitForLoadedRows()
 
     // Every price cell carries a currency symbol; none is a bare integer of cents.
-    const cells = [...document.querySelectorAll('tbody tr')].map(
-      (row) => row.children[3]?.textContent?.trim() ?? '',
-    )
+    const cells = columnCells('Price')
     expect(cells.length).toBeGreaterThan(0)
     expect(cells.every((text) => /[€$£]/.test(text))).toBe(true)
   })
@@ -87,9 +102,7 @@ describe('tickets', () => {
     await waitForLoadedRows()
 
     // Every visible row belongs to the filtered event.
-    const eventCells = [...document.querySelectorAll('tbody tr')].map(
-      (row) => row.children[1]?.textContent?.trim() ?? '',
-    )
+    const eventCells = columnCells('Event')
     expect(eventCells.every((text) => text === event.name)).toBe(true)
   })
 

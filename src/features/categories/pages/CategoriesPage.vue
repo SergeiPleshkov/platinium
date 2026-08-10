@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import CategoryFormDialog from '@/features/categories/components/CategoryFormDialog.vue'
 import { useCategoriesStore } from '@/features/categories/store'
 import type { Category } from '@/features/categories/types'
 import { usePermissions } from '@/features/auth'
 import { ApiError } from '@/shared/api'
-import { useListView, useNotifications } from '@/shared/composables'
+import { useBulkAction, useListView, useNotifications, useRowSelection } from '@/shared/composables'
 import {
   BaseBadge,
+  BaseBulkBar,
   BaseButton,
   BaseConfirmDialog,
   BaseDataTable,
@@ -57,6 +58,36 @@ const columns: TableColumn[] = [
     width: '7rem',
   },
 ]
+
+/* ---- bulk actions ---- */
+
+const selection = useRowSelection()
+
+// A selection only means anything against the query that produced it.
+watch(
+  () => table.query.value,
+  () => selection.clear(),
+)
+
+const bulk = useBulkAction({
+  run: (payload) => store.bulk(payload),
+  refresh: () => table.refresh(),
+  clearSelection: selection.clear,
+  labelFor: (id) => store.items.find((category) => category.id === id)?.name ?? id,
+  entityLabel: 'categories',
+})
+
+const bulkDeleteOpen = ref(false)
+
+const bulkDeleteMessage = computed(
+  () =>
+    `${selection.count.value} category${selection.count.value === 1 ? '' : 's'} will be permanently deleted. This cannot be undone.`,
+)
+
+async function confirmBulkDelete(): Promise<void> {
+  bulkDeleteOpen.value = false
+  await bulk.execute({ action: 'delete', ids: selection.selectedIds.value }, 'deleted')
+}
 
 /* ---- create / edit ---- */
 
@@ -149,6 +180,48 @@ async function confirmDelete(): Promise<void> {
       <TableViewModeSwitch />
     </div>
 
+    <BaseBulkBar
+      :count="selection.count.value"
+      :can-update="permissions.canUpdate.value"
+      :can-delete="permissions.canDelete.value"
+      :busy="bulk.busy.value"
+      entity-label="categories"
+      @delete-selected="bulkDeleteOpen = true"
+      @clear="selection.clear"
+    />
+
+    <div
+      v-if="bulk.hasFailures.value"
+      class="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/40"
+      role="alert"
+      aria-label="Bulk action failures"
+    >
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-sm font-medium text-content">
+            {{ bulk.failures.value.length }} could not be changed
+          </p>
+          <ul class="mt-2 space-y-1">
+            <li
+              v-for="failure in bulk.failures.value"
+              :key="failure.id"
+              class="text-sm text-content-muted"
+            >
+              <span class="font-medium text-content">{{ failure.label }}</span>
+              — {{ failure.reason }}
+            </li>
+          </ul>
+        </div>
+        <BaseButton
+          variant="ghost"
+          size="sm"
+          icon="pi pi-times"
+          aria-label="Dismiss failure report"
+          @click="bulk.dismissFailures"
+        />
+      </div>
+    </div>
+
     <BaseDataTable
       :rows="store.items"
       :columns="columns"
@@ -162,6 +235,8 @@ async function confirmDelete(): Promise<void> {
       :sort-order="table.sortOrder.value"
       :mode="viewMode.mode.value"
       :virtual-rows="store.buffer"
+      :selectable="permissions.canUpdate.value || permissions.canDelete.value"
+      :selected-ids="selection.selectedIds.value"
       label="Categories"
       empty-title="No categories yet"
       empty-description="Ticket tiers group tickets across events. Create the first one."
@@ -171,6 +246,8 @@ async function confirmDelete(): Promise<void> {
       @retry="table.refresh"
       @clear-filters="table.clearFilters"
       @range-change="onRangeChange"
+      @toggle-row="selection.toggle"
+      @toggle-all="selection.setMany"
     >
       <template #cell-description="{ row }">
         <span class="text-content-muted">{{ row.description || '—' }}</span>
@@ -219,6 +296,16 @@ async function confirmDelete(): Promise<void> {
     </BaseDataTable>
 
     <CategoryFormDialog v-model:open="formOpen" :category="editing" @saved="onSaved" />
+
+    <BaseConfirmDialog
+      :open="bulkDeleteOpen"
+      title="Delete categories"
+      :message="bulkDeleteMessage"
+      confirm-label="Delete categories"
+      :busy="bulk.busy.value"
+      @update:open="bulkDeleteOpen = false"
+      @confirm="confirmBulkDelete"
+    />
 
     <BaseConfirmDialog
       :open="deleting !== null"

@@ -1,10 +1,16 @@
 import { http, HttpResponse, type RequestHandler } from 'msw'
 
 import { ticketSchema } from '@/features/tickets/schema'
-import type { Ticket, TicketWithRelations } from '@/features/tickets/types'
+import {
+  TICKET_STATUSES,
+  type Ticket,
+  type TicketStatus,
+  type TicketWithRelations,
+} from '@/features/tickets/types'
 import { db, nextId, nowIso, syncDerivedCounts } from '@/mocks/db'
 import { API_BASE } from '@/mocks/handlers/base'
 import { toCsv } from '@/mocks/csv'
+import { handleBulk } from '@/mocks/bulk'
 import { applyQuery, runQuery } from '@/mocks/query'
 import type { EntityRef } from '@/shared/types/entity'
 import {
@@ -91,7 +97,39 @@ const ticketQueryConfig = {
   defaultSort: 'createdAt',
 }
 
+/** Tickets have no dependants, so a delete only fails when the record has already gone. */
+function deleteOneTicket(id: string): string | null {
+  if (!findTicket(id)) return 'No longer exists.'
+
+  db.tickets = db.tickets.filter((candidate) => candidate.id !== id)
+  return null
+}
+
+function setOneTicketStatus(id: string, status: string): string | null {
+  const ticket = findTicket(id)
+  if (!ticket) return 'No longer exists.'
+
+  ticket.status = status as TicketStatus
+  touch(ticket, nowIso())
+  return null
+}
+
 export const ticketHandlers: RequestHandler[] = [
+  // Before `/:id`, alongside `export`, so neither is captured as an id.
+  http.post(`${RESOURCE}/bulk`, async ({ request }) => {
+    const failure = await preflight(request)
+    if (failure) return failure
+    const auth = requireAuth(request)
+    if (!auth.ok) return auth.response
+
+    return handleBulk(request, auth.user, {
+      deleteOne: deleteOneTicket,
+      setStatus: setOneTicketStatus,
+      isValidStatus: (status) => TICKET_STATUSES.includes(status as TicketStatus),
+      afterChange: syncDerivedCounts,
+    })
+  }),
+
   /**
    * CSV export of the *current query*, not the current page.
    *

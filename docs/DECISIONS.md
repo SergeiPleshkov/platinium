@@ -521,3 +521,39 @@ viewers because downloading changes nothing, which is also why `isReadOnly` igno
 **Absence is explained, not merely rendered.** A viewer gets a "Read only" badge beside the
 page title, and the Actions *column* disappears rather than becoming a header over an empty
 column. A page that silently has fewer buttons than a colleague's reads as broken.
+
+## 2026-08-10 — Bulk operations report per record, and are not transactional
+
+**Chose:** one request carrying many ids, attempting each independently, returning
+`{ succeeded, failed[] }` with a reason per refusal. 207 when some were refused, 200 when
+none were — both 2xx, because the operation *ran*.
+**Over:** a transaction, and over a loop of individual requests from the client.
+
+**Why not a transaction.** It is the defensible choice for a real database, and it is the
+wrong one here: it turns "three of these still have tickets" into "nothing happened", and the
+admin then has to find the three by hand. Ten deletes where three are blocked is not a
+success and not a failure — it is seven successes and three explained refusals, and any
+single status code throws away the only information the user needs.
+
+**Why not N requests.** The client would have to reassemble the per-record picture itself,
+and would lose it entirely the moment one of them threw.
+
+**Why 207 rather than 4xx on partial failure.** A 4xx sends the whole thing down an error
+path that cannot report the seven that worked. Both codes are 2xx and the client reads the
+body either way; the distinct code is for anything watching the wire.
+
+**The client rule, stated once in `useBulkAction`.** The naive handling gets this wrong in
+both directions — a try/catch makes a partial success look total and hides the failures;
+treating it as an error hides the successes. Three outcomes, three responses: all succeeded →
+toast and clear the selection; all failed → error, and **keep** the selection so the user can
+amend and retry without re-ticking; some failed → warning plus the per-record reasons
+rendered *on the page*, because a list someone has to read does not belong in a toast that
+auto-dismisses.
+
+**Bulk is not a back door.** `action: 'delete'` requires the `delete` permission, so an editor
+is refused exactly as they are on `DELETE /:id`. There is a test for precisely that.
+
+**Selection holds ids, not records**, and is dropped when the query changes. Ticking three
+rows and then filtering to a different set would leave those ids selected but invisible, and
+the next "delete selected" would hit records nobody can see. "Select all" means the rows on
+screen, never the whole result set — the user cannot consent to what they cannot see.

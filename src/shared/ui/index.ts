@@ -9,6 +9,7 @@
  * use rather than guessed at up front.
  */
 export { default as BaseBadge } from '@/shared/ui/BaseBadge/BaseBadge.vue'
+export { default as BaseBulkBar } from '@/shared/ui/BaseBulkBar/BaseBulkBar.vue'
 export { default as BaseButton } from '@/shared/ui/BaseButton/BaseButton.vue'
 export { default as BaseDatePicker } from '@/shared/ui/BaseDatePicker/BaseDatePicker.vue'
 export { default as BaseConfirmDialog } from '@/shared/ui/BaseConfirmDialog/BaseConfirmDialog.vue'

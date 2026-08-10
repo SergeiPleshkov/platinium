@@ -28,6 +28,13 @@ export {
   useRouteLoading,
   type UseRouteLoading,
 } from '@/shared/composables/useRouteLoading'
+export {
+  useBulkAction,
+  type FailureDetail,
+  type UseBulkAction,
+  type UseBulkActionOptions,
+} from '@/shared/composables/useBulkAction'
+export { useRowSelection, type UseRowSelection } from '@/shared/composables/useRowSelection'
 export { resetSidebar, useSidebar, type UseSidebar } from '@/shared/composables/useSidebar'
 export {
   resetTableViewMode,

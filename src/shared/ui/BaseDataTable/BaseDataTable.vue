@@ -52,6 +52,12 @@ interface Props {
   virtualRows?: ReadonlyArray<BufferRow<TRow>> | undefined
   /** Height of the virtual viewport. Fixed by necessity: the scroller needs a known box. */
   scrollHeight?: string | undefined
+  /**
+   * Ids the user has ticked. Presence of this prop is what turns the checkbox column on, so a
+   * table with no bulk actions renders exactly as it did before.
+   */
+  selectedIds?: readonly string[] | undefined
+  selectable?: boolean | undefined
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -64,6 +70,8 @@ const props = withDefaults(defineProps<Props>(), {
   mode: 'paginated',
   virtualRows: () => [],
   scrollHeight: '32rem',
+  selectedIds: () => [],
+  selectable: false,
 })
 
 const emit = defineEmits<{
@@ -74,6 +82,9 @@ const emit = defineEmits<{
   clearFilters: []
   /** Virtual mode: the visible window moved. Indices are zero-based, `last` inclusive. */
   rangeChange: [first: number, last: number]
+  toggleRow: [id: string]
+  /** The header checkbox. `ids` is every row currently rendered, not the whole result set. */
+  toggleAll: [ids: string[], selected: boolean]
 }>()
 
 defineSlots<{
@@ -200,6 +211,36 @@ function pending(row: BufferRow<TRow>): boolean {
 function asRow(row: unknown): TRow {
   return row as TRow
 }
+
+/* ---- selection ---- */
+
+const selectedSet = computed(() => new Set(props.selectedIds))
+
+function isRowSelected(id: string): boolean {
+  return selectedSet.value.has(id)
+}
+
+/**
+ * Ids the header checkbox acts on: the rows on screen, not the whole result set.
+ *
+ * "Select all" meaning *all 250* would be a different feature and a more dangerous one — the
+ * user cannot see what they are agreeing to. This selects what is visible, and the count in
+ * the action bar tells them exactly how many that is.
+ */
+const selectableIds = computed(() =>
+  useVirtualGrid.value
+    ? props.virtualRows.filter((row) => !isPendingRow(row)).map((row) => row.id)
+    : props.rows.map((row) => row.id),
+)
+
+const allSelected = computed(
+  () =>
+    selectableIds.value.length > 0 && selectableIds.value.every((id) => selectedSet.value.has(id)),
+)
+
+const someSelected = computed(
+  () => !allSelected.value && selectableIds.value.some((id) => selectedSet.value.has(id)),
+)
 </script>
 
 <template>
@@ -309,6 +350,40 @@ function asRow(row: unknown): TRow {
       removable-sort
       @sort="onSort"
     >
+      <!--
+        A plain checkbox, not PrimeVue's selection column. Ours emits ids; theirs emits row
+        objects and owns the selection state, which would put a second copy of it beside the
+        one `useRowSelection` already holds.
+      -->
+      <Column v-if="selectable" :style="{ width: '3rem' }" :body-style="virtualCellStyle">
+        <template #header>
+          <input
+            type="checkbox"
+            class="size-4 cursor-pointer accent-brand-600"
+            :checked="allSelected"
+            :indeterminate="someSelected"
+            :aria-label="
+              allSelected
+                ? `Deselect all ${label.toLowerCase()} on this page`
+                : `Select all ${label.toLowerCase()} on this page`
+            "
+            @change="emit('toggleAll', selectableIds, !allSelected)"
+          />
+        </template>
+        <template #body="{ data }">
+          <div class="flex h-full items-center">
+            <input
+              v-if="!pending(data as BufferRow<TRow>)"
+              type="checkbox"
+              class="size-4 cursor-pointer accent-brand-600"
+              :checked="isRowSelected(asRow(data).id)"
+              :aria-label="`Select row ${asRow(data).id}`"
+              @change="emit('toggleRow', asRow(data).id)"
+            />
+          </div>
+        </template>
+      </Column>
+
       <Column
         v-for="column in columns"
         :key="column.field"
@@ -370,6 +445,34 @@ function asRow(row: unknown): TRow {
       @sort="onSort"
       @page="onPage"
     >
+      <Column v-if="selectable" :style="{ width: '3rem' }">
+        <template #header>
+          <input
+            type="checkbox"
+            class="size-4 cursor-pointer accent-brand-600"
+            :checked="allSelected"
+            :indeterminate="someSelected"
+            :aria-label="
+              allSelected
+                ? `Deselect all ${label.toLowerCase()} on this page`
+                : `Select all ${label.toLowerCase()} on this page`
+            "
+            @change="emit('toggleAll', selectableIds, !allSelected)"
+          />
+        </template>
+        <template #body="{ data }">
+          <Skeleton v-if="initialising" width="1rem" height="1rem" />
+          <input
+            v-else
+            type="checkbox"
+            class="size-4 cursor-pointer accent-brand-600"
+            :checked="isRowSelected((data as TRow).id)"
+            :aria-label="`Select row ${(data as TRow).id}`"
+            @change="emit('toggleRow', (data as TRow).id)"
+          />
+        </template>
+      </Column>
+
       <Column
         v-for="column in columns"
         :key="column.field"

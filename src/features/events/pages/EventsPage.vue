@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import EventFormDialog from '@/features/events/components/EventFormDialog.vue'
 import { useEventsStore } from '@/features/events/store'
@@ -11,10 +11,11 @@ import {
 } from '@/features/events/types'
 import { usePermissions } from '@/features/auth'
 import { ApiError } from '@/shared/api'
-import { useListView, useNotifications } from '@/shared/composables'
+import { useBulkAction, useListView, useNotifications, useRowSelection } from '@/shared/composables'
 import { formatDateRange } from '@/shared/utils/date'
 import {
   BaseBadge,
+  BaseBulkBar,
   BaseButton,
   BaseConfirmDialog,
   BaseDataTable,
@@ -75,6 +76,40 @@ const countryFilter = computed({
 })
 
 const countryOptions = computed(() => store.countries.map((value) => ({ value, label: value })))
+
+/* ---- bulk actions ---- */
+
+const selection = useRowSelection()
+
+// A selection only means anything against the query that produced it.
+watch(
+  () => table.query.value,
+  () => selection.clear(),
+)
+
+const bulk = useBulkAction({
+  run: (payload) => store.bulk(payload),
+  refresh: () => table.refresh(),
+  clearSelection: selection.clear,
+  labelFor: (id) => store.items.find((event) => event.id === id)?.name ?? id,
+  entityLabel: 'events',
+})
+
+const bulkDeleteOpen = ref(false)
+
+const bulkDeleteMessage = computed(
+  () =>
+    `${selection.count.value} event${selection.count.value === 1 ? '' : 's'} will be permanently deleted. This cannot be undone.`,
+)
+
+async function confirmBulkDelete(): Promise<void> {
+  bulkDeleteOpen.value = false
+  await bulk.execute({ action: 'delete', ids: selection.selectedIds.value }, 'deleted')
+}
+
+async function applyBulkStatus(status: string): Promise<void> {
+  await bulk.execute({ action: 'status', ids: selection.selectedIds.value, status }, 'updated')
+}
 
 /* ---- create / edit ---- */
 
@@ -182,6 +217,50 @@ async function confirmDelete(): Promise<void> {
       <TableViewModeSwitch />
     </div>
 
+    <BaseBulkBar
+      :count="selection.count.value"
+      :status-options="EVENT_STATUS_OPTIONS"
+      :can-update="permissions.canUpdate.value"
+      :can-delete="permissions.canDelete.value"
+      :busy="bulk.busy.value"
+      entity-label="events"
+      @apply-status="applyBulkStatus"
+      @delete-selected="bulkDeleteOpen = true"
+      @clear="selection.clear"
+    />
+
+    <div
+      v-if="bulk.hasFailures.value"
+      class="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/40"
+      role="alert"
+      aria-label="Bulk action failures"
+    >
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-sm font-medium text-content">
+            {{ bulk.failures.value.length }} could not be changed
+          </p>
+          <ul class="mt-2 space-y-1">
+            <li
+              v-for="failure in bulk.failures.value"
+              :key="failure.id"
+              class="text-sm text-content-muted"
+            >
+              <span class="font-medium text-content">{{ failure.label }}</span>
+              — {{ failure.reason }}
+            </li>
+          </ul>
+        </div>
+        <BaseButton
+          variant="ghost"
+          size="sm"
+          icon="pi pi-times"
+          aria-label="Dismiss failure report"
+          @click="bulk.dismissFailures"
+        />
+      </div>
+    </div>
+
     <BaseDataTable
       :rows="store.items"
       :columns="columns"
@@ -195,6 +274,8 @@ async function confirmDelete(): Promise<void> {
       :sort-order="table.sortOrder.value"
       :mode="viewMode.mode.value"
       :virtual-rows="store.buffer"
+      :selectable="permissions.canUpdate.value || permissions.canDelete.value"
+      :selected-ids="selection.selectedIds.value"
       label="Events"
       empty-title="No events yet"
       empty-description="Create an event before adding tickets to it."
@@ -204,6 +285,8 @@ async function confirmDelete(): Promise<void> {
       @retry="table.refresh"
       @clear-filters="table.clearFilters"
       @range-change="onRangeChange"
+      @toggle-row="selection.toggle"
+      @toggle-all="selection.setMany"
     >
       <template #cell-startDate="{ row }">
         <span class="whitespace-nowrap">{{ formatDateRange(row.startDate, row.endDate) }}</span>
@@ -259,6 +342,16 @@ async function confirmDelete(): Promise<void> {
     </BaseDataTable>
 
     <EventFormDialog v-model:open="formOpen" :event="editing" @saved="onSaved" />
+
+    <BaseConfirmDialog
+      :open="bulkDeleteOpen"
+      title="Delete events"
+      :message="bulkDeleteMessage"
+      confirm-label="Delete events"
+      :busy="bulk.busy.value"
+      @update:open="bulkDeleteOpen = false"
+      @confirm="confirmBulkDelete"
+    />
 
     <BaseConfirmDialog
       :open="deleting !== null"

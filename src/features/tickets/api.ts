@@ -2,6 +2,7 @@ import type { TicketPayload, TicketWithRelations } from '@/features/tickets/type
 import { http, serialiseListQuery } from '@/shared/api'
 import { withSignal, type Resource } from '@/shared/api/types'
 import type { ListQuery, ListResponse } from '@/shared/types/api'
+import type { BulkRequest, BulkResult } from '@/shared/types/bulk'
 
 const BASE = '/tickets'
 
@@ -14,8 +15,18 @@ const BASE = '/tickets'
  * application is meant to represent.
  */
 export const ticketsApi: Resource<TicketWithRelations, TicketPayload> & {
+  bulk(payload: BulkRequest, signal?: AbortSignal): Promise<BulkResult>
   exportCsv(query: ListQuery, signal?: AbortSignal): Promise<Blob>
 } = {
+  /**
+   * Applies one action to many records.
+   *
+   * A single request, not N: the server reports per record, so the client learns which
+   * succeeded and why the rest did not — information a loop of individual calls would have to
+   * reassemble, and would lose the moment one of them threw.
+   */
+  bulk: (payload: BulkRequest, signal?: AbortSignal) =>
+    http.post<BulkResult>(`${BASE}/bulk`, payload, withSignal(signal)),
   /**
    * Downloads every row matching the *current query*, not the current page.
    *
