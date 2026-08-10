@@ -3,6 +3,7 @@ import { http, serialiseListQuery } from '@/shared/api'
 import { withSignal, type Resource } from '@/shared/api/types'
 import type { ListQuery, ListResponse } from '@/shared/types/api'
 import type { BulkRequest, BulkResult } from '@/shared/types/bulk'
+import type { ImportRequest, ImportResult } from '@/shared/types/import'
 
 const BASE = '/tickets'
 
@@ -16,6 +17,7 @@ const BASE = '/tickets'
  */
 export const ticketsApi: Resource<TicketWithRelations, TicketPayload> & {
   bulk(payload: BulkRequest, signal?: AbortSignal): Promise<BulkResult>
+  import(payload: ImportRequest, signal?: AbortSignal): Promise<ImportResult>
   exportCsv(query: ListQuery, signal?: AbortSignal): Promise<Blob>
 } = {
   /**
@@ -27,6 +29,15 @@ export const ticketsApi: Resource<TicketWithRelations, TicketPayload> & {
    */
   bulk: (payload: BulkRequest, signal?: AbortSignal) =>
     http.post<BulkResult>(`${BASE}/bulk`, payload, withSignal(signal)),
+
+  /**
+   * Validates and optionally writes rows parsed from a file.
+   *
+   * `dryRun` drives the preview. Same endpoint, same validation, same report — the preview is
+   * a rehearsal of the commit rather than a second opinion about it.
+   */
+  import: (payload: ImportRequest, signal?: AbortSignal) =>
+    http.post<ImportResult>(`${BASE}/import`, payload, withSignal(signal)),
   /**
    * Downloads every row matching the *current query*, not the current page.
    *

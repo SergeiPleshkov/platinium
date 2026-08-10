@@ -11,6 +11,7 @@ import { db, nextId, nowIso, syncDerivedCounts } from '@/mocks/db'
 import { API_BASE } from '@/mocks/handlers/base'
 import { toCsv } from '@/mocks/csv'
 import { handleBulk } from '@/mocks/bulk'
+import { importTickets, isImportRequest } from '@/mocks/handlers/ticketsImport'
 import { applyQuery, runQuery } from '@/mocks/query'
 import type { EntityRef } from '@/shared/types/entity'
 import {
@@ -115,6 +116,39 @@ function setOneTicketStatus(id: string, status: string): string | null {
 }
 
 export const ticketHandlers: RequestHandler[] = [
+  /**
+   * Import, with a dry-run mode that the preview uses.
+   *
+   * The preview and the commit run the *same* validation, differing only in whether anything
+   * is written. Validating separately in the browser would be a second implementation of one
+   * rule, and could not answer the interesting questions — whether an event of that name
+   * exists — without the client downloading every event.
+   */
+  http.post(`${RESOURCE}/import`, async ({ request }) => {
+    const failure = await preflight(request)
+    if (failure) return failure
+    const auth = requireAuth(request)
+    if (!auth.ok) return auth.response
+    const forbidden = requirePermission(auth.user, 'import')
+    if (forbidden) return forbidden
+
+    let raw: unknown
+    try {
+      raw = await request.json()
+    } catch {
+      return errorResponse(400, 'The request body was not valid JSON.')
+    }
+
+    if (!isImportRequest(raw)) {
+      return errorResponse(400, 'An import needs a list of rows and a dryRun flag.')
+    }
+    if (raw.rows.length === 0) {
+      return errorResponse(422, 'The file has no rows to import.')
+    }
+
+    return HttpResponse.json(importTickets(raw))
+  }),
+
   // Before `/:id`, alongside `export`, so neither is captured as an id.
   http.post(`${RESOURCE}/bulk`, async ({ request }) => {
     const failure = await preflight(request)

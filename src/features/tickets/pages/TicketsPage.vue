@@ -4,6 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useCategoriesStore } from '@/features/categories'
 import { useEventsStore } from '@/features/events'
 import TicketFormDialog from '@/features/tickets/components/TicketFormDialog.vue'
+import TicketImportDialog from '@/features/tickets/components/TicketImportDialog.vue'
 import { useTicketsStore } from '@/features/tickets/store'
 import {
   TICKET_STATUS_LABELS,
@@ -174,6 +175,15 @@ async function onSaved(): Promise<void> {
   await table.refresh()
 }
 
+/* ---- import ---- */
+
+const importOpen = ref(false)
+
+async function onImported(): Promise<void> {
+  // Several rows arrived at once and may belong anywhere under the current sort.
+  await table.refresh()
+}
+
 /* ---- export ---- */
 
 const exporting = ref(false)
@@ -242,6 +252,13 @@ async function confirmDelete(): Promise<void> {
         <p class="mt-1 text-sm text-content-muted">Pricing, inventory and availability.</p>
       </div>
       <div class="flex gap-2">
+        <BaseButton
+          v-if="permissions.canImport.value"
+          variant="secondary"
+          icon="pi pi-upload"
+          label="Import CSV"
+          @click="importOpen = true"
+        />
         <BaseButton
           v-if="permissions.canExport.value"
           variant="secondary"
@@ -450,6 +467,8 @@ async function confirmDelete(): Promise<void> {
     </BaseDataTable>
 
     <TicketFormDialog v-model:open="formOpen" :ticket="editing" @saved="onSaved" />
+
+    <TicketImportDialog v-model:open="importOpen" @imported="onImported" />
 
     <BaseConfirmDialog
       :open="bulkDeleteOpen"

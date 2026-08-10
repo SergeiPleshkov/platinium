@@ -589,3 +589,37 @@ already at the new value. The previous record is captured whole and written back
 **Success is silent.** No toast when it works — the row said so the moment it was clicked, and
 confirming it afterwards is noise. Only the failure speaks, and it uses the *server's* message
 in preference to the page's fallback.
+
+## 2026-08-10 — The import preview is a dry run of the commit, not a second validator
+
+**Chose:** one endpoint, one validation path, a `dryRun` flag. The preview *is* the import,
+minus the writing.
+**Over:** validating in the browser to build the preview and again on the server to commit.
+
+Two implementations of one rule drift, and the drift shows up as a preview that promises
+something the commit then refuses. Worse, the client cannot check the interesting rules at
+all: "is there an event called this?" is unanswerable without downloading every event, which
+is the pattern this application argues against everywhere else. So the browser's only job is
+turning text into rows; every judgement about those rows belongs to the server.
+`import.spec.ts` asserts the two reports are identical rather than assuming it.
+
+**Rows are reported by line number, header included.** Not by index and not by id — the user
+is about to open the file in a spreadsheet, and the number they need is the one in the gutter.
+For the same reason, columns are named as the *file* spells them: an error saying `status` is
+useless next to a heading that says `Status`, and `priceMinor` appears nowhere in the file at
+all.
+
+**Valid rows import even when others fail**, matching the bulk endpoint. Rejecting 900 good
+rows over 3 bad ones makes the feature useless on exactly the files that need it.
+
+**A hand-written parser, not a dependency.** The requirement is narrow and the correctness
+conditions enumerable: quoted fields, delimiters and newlines inside quotes, doubled quotes,
+CRLF or LF, and a leading BOM. It is a character scan rather than a regex because a field may
+contain every character that would otherwise be a boundary. What earns it is the pairing with
+the exporter — `csv.spec.ts` round-trips writer through reader, so the BOM and CRLF the export
+deliberately writes cannot become an import that reports every row as broken.
+
+**Tolerant where tolerance costs nothing.** Column order, header case, currency case, a status
+written "On Sale" instead of "on_sale", and the `ID`/`Created` columns the export adds are all
+accepted. A round trip that failed because the file still had the column it was given would
+be a poor joke.

@@ -7,6 +7,7 @@ import { ApiError, isAbortError } from '@/shared/api'
 import { useCollectionState } from '@/shared/composables/useCollectionState'
 import type { ListQuery } from '@/shared/types/api'
 import type { BulkRequest, BulkResult } from '@/shared/types/bulk'
+import type { ImportRequest, ImportResult } from '@/shared/types/import'
 import { downloadBlob, timestampedFilename } from '@/shared/utils/download'
 
 /** The single source of truth for ticket data. */
@@ -115,6 +116,21 @@ export const useTicketsStore = defineStore('tickets', () => {
     }
   }
 
+  /**
+   * Validates rows from a file, and writes them unless this is a dry run.
+   *
+   * Never throws on *row* problems — those are the report, not an error. It throws only when
+   * the request itself failed, which the page distinguishes because the two need different
+   * words.
+   */
+  async function importRows(payload: ImportRequest): Promise<ImportResult> {
+    try {
+      return await ticketsApi.import(payload)
+    } catch (caught) {
+      throw asApiError(caught)
+    }
+  }
+
   /** Applies one action to many records. See the categories store for the contract. */
   async function bulk(payload: BulkRequest): Promise<BulkResult> {
     try {
@@ -139,6 +155,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     fetchList,
     fetchWindow,
     setStatus,
+    importRows,
     exportCsv,
     create,
     update,
