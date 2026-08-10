@@ -31,3 +31,19 @@ export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
   cancelled: 'Cancelled',
   completed: 'Completed',
 }
+
+/**
+ * Status → badge tone. Colour is a secondary signal only; the label always carries the
+ * meaning, so this table can change without anything becoming unreadable.
+ */
+export const EVENT_STATUS_TONES = {
+  draft: 'neutral',
+  published: 'success',
+  cancelled: 'danger',
+  completed: 'info',
+} as const satisfies Record<EventStatus, 'neutral' | 'success' | 'info' | 'warning' | 'danger'>
+
+export const EVENT_STATUS_OPTIONS = EVENT_STATUSES.map((status) => ({
+  value: status,
+  label: EVENT_STATUS_LABELS[status],
+}))

@@ -24,16 +24,27 @@ interface Props {
   required?: boolean | undefined
   /** Hides the label visually while keeping it for screen readers. */
   labelHidden?: boolean | undefined
+  /**
+   * Whether the control can be the target of `<label for>`.
+   *
+   * Native inputs can. Composite widgets — PrimeVue's Select, MultiSelect, DatePicker —
+   * render a `<div>` or `<span>` root, and a label pointing at a non-labellable element
+   * associates with *nothing*: the control looks labelled on screen and is anonymous to a
+   * screen reader. Those pass `false` and consume `labelId` via `aria-labelledby` instead.
+   */
+  labellable?: boolean | undefined
 }
 
 const props = withDefaults(defineProps<Props>(), {
   required: false,
   labelHidden: false,
+  labellable: true,
 })
 
 defineSlots<{
   default: (props: {
     inputId: string
+    labelId: string
     describedBy: string | undefined
     invalid: boolean
   }) => unknown
@@ -41,6 +52,7 @@ defineSlots<{
 
 const uid = useId()
 const inputId = computed(() => `field-${uid}`)
+const labelId = computed(() => `${inputId.value}-label`)
 const hintId = computed(() => `${inputId.value}-hint`)
 const errorId = computed(() => `${inputId.value}-error`)
 
@@ -57,7 +69,8 @@ const describedBy = computed(() => {
 <template>
   <div class="flex flex-col gap-1.5">
     <label
-      :for="inputId"
+      :id="labelId"
+      :for="labellable ? inputId : undefined"
       :class="['text-sm font-medium text-content', labelHidden ? 'sr-only' : '']"
     >
       {{ label }}
@@ -65,7 +78,7 @@ const describedBy = computed(() => {
       <span v-if="required" class="sr-only">(required)</span>
     </label>
 
-    <slot :input-id="inputId" :described-by="describedBy" :invalid="invalid" />
+    <slot :input-id="inputId" :label-id="labelId" :described-by="describedBy" :invalid="invalid" />
 
     <p v-if="!error && hint" :id="hintId" class="text-xs text-content-muted">
       {{ hint }}

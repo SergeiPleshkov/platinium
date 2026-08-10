@@ -83,7 +83,7 @@ API resource, store, list page, form dialog, tests (schema, store, form, integra
 
 **Exit:** full CRUD through the UI; create → edit → delete integration flow green.
 
-## Phase 6 — Events slice
+## Phase 6 — Events slice ✅ (done)
 
 Same nine layers, plus: date-range fields with cross-field validation (end after start),
 country and status filters, status badges, and a guard on deleting an event that still has

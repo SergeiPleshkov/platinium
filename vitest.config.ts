@@ -10,6 +10,12 @@ export default mergeConfig(
   defineConfig({
     test: {
       globals: true,
+      /*
+       * Dates are formatted with `Intl`, which uses the local zone. Without pinning this, a
+       * range spanning midnight formats differently in CI than on a developer's machine and
+       * the suite is quietly machine-dependent.
+       */
+      env: { TZ: 'UTC' },
       environment: 'jsdom',
       setupFiles: ['./tests/setup.ts'],
       // Component styles are not asserted on; skipping them keeps runs fast.

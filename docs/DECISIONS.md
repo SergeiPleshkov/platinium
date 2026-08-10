@@ -99,6 +99,29 @@ so the browser and Vitest use the same transport rather than XHR and Node's `htt
 **Revisit if:** bundle size becomes a real constraint — `ky` is a drop-in behind this same
 wrapper, which is the point of having the wrapper.
 
+## 2026-08-10 — `BaseFormField` distinguishes labellable from composite controls
+
+**Chose:** a `labellable` flag on `BaseFormField`. Native inputs get `<label for>`; composite
+widgets get `aria-labelledby` pointing at the label's id, and no `for` at all.
+**Because:** PrimeVue's Select, MultiSelect and DatePicker render a `<div>`/`<span>` root. A
+`<label for>` aimed at a non-labellable element associates with **nothing** — the field looks
+labelled on screen and is anonymous to a screen reader. Both the country select and both date
+pickers shipped that way and looked perfect; the integration test caught it because
+`getByLabelText` refuses to resolve a label pointing at a non-labellable element.
+**Worth noting:** this is the second accessibility defect found by querying the way a screen
+reader does rather than by looking at the page. Tests that select by `data-testid` would have
+passed on both.
+
+## 2026-08-10 — Test timezone is pinned to UTC
+
+**Chose:** `env: { TZ: 'UTC' }` in `vitest.config.ts`, plus comparing local date components in
+`formatDateRange` so the comparison matches what `Intl` renders.
+**Because:** `formatDateRange` compared UTC day boundaries while `Intl` formatted in the local
+zone, so an event ending at 22:00 UTC was "the same day" by the check and a different day on
+screen. The two can only agree if both use the same frame of reference. Pinning the runner's
+zone additionally stops the suite passing locally and failing in CI, which is the worse
+version of the same bug.
+
 ## 2026-08-10 — Our own zod adapter for vee-validate
 
 **Chose:** `src/shared/validation/zodSchema.ts`, ~40 lines implementing vee-validate's

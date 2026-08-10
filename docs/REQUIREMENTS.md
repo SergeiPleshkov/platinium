@@ -27,17 +27,17 @@ decision-making, overall software craftsmanship — not only "does it work".
       guards in `src/app/router/guards.ts`, covered by `tests/integration/auth-flow.spec.ts`
 
 ### Dashboard
-- [ ] Manage Events
-- [ ] Manage Categories
+- [x] Manage Events
+- [x] Manage Categories
 - [ ] Manage Tickets
-- [ ] Search
-- [ ] Filtering
-- [ ] Sorting
-- [ ] Pagination
+- [x] Search — debounced, server-side, URL-synced
+- [x] Filtering — status and country on events; all server-side
+- [x] Sorting — every sortable column, across the whole collection
+- [x] Pagination — server-side, page size configurable, clamped by the server
 
 ### CRUD — complete Create / Read / Update / Delete for all three entities
 - [ ] Ticket — Name, Price, Currency, Quantity, Status, Event, Category
-- [ ] Event — Name, Country, Venue, Start Date, End Date, Status
+- [x] Event — Name, Country, Venue, Start Date, End Date, Status
 - [x] Category — Name, Description
 
 ### Validation & error handling
@@ -70,8 +70,7 @@ decision-making, overall software craftsmanship — not only "does it work".
 ### Architecture — must demonstrate
 - [x] Scalable folder organization — `src/features/README.md`; layering enforced by
       `eslint.config.js` and proven by `tests/architecture/boundaries.spec.ts`
-- [ ] Reusable components — `shared/ui` adapters (Button, Input, FormField, Toaster); table
-      primitives follow in phase 4
+- [x] Reusable components — 12 `shared/ui` adapters, all PrimeVue-free at the call site
 - [x] Separation of concerns — components render, composables hold behaviour, stores hold
       state, `shared/api` owns transport; all four enforced by lint
 - [x] Reusable composables — `useAsyncAction`, `useNotifications`, `useBreakpoint`
