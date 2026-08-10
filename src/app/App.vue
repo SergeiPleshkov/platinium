@@ -33,17 +33,12 @@ const { isNavigating } = useRouteLoading()
       aria-busy="true"
     >
       <!--
-        The live region is here, on the element that has the text. `role="status"` already
-        implies `aria-live="polite"`, and the spinner inside is decorative so the wait is
-        announced once rather than by two nested regions.
+        Just the spinner. A card around it, with "Loading page…" written next to a shape that
+        already means exactly that, was saying the same thing three ways.
+        Not `decorative` here: with the visible label gone, the spinner's own live region and
+        hidden label are the only things left to announce the wait to a screen reader.
       -->
-      <div
-        role="status"
-        class="flex items-center gap-3 rounded-lg border border-border bg-surface-0 px-5 py-4 shadow-lg dark:bg-surface-900"
-      >
-        <BaseSpinner size="md" decorative />
-        <span class="text-sm font-medium text-content">Loading page…</span>
-      </div>
+      <BaseSpinner size="lg" label="Loading page" />
     </div>
   </Transition>
 

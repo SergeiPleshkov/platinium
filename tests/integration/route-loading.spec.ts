@@ -31,7 +31,7 @@ describe('lazy route navigation', () => {
   it('shows no overlay when the view is already available', async () => {
     await renderWithApp(App, { initialRoute: '/login' })
 
-    expect(screen.queryByText('Loading page…')).not.toBeInTheDocument()
+    expect(screen.queryByText('Loading page')).not.toBeInTheDocument()
   })
 
   it('covers the page while a slow navigation is in flight', async () => {
@@ -45,7 +45,7 @@ describe('lazy route navigation', () => {
 
     // Real timers here: the assertion is that the overlay reaches the DOM, and `waitFor`
     // already tolerates the 150ms threshold.
-    const overlay = await waitFor(() => screen.getByText('Loading page…'))
+    const overlay = await waitFor(() => screen.getByText('Loading page'))
     expect(overlay).toBeInTheDocument()
 
     gate.resolve()
@@ -60,12 +60,15 @@ describe('lazy route navigation', () => {
     router.beforeEach(() => gate.promise.then(() => true))
     const navigation = router.push('/events')
 
-    await waitFor(() => screen.getByText('Loading page…'))
-    // A spinning shape means nothing without this; the page would just appear to stop.
-    // Exactly one live region, not two nested ones announcing the same wait twice.
+    await waitFor(() => screen.getByText('Loading page'))
+    /*
+     * The overlay is a bare spinner, so this hidden label is the *only* thing a screen
+     * reader gets — without it the page would simply appear to stop. One live region, not
+     * two nested ones announcing the same wait twice.
+     */
     const regions = screen.getAllByRole('status')
     expect(regions).toHaveLength(1)
-    expect(regions[0]).toHaveTextContent('Loading page…')
+    expect(regions[0]).toHaveTextContent('Loading page')
 
     gate.resolve()
     await navigation
@@ -79,12 +82,12 @@ describe('lazy route navigation', () => {
     const stop = router.beforeEach(() => gate.promise.then(() => true))
     const navigation = router.push('/events')
 
-    await waitFor(() => screen.getByText('Loading page…'))
+    await waitFor(() => screen.getByText('Loading page'))
     gate.resolve()
     await navigation
     stop()
 
-    await waitFor(() => expect(screen.queryByText('Loading page…')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByText('Loading page')).not.toBeInTheDocument())
     expect(await screen.findByRole('heading', { name: 'Events' })).toBeInTheDocument()
   })
 })

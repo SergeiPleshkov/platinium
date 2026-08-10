@@ -461,7 +461,28 @@ is the right default for the text-heavy ones.
 **Not applied to paginated mode**, which re-renders a whole page at a time and does not have
 the symptom. Changing it there would be scope creep with real regression risk.
 
-## 2026-08-10 — The virtual grid has no loading banner
+## 2026-08-10 — Both loading indicators are the indicator and nothing else
+
+**Chose:** skeleton cells in the virtual grid, and a bare spinner over a scrim for route
+navigation. No banner, no card, no caption.
+**Over:** the "Loading rows…" pill and the "Loading page…" plate shipped an hour earlier.
+**Because:** each said the same thing more than once. In the grid, the placeholder rows
+already mark which rows are arriving, exactly where they will appear, at the row's own height
+— so nothing moves when the data lands, and a banner on top of that only covered rows the
+user could otherwise have been reading. For navigation, a card containing a spinner *and* the
+words "Loading page…" stated it three ways: the scrim, the shape, and the sentence.
+
+The route overlay stays where the grid's banner went, because the situations differ: during
+navigation the old page is still on screen and nothing else indicates a wait.
+
+**The accessibility consequence is the interesting part.** Removing the visible caption
+removed the text a screen reader had to announce. The spinner therefore stops being
+`decorative` there and carries its own live region and hidden label — so the page still
+announces "Loading page" while showing nothing but a spinning shape. That is why
+`BaseSpinner` has the `decorative` prop rather than a hard-coded role: which element owns the
+live region depends on what else is on screen, and it must always be exactly one.
+
+## 2026-08-10 — (superseded) The virtual grid has no loading banner
 
 **Chose:** skeleton cells in the rows being fetched, and nothing else.
 **Over:** the "Loading rows…" overlay shipped an hour earlier.

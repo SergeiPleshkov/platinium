@@ -61,7 +61,7 @@ const columns: TableColumn[] = [
     header: 'Price',
     sortable: true,
     cellClass: 'text-right',
-    width: '7rem',
+    width: '6rem',
   },
   {
     field: 'quantity',
@@ -70,7 +70,7 @@ const columns: TableColumn[] = [
     cellClass: 'text-right',
     width: '7rem',
   },
-  { field: 'status', header: 'Status', sortable: true, width: '8rem' },
+  { field: 'status', header: 'Status', sortable: true, width: '6rem' },
 ]
 
 function filterModel(key: string) {
