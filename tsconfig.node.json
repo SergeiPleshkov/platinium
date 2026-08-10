@@ -12,9 +12,8 @@
     "noEmit": true,
     "skipLibCheck": true,
 
+    /* Unused-binding enforcement lives in ESLint — see tsconfig.base.json. */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
     "noUncheckedIndexedAccess": true,
 
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"

@@ -1,13 +1,18 @@
 import '@testing-library/jest-dom/vitest'
 
 import { cleanup } from '@testing-library/vue'
-import { afterEach, beforeAll, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+
+import { resetMockConfig } from '@/mocks/config'
+import { resetDb } from '@/mocks/db'
+import { server } from '@/mocks/server'
 
 /**
  * Global test environment.
  *
- * The MSW node server is registered here in phase 2 — one mock backend shared by the browser
- * and the test runner, so tests exercise the same request handling the app does.
+ * The MSW node server runs the *same* handlers the browser does, so tests exercise real
+ * request handling rather than a parallel set of stubs. Handlers, database and mock config
+ * are all reset between tests, so no spec can be influenced by what another one did.
  */
 
 /**
@@ -17,6 +22,13 @@ import { afterEach, beforeAll, vi } from 'vitest'
 const hasDom = typeof document !== 'undefined'
 
 beforeAll(() => {
+  /*
+   * `error` rather than `bypass`: an unhandled request in a test means the client is calling
+   * an endpoint the mock backend does not implement, which is a bug worth failing on rather
+   * than a silent network attempt.
+   */
+  server.listen({ onUnhandledRequest: 'error' })
+
   if (!hasDom) return
 
   /*
@@ -48,8 +60,17 @@ beforeAll(() => {
 })
 
 afterEach(() => {
+  // Drop any per-test handler overrides, then restore pristine seed data and mock settings.
+  server.resetHandlers()
+  resetDb()
+  resetMockConfig()
+
   if (!hasDom) return
 
   cleanup()
   document.documentElement.classList.remove('dark')
+})
+
+afterAll(() => {
+  server.close()
 })

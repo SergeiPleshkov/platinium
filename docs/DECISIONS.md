@@ -77,6 +77,24 @@ values into optional properties. Both are the rule working as intended.
 **Revisit if:** never, on a greenfield project. Retrofitting these onto an existing codebase
 is a different calculation.
 
+## 2026-08-10 — Money is stored as integer minor units
+
+**Chose:** persist and transport prices as an integer count of the currency's minor unit
+(`priceMinor: 4550`, `currency: 'EUR'`), converting to a major amount only for display and
+form input, in `@/shared/utils/money`.
+**Over:** a `price: number` float, which is what the brief's field list literally implies.
+**Because:** floats cannot represent most decimal amounts exactly, and a ticketing platform
+sums prices constantly — inventory value, revenue tiles, CSV exports. The bug is invisible
+until totals are off by a cent.
+**Costs:** the form has to convert both ways, and `priceMinor` is a less obvious field name
+than `price`. Both are paid once, in one place.
+**Note:** writing the tests for this caught a genuine bug in the first implementation.
+`Math.round(1.005 * 100)` is 100, not 101, because `1.005 * 100` evaluates to
+`100.49999999999999` — so the naive conversion silently lost a cent on exactly the inputs it
+existed to protect. The fix shifts the decimal point on the number's string form instead.
+**Revisit if:** a zero-decimal (JPY) or three-decimal (BHD) currency is added — the digit
+table already exists for it, but the form's input mask would need to follow.
+
 ## 2026-08-10 — Architecture boundaries are lint rules with their own tests
 
 **Chose:** encode the `app → features → shared` layering, feature isolation, the PrimeVue

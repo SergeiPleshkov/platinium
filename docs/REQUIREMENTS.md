@@ -61,8 +61,10 @@ decision-making, overall software craftsmanship — not only "does it work".
 - [ ] Docker
 
 ### Mock API
-- [ ] Data fixtures simulating backend data
-- [ ] MSW / MirageJS / json-server / equivalent
+- [x] Data fixtures simulating backend data — `src/mocks/fixtures/`, deterministic:
+      10 categories, 30 events, 250 tickets with real relations
+- [x] MSW / MirageJS / json-server / equivalent — MSW, one handler set shared by the browser
+      worker and the Vitest node server (`src/mocks/README.md`)
 
 ### Architecture — must demonstrate
 - [x] Scalable folder organization — `src/features/README.md`; layering enforced by

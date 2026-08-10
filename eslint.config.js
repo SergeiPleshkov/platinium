@@ -127,9 +127,21 @@ export default defineConfigWithVueTs(
     rules: {
       /* Type safety is the point of using TypeScript; don't let it be opted out of quietly. */
       '@typescript-eslint/no-explicit-any': 'error',
+      /*
+       * The single source of truth for unused bindings (tsc's equivalents are off, since they
+       * cannot be opted out of). A leading underscore marks something as intentionally unused
+       * — required positional params, discarded destructured elements, ignored catch bindings.
+       */
       '@typescript-eslint/no-unused-vars': [
         'error',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+        {
+          args: 'all',
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
       ],
       '@typescript-eslint/consistent-type-imports': [
         'error',

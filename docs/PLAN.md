@@ -26,7 +26,7 @@ folder tree from `CLAUDE.md`, real not empty. `package.json` scripts matching th
 **Exit:** `pnpm dev` serves a shell page; the boundary lint rules provably fail on a
 deliberate violation; typecheck, lint, an empty test run and build all pass.
 
-## Phase 2 — Mock API & domain model
+## Phase 2 — Mock API & domain model ✅ (done)
 
 Domain types and zod schemas for Event, Category, Ticket, User. Deterministic fixtures —
 ~30 events, ~10 categories, ~250 tickets with real relations. In-memory MSW database with

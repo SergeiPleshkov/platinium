@@ -15,8 +15,13 @@
 
     /* Strictness is deliberately maximal — see docs/DECISIONS.md. */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    /*
+     * `noUnusedLocals` / `noUnusedParameters` are deliberately off: tsc has no ignore-pattern
+     * escape hatch, so a genuinely-unused-by-design binding cannot be marked as such.
+     * `@typescript-eslint/no-unused-vars` enforces the same thing and honours a leading
+     * underscore, so `_unused` is allowed for params, locals, catch bindings and destructured
+     * array holes. Enforcement moves, it does not disappear.
+     */
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "noUncheckedIndexedAccess": true,
