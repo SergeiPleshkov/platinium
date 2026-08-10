@@ -1,34 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { effectScope, nextTick } from 'vue'
 
-import { ApiError } from '@/shared/api'
-import { useTable, type UseTable } from '@/shared/composables/useTable'
-import type { ListQuery, ListResponse } from '@/shared/types/api'
-
-interface Row {
-  id: string
-}
+import { useTable, type UseTable, type UseTableOptions } from '@/shared/composables/useTable'
+import type { ListQuery } from '@/shared/types/api'
 
 /**
- * Runs a composable inside its own effect scope, so `onScopeDispose` cleanup can be exercised
- * the way a real unmount would exercise it.
+ * `useTable` owns query state and nothing else — the rows live in the store. These tests
+ * therefore assert on *what was asked for*, not on what came back.
  */
+
 function withScope<T>(factory: () => T): { result: T; dispose: () => void } {
   const scope = effectScope()
   const result = scope.run(factory)!
   return { result, dispose: () => scope.stop() }
-}
-
-function page(rows: Row[], total = rows.length, pageNumber = 1, perPage = 10): ListResponse<Row> {
-  return {
-    data: rows,
-    meta: { total, page: pageNumber, perPage, totalPages: Math.max(1, Math.ceil(total / perPage)) },
-  }
-}
-
-/** `page`, already wrapped in a promise — the shape a fetcher returns. */
-function resolved(...args: Parameters<typeof page>): Promise<ListResponse<Row>> {
-  return Promise.resolve(page(...args))
 }
 
 /** Waits out the 300ms search debounce and lets the resulting promise settle. */
@@ -40,21 +24,27 @@ async function flushDebounce(): Promise<void> {
 let scopes: Array<() => void> = []
 
 function makeTable(
-  fetcher: (query: ListQuery, signal: AbortSignal) => Promise<ListResponse<Row>>,
-  overrides: Partial<Parameters<typeof useTable<Row>>[0]> = {},
-): UseTable<Row> {
+  onQuery: UseTableOptions['onQuery'],
+  overrides: Partial<UseTableOptions> = {},
+): UseTable {
   const { result, dispose } = withScope(() =>
-    useTable<Row>({
-      resource: 'rows',
-      fetcher,
+    useTable({
+      onQuery,
       defaultSort: 'createdAt',
-      // No router in these tests: the URL round-trip is covered by the integration suite.
+      // No router here: the URL round-trip is covered by the integration suite.
       syncUrl: false,
       ...overrides,
     }),
   )
   scopes.push(dispose)
   return result
+}
+
+const noop = (): Promise<void> => Promise.resolve()
+
+/** A typed spy, so `mock.calls[n][0]` is a `ListQuery` rather than `never`. */
+function spyQuery(): ReturnType<typeof vi.fn<(q: ListQuery, s: AbortSignal) => Promise<void>>> {
+  return vi.fn((_query: ListQuery, _signal: AbortSignal) => Promise.resolve())
 }
 
 beforeEach(() => {
@@ -68,70 +58,66 @@ afterEach(() => {
 })
 
 describe('useTable', () => {
-  it('loads immediately and exposes rows and meta', async () => {
-    const fetcher = vi.fn(() => resolved([{ id: 'a' }, { id: 'b' }], 42))
-    const table = makeTable(fetcher)
+  it('issues the initial query with the defaults', async () => {
+    const onQuery = spyQuery()
+    makeTable(onQuery)
+    await nextTick()
 
-    await vi.waitFor(() => expect(table.rows.value).toHaveLength(2))
-
-    expect(fetcher).toHaveBeenCalledTimes(1)
-    expect(table.meta.value.total).toBe(42)
-    expect(table.loading.value).toBe(false)
+    expect(onQuery).toHaveBeenCalledTimes(1)
+    expect(onQuery.mock.calls[0]?.[0]).toMatchObject({
+      search: '',
+      sort: 'createdAt',
+      order: 'desc',
+      page: 1,
+    })
   })
 
-  it('can be told not to load until asked', async () => {
-    const fetcher = vi.fn(() => resolved([]))
-    const table = makeTable(fetcher, { immediate: false })
-
+  it('can be told not to query until asked', async () => {
+    const onQuery = spyQuery()
+    const table = makeTable(onQuery, { immediate: false })
     await nextTick()
-    expect(fetcher).not.toHaveBeenCalled()
 
-    await table.reload()
-    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(onQuery).not.toHaveBeenCalled()
+
+    await table.refresh()
+    expect(onQuery).toHaveBeenCalledTimes(1)
   })
 
   describe('search', () => {
-    it('debounces, issuing one request rather than one per keystroke', async () => {
-      const fetcher = vi.fn((_query: ListQuery, _signal: AbortSignal) => resolved([]))
-      const table = makeTable(fetcher)
-      await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1))
-
-      table.search.value = 'g'
-      await nextTick()
-      table.search.value = 'ga'
-      await nextTick()
-      table.search.value = 'gal'
-      await nextTick()
-      table.search.value = 'gala'
+    it('debounces, issuing one query rather than one per keystroke', async () => {
+      const onQuery = spyQuery()
+      const table = makeTable(onQuery)
       await nextTick()
 
-      expect(fetcher).toHaveBeenCalledTimes(1)
+      for (const value of ['g', 'ga', 'gal', 'gala']) {
+        table.search.value = value
+        await nextTick()
+      }
+      expect(onQuery).toHaveBeenCalledTimes(1)
 
       await flushDebounce()
-      expect(fetcher).toHaveBeenCalledTimes(2)
-      expect(fetcher.mock.calls[1]?.[0].search).toBe('gala')
+      expect(onQuery).toHaveBeenCalledTimes(2)
+      expect(onQuery.mock.calls[1]?.[0].search).toBe('gala')
     })
 
     it('returns to page 1, because page 4 of the old result set is meaningless', async () => {
-      const fetcher = vi.fn((_query: ListQuery, _signal: AbortSignal) => resolved([], 500, 1, 10))
-      const table = makeTable(fetcher)
-      await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1))
+      const onQuery = spyQuery()
+      const table = makeTable(onQuery)
+      await nextTick()
 
       table.setPage(4)
       await nextTick()
-
       table.search.value = 'gala'
       await flushDebounce()
 
-      expect(fetcher.mock.calls.at(-1)?.[0].page).toBe(1)
+      expect(onQuery.mock.calls.at(-1)?.[0].page).toBe(1)
     })
   })
 
   describe('sorting', () => {
     it('cycles a column ascending, descending, then back to the default', async () => {
-      const fetcher = vi.fn(() => resolved([]))
-      const table = makeTable(fetcher)
-      await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1))
+      const table = makeTable(noop)
+      await nextTick()
 
       table.toggleSort('name')
       await nextTick()
@@ -147,7 +133,7 @@ describe('useTable', () => {
     })
 
     it('starts a newly chosen column ascending', async () => {
-      const table = makeTable(() => resolved([]))
+      const table = makeTable(noop)
       await nextTick()
 
       table.toggleSort('price')
@@ -157,27 +143,44 @@ describe('useTable', () => {
 
       expect(table.query.value).toMatchObject({ sort: 'name', order: 'asc' })
     })
+
+    it('issues exactly one query per sort change, not one per changed field', async () => {
+      const onQuery = spyQuery()
+      const table = makeTable(onQuery)
+      await nextTick()
+      onQuery.mockClear()
+
+      // sort, order and page all change together; that is one user action.
+      table.setSort('name', 'asc')
+      await nextTick()
+
+      expect(onQuery).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('filters', () => {
-    it('applies a filter and resets to page 1', async () => {
-      const fetcher = vi.fn((_query: ListQuery, _signal: AbortSignal) => resolved([], 500))
-      const table = makeTable(fetcher)
-      await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1))
+    it('applies a filter and resets to page 1 in a single query', async () => {
+      const onQuery = spyQuery()
+      const table = makeTable(onQuery)
+      await nextTick()
 
       table.setPage(3)
       await nextTick()
+      onQuery.mockClear()
+
       table.setFilter('status', 'on_sale')
       await nextTick()
 
-      const last = fetcher.mock.calls.at(-1)?.[0]
-      expect(last?.filters).toEqual({ status: 'on_sale' })
-      expect(last?.page).toBe(1)
+      expect(onQuery).toHaveBeenCalledTimes(1)
+      expect(onQuery.mock.calls[0]?.[0]).toMatchObject({
+        filters: { status: 'on_sale' },
+        page: 1,
+      })
     })
 
     it('removes a filter when cleared to an empty value', async () => {
-      const fetcher = vi.fn((_query: ListQuery, _signal: AbortSignal) => resolved([]))
-      const table = makeTable(fetcher)
+      const onQuery = spyQuery()
+      const table = makeTable(onQuery)
       await nextTick()
 
       table.setFilter('status', 'draft')
@@ -185,12 +188,11 @@ describe('useTable', () => {
       table.setFilter('status', undefined)
       await nextTick()
 
-      expect(fetcher.mock.calls.at(-1)?.[0].filters).toEqual({})
+      expect(onQuery.mock.calls.at(-1)?.[0].filters).toEqual({})
     })
 
     it('treats an empty array as no filter rather than "match nothing"', async () => {
-      const fetcher = vi.fn(() => resolved([]))
-      const table = makeTable(fetcher)
+      const table = makeTable(noop)
       await nextTick()
 
       table.setFilter('status', [])
@@ -199,59 +201,61 @@ describe('useTable', () => {
       expect(table.hasActiveFilters.value).toBe(false)
     })
 
-    it('clears filters and search together', async () => {
-      const table = makeTable(() => resolved([]))
+    it('keeps repeated values for a multi-select filter', async () => {
+      const onQuery = spyQuery()
+      const table = makeTable(onQuery)
+      await nextTick()
+
+      table.setFilter('status', ['draft', 'paused'])
+      await nextTick()
+
+      expect(onQuery.mock.calls.at(-1)?.[0].filters).toEqual({ status: ['draft', 'paused'] })
+    })
+
+    it('clears filters and search together, in one query', async () => {
+      const onQuery = spyQuery()
+      const table = makeTable(onQuery)
       await nextTick()
 
       table.setFilter('status', 'draft')
       table.search.value = 'gala'
-      await nextTick()
+      await flushDebounce()
       expect(table.hasActiveFilters.value).toBe(true)
+      onQuery.mockClear()
 
       table.clearFilters()
       await nextTick()
+
       expect(table.hasActiveFilters.value).toBe(false)
       expect(table.search.value).toBe('')
+      expect(onQuery).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not fire a stale debounced search after filters are cleared', async () => {
+      const onQuery = spyQuery()
+      const table = makeTable(onQuery)
+      await nextTick()
+
+      table.search.value = 'gala'
+      await nextTick()
+      table.clearFilters()
+      await nextTick()
+      onQuery.mockClear()
+
+      await flushDebounce()
+
+      expect(onQuery).not.toHaveBeenCalled()
     })
   })
 
-  describe('empty states', () => {
-    it('distinguishes an empty resource from an over-filtered one', async () => {
-      const fetcher = vi.fn(() => resolved([], 0))
-      const table = makeTable(fetcher)
-      await vi.waitFor(() => expect(table.isEmpty.value).toBe(true))
-
-      // Nothing at all: offer a create action.
-      expect(table.isEmpty.value).toBe(true)
-      expect(table.isFilteredEmpty.value).toBe(false)
-
-      table.setFilter('status', 'draft')
-      await vi.waitFor(() => expect(table.isFilteredEmpty.value).toBe(true))
-
-      // Nothing *matching*: offer to clear the filters instead.
-      expect(table.isEmpty.value).toBe(false)
-    })
-
-    it('reports neither empty state before the first load resolves', () => {
-      const table = makeTable(() => new Promise(() => {}))
-
-      expect(table.isEmpty.value).toBe(false)
-      expect(table.isFilteredEmpty.value).toBe(false)
-      expect(table.initialising.value).toBe(true)
-    })
-  })
-
-  describe('races and cancellation', () => {
-    it('aborts the request a new one supersedes', async () => {
+  describe('cancellation', () => {
+    it('aborts the query a new one supersedes', async () => {
       const signals: AbortSignal[] = []
-      const fetcher = vi.fn((_query: ListQuery, signal: AbortSignal) => {
+      const table = makeTable((_query, signal) => {
         signals.push(signal)
-        return new Promise<ListResponse<Row>>((resolve) => {
-          setTimeout(() => resolve(page([])), 50)
-        })
+        return new Promise(() => {})
       })
 
-      const table = makeTable(fetcher)
       await nextTick()
       table.setPage(2)
       await nextTick()
@@ -260,99 +264,29 @@ describe('useTable', () => {
       expect(signals[1]?.aborted).toBe(false)
     })
 
-    it('ignores a superseded response so slow page 1 cannot overwrite page 2', async () => {
-      let call = 0
-      const fetcher = vi.fn(
-        () =>
-          new Promise<ListResponse<Row>>((resolve) => {
-            call += 1
-            const isFirst = call === 1
-            setTimeout(
-              () => resolve(page([{ id: isFirst ? 'stale' : 'fresh' }])),
-              isFirst ? 100 : 10,
-            )
-          }),
+    it('cancels in-flight work when its scope is disposed', async () => {
+      const signals: AbortSignal[] = []
+      const { dispose } = withScope(() =>
+        useTable({
+          onQuery: (_query, signal) => {
+            signals.push(signal)
+            return new Promise(() => {})
+          },
+          defaultSort: 'createdAt',
+          syncUrl: false,
+        }),
       )
 
-      const table = makeTable(fetcher)
       await nextTick()
-      table.setPage(2)
-      await nextTick()
+      dispose()
 
-      await vi.advanceTimersByTimeAsync(200)
-
-      expect(table.rows.value).toEqual([{ id: 'fresh' }])
-    })
-
-    it('does not surface an aborted request as an error', async () => {
-      const fetcher = vi.fn(() =>
-        Promise.reject(new ApiError({ kind: 'aborted', status: 0, message: 'Cancelled' })),
-      )
-      const table = makeTable(fetcher)
-
-      await vi.waitFor(() => expect(fetcher).toHaveBeenCalled())
-      await nextTick()
-
-      expect(table.error.value).toBeNull()
-    })
-  })
-
-  describe('errors', () => {
-    it('records a failure and keeps it retryable', async () => {
-      let shouldFail = true
-      const fetcher = vi.fn(() =>
-        shouldFail
-          ? Promise.reject(new ApiError({ kind: 'http', status: 500, message: 'Server error' }))
-          : resolved([{ id: 'a' }]),
-      )
-
-      const table = makeTable(fetcher)
-      await vi.waitFor(() => expect(table.error.value).not.toBeNull())
-      expect(table.error.value?.isRetryable).toBe(true)
-
-      shouldFail = false
-      await table.reload()
-
-      expect(table.error.value).toBeNull()
-      expect(table.rows.value).toHaveLength(1)
-    })
-
-    it('wraps a non-ApiError rejection instead of leaking it', async () => {
-      const table = makeTable(() => Promise.reject(new TypeError('boom')))
-
-      await vi.waitFor(() => expect(table.error.value).not.toBeNull())
-      expect(table.error.value).toBeInstanceOf(ApiError)
-      expect(table.error.value?.message).toMatch(/could not load this list/i)
+      expect(signals[0]?.aborted).toBe(true)
     })
   })
 
   describe('pagination', () => {
-    it('adopts the page the server clamped to', async () => {
-      // Deleting the last row on page 4 should land the user on page 3, not a blank table.
-      const fetcher = vi.fn(() => resolved([{ id: 'a' }], 21, 3, 10))
-      const table = makeTable(fetcher)
-
-      await vi.waitFor(() => expect(table.meta.value.page).toBe(3))
-      expect(table.query.value.page).toBe(3)
-    })
-
-    it('returns to page 1 when the page size changes', async () => {
-      const fetcher = vi.fn((_query: ListQuery, _signal: AbortSignal) => resolved([], 500))
-      const table = makeTable(fetcher)
-      await nextTick()
-
-      table.setPage(4)
-      await nextTick()
-      table.setPerPage(100)
-      await nextTick()
-
-      const last = fetcher.mock.calls.at(-1)?.[0]
-      expect(last?.perPage).toBe(100)
-      expect(last?.page).toBe(1)
-    })
-
     it('refuses a page below 1', async () => {
-      const table = makeTable(() => resolved([]))
+      const table = makeTable(noop)
       await nextTick()
 
       table.setPage(-5)
@@ -360,25 +294,58 @@ describe('useTable', () => {
 
       expect(table.query.value.page).toBe(1)
     })
+
+    it('returns to page 1 when the page size changes, in one query', async () => {
+      const onQuery = spyQuery()
+      const table = makeTable(onQuery)
+      await nextTick()
+
+      table.setPage(4)
+      await nextTick()
+      onQuery.mockClear()
+
+      table.setPerPage(100)
+      await nextTick()
+
+      expect(onQuery).toHaveBeenCalledTimes(1)
+      expect(onQuery.mock.calls[0]?.[0]).toMatchObject({ perPage: 100, page: 1 })
+    })
+
+    it('adopts a page the server corrected without issuing another query', async () => {
+      const onQuery = spyQuery()
+      const table = makeTable(onQuery)
+      await nextTick()
+      onQuery.mockClear()
+
+      // Deleting the last row on page 4 leaves the server answering for page 3.
+      table.adoptPage(3)
+      await nextTick()
+
+      expect(table.page.value).toBe(3)
+      expect(onQuery).not.toHaveBeenCalled()
+    })
+
+    it('ignores adopting the page it is already on', async () => {
+      const onQuery = spyQuery()
+      const table = makeTable(onQuery)
+      await nextTick()
+      onQuery.mockClear()
+
+      table.adoptPage(1)
+      await nextTick()
+
+      expect(onQuery).not.toHaveBeenCalled()
+    })
   })
 
-  it('cancels in-flight work when its scope is disposed', async () => {
-    const signals: AbortSignal[] = []
-    const { result: _table, dispose } = withScope(() =>
-      useTable<Row>({
-        resource: 'rows',
-        fetcher: (_query, signal) => {
-          signals.push(signal)
-          return new Promise(() => {})
-        },
-        defaultSort: 'createdAt',
-        syncUrl: false,
-      }),
-    )
-
+  it('re-runs the current query on refresh, for a retry button', async () => {
+    const onQuery = spyQuery()
+    const table = makeTable(onQuery)
     await nextTick()
-    dispose()
+    onQuery.mockClear()
 
-    expect(signals[0]?.aborted).toBe(true)
+    await table.refresh()
+
+    expect(onQuery).toHaveBeenCalledTimes(1)
   })
 })

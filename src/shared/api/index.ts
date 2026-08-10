@@ -7,6 +7,7 @@
  * docs/DECISIONS.md — "No generic resource factory".
  */
 export { ApiError, isAbortError, type ApiErrorKind } from '@/shared/api/errors'
+export { withSignal, type Resource } from '@/shared/api/types'
 export {
   buildQueryString,
   configureHttp,

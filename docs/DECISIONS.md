@@ -99,6 +99,44 @@ so the browser and Vitest use the same transport rather than XHR and Node's `htt
 **Revisit if:** bundle size becomes a real constraint — `ky` is a drop-in behind this same
 wrapper, which is the point of having the wrapper.
 
+## 2026-08-10 — Store owns the data; `useTable` owns the query; state+getters are shared
+
+Revisits the previous entry after a challenge about extensibility. Three parts:
+
+**Per-feature `api.ts` is back, with a `Resource<T, P>` contract instead of a factory.**
+The earlier measurement was correct about today and wrong about the trajectory. By phase 8,
+tickets has bulk delete, CSV export, CSV import and stats — eight-plus endpoints — so "inline
+it now, extract it when it reaches three" just schedules a migration. What is *not* back is
+the factory: each `api.ts` spells out its own URLs, so the endpoint is visible where it is
+called, while implementing a shared interface so cross-cutting behaviour (optimistic updates,
+bulk operations, typed test doubles) can be written once against `Resource<T, P>`. Contract
+without machinery.
+
+**State and getters are shared, not split per entity by technical role.**
+The request was `state.ts` / `getters.ts` / `actions.ts` per store. Declined, for two reasons.
+Pinia setup stores are a single closure — state, getters and actions all close over the same
+scope — so splitting them by role means threading `state` through every function as a
+parameter and opening four files to follow one flow. And splitting by *technical role* is the
+opposite of this codebase's organising idea, which is vertical slices.
+
+The goal behind it was right, so it is served better: `useCollectionState<T>()` holds
+`items` / `meta` / `status` / `error` plus every derived flag, and all three entity stores
+compose it. That is the same separation, written once and reused three times rather than
+copy-pasted three times — and adding a fourth entity gets it free.
+
+**`useTable` no longer owns rows.** The real problem the request exposed: the composable held
+`rows` and `meta`, and so would the store — the same page of server data in two places, free
+to disagree. Now the store is the single source of truth for data and `useTable` is purely a
+query-state engine (search, filters, sort, pagination, URL sync, debounce, cancellation).
+This also gives the mandated Pinia layer real work instead of a parallel cache.
+
+**Found while refactoring:** the batched setters ("change filter *and* reset to page 1") were
+firing two requests, because Vue watchers flush asynchronously and a synchronous guard flag is
+already cleared by the time they run. Requests are now issued explicitly from each setter
+rather than by watching state — the one exception being `search`, which callers bind with
+`v-model`, and which needs an internal-change flag so clearing filters does not re-arm the
+debounce for a second redundant request.
+
 ## 2026-08-10 — `matchMedia` stub models a real viewport width
 
 **Chose:** a test `matchMedia` that parses `(min-width: Npx)` and evaluates it against a
