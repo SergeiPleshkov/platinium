@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
 
 import { useAuthStore } from '@/features/auth'
 import StatTile from '@/features/dashboard/components/StatTile.vue'
@@ -15,6 +14,13 @@ import { BaseBadge, BaseButton } from '@/shared/ui'
  *
  * Every figure arrives pre-aggregated from `/api/stats`. Nothing here loads a collection in
  * order to count it.
+ *
+ * Deliberately renders no navigation. `PortalLayout`'s sidebar is the single source of it,
+ * driven by `NAVIGATION` in the router. This page previously repeated those destinations as
+ * literal path strings — the only hardcoded routes in the codebase — because the boundary
+ * rule stops a feature importing `app/`. That was working around the boundary rather than
+ * respecting it, and it gave up the guarantee `RouteName` exists for: a renamed path would
+ * have kept the sidebar working while silently 404ing here.
  */
 
 const auth = useAuthStore()
@@ -141,21 +147,6 @@ const inventoryValues = computed(() =>
           </ul>
         </section>
       </div>
-
-      <nav class="mt-6 flex flex-wrap gap-3" aria-label="Manage">
-        <RouterLink
-          v-for="link in [
-            { to: '/events', label: 'Manage events' },
-            { to: '/tickets', label: 'Manage tickets' },
-            { to: '/categories', label: 'Manage categories' },
-          ]"
-          :key="link.to"
-          :to="link.to"
-          class="rounded-md border border-border px-3 py-2 text-sm font-medium text-content transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
-        >
-          {{ link.label }}
-        </RouterLink>
-      </nav>
     </template>
   </div>
 </template>

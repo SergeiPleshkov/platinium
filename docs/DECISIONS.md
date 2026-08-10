@@ -99,6 +99,27 @@ so the browser and Vitest use the same transport rather than XHR and Node's `htt
 **Revisit if:** bundle size becomes a real constraint — `ky` is a drop-in behind this same
 wrapper, which is the point of having the wrapper.
 
+## 2026-08-10 — One navigation, one source; features never hardcode routes
+
+**Chose:** the sidebar in `PortalLayout` is the only navigation, driven by `NAVIGATION` in the
+router. The dashboard's "Manage events / tickets / categories" row is deleted.
+**Over:** keeping the quick links and sourcing them from a shared navigation registry that the
+app populates and features read.
+**Because:** the row duplicated the sidebar exactly — same destinations, visible at the same
+time on desktop, one tap away in the drawer on mobile — and it was the *only* place in the
+codebase navigating by literal path string. That gave up precisely the guarantee `RouteName`
+exists for: rename a path and the sidebar keeps working while the dashboard silently 404s.
+
+**The root cause is worth recording.** It was written that way because the boundary rule stops
+a feature importing `app/`, so `NAVIGATION` was unreachable from the dashboard and string
+literals were the path of least resistance. That is working *around* the boundary rather than
+respecting it — the rule was right and the code was wrong. A rule that is inconvenient once is
+not evidence the rule is wrong; it is usually evidence the thing being attempted belongs
+somewhere else.
+**Revisit if:** cross-feature linking becomes a recurring need — an empty state saying "create
+an event first" would want it. Then a `shared/navigation` registry, populated by the app and
+read by features, is the correct seam. One consumer did not justify it.
+
 ## 2026-08-10 — One display locale for every currency
 
 **Chose:** format all amounts with `en-GB` and `currencyDisplay: 'narrowSymbol'`, so the
