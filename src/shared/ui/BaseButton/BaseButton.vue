@@ -13,21 +13,21 @@ import type { ButtonSize, ButtonVariant } from '@/shared/ui/BaseButton/types'
  */
 
 interface Props {
-  variant?: ButtonVariant
-  size?: ButtonSize
+  variant?: ButtonVariant | undefined
+  size?: ButtonSize | undefined
   /** Shows a spinner and blocks interaction. Prefer this over disabling manually. */
-  loading?: boolean
-  disabled?: boolean
+  loading?: boolean | undefined
+  disabled?: boolean | undefined
   /** A PrimeIcons class, e.g. `pi pi-plus`. */
-  icon?: string
-  iconPosition?: 'left' | 'right'
+  icon?: string | undefined
+  iconPosition?: 'left' | 'right' | undefined
   /** Stretch to the width of the container — useful for mobile and dialog footers. */
-  block?: boolean
+  block?: boolean | undefined
   /**
    * Accessible name, required when the button renders an icon with no visible text.
    * An icon-only button without this is unusable with a screen reader.
    */
-  label?: string
+  label?: string | undefined
 }
 
 const props = withDefaults(defineProps<Props>(), {

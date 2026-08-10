@@ -21,9 +21,10 @@ decision-making, overall software craftsmanship — not only "does it work".
 ## Functional
 
 ### Authentication
-- [ ] Simple login page
-- [ ] Authentication fully mocked
-- [ ] Authenticated users reach the administration portal (unauthenticated ones cannot)
+- [x] Simple login page — `src/features/auth/pages/LoginPage.vue`
+- [x] Authentication fully mocked — tokens issued, checked and invalidated by MSW
+- [x] Authenticated users reach the administration portal (unauthenticated ones cannot) —
+      guards in `src/app/router/guards.ts`, covered by `tests/integration/auth-flow.spec.ts`
 
 ### Dashboard
 - [ ] Manage Events
@@ -69,11 +70,13 @@ decision-making, overall software craftsmanship — not only "does it work".
 ### Architecture — must demonstrate
 - [x] Scalable folder organization — `src/features/README.md`; layering enforced by
       `eslint.config.js` and proven by `tests/architecture/boundaries.spec.ts`
-- [ ] Reusable components — `shared/ui` layer started (`BaseButton`), built out in phase 3
-- [ ] Separation of concerns
-- [ ] Reusable composables
-- [ ] Clean state management
-- [ ] Reusable API layer
+- [ ] Reusable components — `shared/ui` adapters (Button, Input, FormField, Toaster); table
+      primitives follow in phase 4
+- [x] Separation of concerns — components render, composables hold behaviour, stores hold
+      state, `shared/api` owns transport; all four enforced by lint
+- [x] Reusable composables — `useAsyncAction`, `useNotifications`, `useBreakpoint`
+- [ ] Clean state management — auth store done; entity stores in phases 5–7
+- [x] Reusable API layer — `shared/api`: axios behind `ApiError`, generic `createResource`
 - [ ] Maintainable project structure
 
 ### Testing

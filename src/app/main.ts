@@ -4,6 +4,8 @@ import { createApp } from 'vue'
 import App from '@/app/App.vue'
 import { installPrimeVue } from '@/app/plugins/primevue'
 import { router } from '@/app/router'
+import { useAuthStore } from '@/features/auth'
+import { configureHttp } from '@/shared/api'
 
 import '@/app/assets/main.css'
 
@@ -19,10 +21,24 @@ async function bootstrap(): Promise<void> {
   }
 
   const app = createApp(App)
+  const pinia = createPinia()
 
-  app.use(createPinia())
-  app.use(router)
+  app.use(pinia)
   installPrimeVue(app)
+
+  /*
+   * The HTTP layer is told how to find the token and what to do on a 401, rather than
+   * importing the auth store itself — `shared/` may not depend on a feature. Wiring the two
+   * together is the app layer's job, and this is the seam where it happens.
+   */
+  const auth = useAuthStore(pinia)
+  configureHttp({
+    baseUrl: import.meta.env.VITE_API_BASE_URL ?? '/api',
+    getAuthToken: () => auth.token,
+    onUnauthorized: () => auth.endExpiredSession(),
+  })
+
+  app.use(router)
 
   // Resolving the initial route before mount avoids a flash of the wrong view on deep links.
   await router.isReady()

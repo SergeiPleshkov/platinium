@@ -184,6 +184,13 @@ export default defineConfigWithVueTs(
        * satisfying this rule would mean weakening the types.
        */
       'vue/require-default-prop': 'off',
+      /*
+       * Accept a `for`/`id` association as sufficient. The default also demands the control be
+       * nested inside the label, which BaseFormField cannot do — it exposes the generated id
+       * through a scoped slot so any control can use it. The association is real and asserted:
+       * BaseInput's tests query by `getByLabelText`, which only resolves when it works.
+       */
+      'vuejs-accessibility/label-has-for': ['error', { required: { some: ['nesting', 'id'] } }],
 
       /* General hygiene. */
       'no-console': ['error', { allow: ['warn', 'error'] }],

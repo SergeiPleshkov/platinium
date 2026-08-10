@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type Router } from 'vue-router'
 
+import { registerGuards } from '@/app/router/guards'
 import { routes } from '@/app/router/routes'
 
 export function createAppRouter(): Router {
@@ -11,18 +12,15 @@ export function createAppRouter(): Router {
     },
   })
 
-  router.afterEach((to) => {
-    const title = typeof to.meta['title'] === 'string' ? to.meta['title'] : null
-    document.title = title ? `${title} · Ticket Admin` : 'Ticket Admin'
-  })
+  registerGuards(router)
 
   return router
 }
 
 /**
- * The application-wide instance. Tests build their own via `createAppRouter()` so they never
- * share history state between cases.
+ * The application-wide instance. Tests build their own so they never share history or guard
+ * state between cases.
  */
 export const router = createAppRouter()
 
-export { RouteName, routes } from '@/app/router/routes'
+export { NAVIGATION, RouteName, routes } from '@/app/router/routes'

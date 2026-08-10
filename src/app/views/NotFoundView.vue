@@ -13,7 +13,7 @@ import { RouteName } from '@/app/router/routes'
         The link may be out of date, or the record may have been deleted.
       </p>
       <RouterLink
-        :to="{ name: RouteName.Startup }"
+        :to="{ name: RouteName.Dashboard }"
         class="mt-6 inline-block rounded-md bg-brand-600 px-4 py-2 font-medium text-white transition-colors hover:bg-brand-700"
       >
         Back to the portal

@@ -38,7 +38,7 @@ browser worker and the Vitest node server.
 **Exit:** every endpoint exercised by a store-level test; pagination/sort/filter proven
 server-side, not client-side.
 
-## Phase 3 — App shell, API layer, auth
+## Phase 3 — App shell, API layer, auth ✅ (done)
 
 `shared/api`: `http.ts` (axios instance, interceptors for auth and 401), `errors.ts`
 (`ApiError` normalisation), `createResource.ts` (typed CRUD factory).
