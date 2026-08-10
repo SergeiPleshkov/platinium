@@ -491,3 +491,33 @@ rows are arriving, exactly where they will appear, at the row's own height — s
 when the data lands. A banner on top of that added no information and covered rows the user
 could otherwise have been reading. The route-navigation overlay stays, because there the old
 page is still on screen and genuinely nothing else indicates a wait.
+
+## 2026-08-10 — Permissions are capabilities, checked on both sides of one table
+
+**Chose:** a `ROLE_PERMISSIONS` matrix in `features/auth/permissions.ts`, imported by the UI
+*and* by the mock backend, with every mutating handler re-checking it.
+**Over:** role comparisons at call sites (`role === 'admin'`), and over gating in the client
+only.
+
+**Capabilities, not roles.** A button that asks `can('delete')` keeps working when a fourth
+role appears. One that asks `role === 'admin'` has to be found and edited, and the ones nobody
+finds are the bugs. The matrix is the only place a role name appears in a decision.
+
+**Both sides, from one table.** Hiding a delete button stops an honest mistake and nothing
+else — the request still succeeds from a console, from a stale tab whose role was downgraded,
+or from a client bug. `requirePermission` re-checks server-side against the *same* import, so
+the two cannot drift. `tests/mock-api/permissions.spec.ts` makes each forbidden call anyway
+and asserts both the 403 and that the database did not change.
+
+**403 is not 401.** The HTTP client's 401 hook ends the session. Conflating the two would
+eject a viewer from the application for clicking something they were not allowed to click, so
+there is a test asserting the session survives a 403.
+
+**The matrix:** admin does everything; editor does everything but `delete`; viewer reads and
+exports. That middle row is the one worth modelling — creating and correcting records is
+routine back-office work, destroying one with sales against it is not. `export` is granted to
+viewers because downloading changes nothing, which is also why `isReadOnly` ignores it.
+
+**Absence is explained, not merely rendered.** A viewer gets a "Read only" badge beside the
+page title, and the Actions *column* disappears rather than becoming a header over an empty
+column. A page that silently has fewer buttons than a colleague's reads as broken.

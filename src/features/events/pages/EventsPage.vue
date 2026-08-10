@@ -9,6 +9,7 @@ import {
   EVENT_STATUS_TONES,
   type Event,
 } from '@/features/events/types'
+import { usePermissions } from '@/features/auth'
 import { ApiError } from '@/shared/api'
 import { useListView, useNotifications } from '@/shared/composables'
 import { formatDateRange } from '@/shared/utils/date'
@@ -27,6 +28,11 @@ import {
 
 const store = useEventsStore()
 const notifications = useNotifications()
+/*
+ * Gating here rather than inside `BaseDataTable`: a shared primitive must not know what
+ * a role is. The page owns the domain question, the kit owns the rendering.
+ */
+const permissions = usePermissions()
 
 const { table, viewMode, onRangeChange } = useListView({
   fetchList: (query, signal) => store.fetchList(query, signal),
@@ -136,10 +142,19 @@ async function confirmDelete(): Promise<void> {
   <div>
     <header class="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 class="text-2xl font-semibold text-content">Events</h1>
+        <div class="flex items-center gap-2">
+          <h1 class="text-2xl font-semibold text-content">Events</h1>
+          <!-- Explains the missing buttons. Absence alone reads as a broken page. -->
+          <BaseBadge v-if="permissions.readOnly.value" label="Read only" tone="info" />
+        </div>
         <p class="mt-1 text-sm text-content-muted">Dates, venues and publication status.</p>
       </div>
-      <BaseButton icon="pi pi-plus" label="New event" @click="openCreate" />
+      <BaseButton
+        v-if="permissions.canCreate.value"
+        icon="pi pi-plus"
+        label="New event"
+        @click="openCreate"
+      />
     </header>
 
     <div class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_11rem_13rem]">
@@ -205,9 +220,17 @@ async function confirmDelete(): Promise<void> {
         <span class="tabular-nums">{{ row.ticketCount }}</span>
       </template>
 
-      <template #actions="{ row }">
+      <!--
+        The whole slot goes, not just the buttons: leaving it would render an empty
+        "Actions" column header over a column of nothing.
+      -->
+      <template
+        v-if="permissions.canUpdate.value || permissions.canDelete.value"
+        #actions="{ row }"
+      >
         <div class="flex justify-end gap-1">
           <BaseButton
+            v-if="permissions.canUpdate.value"
             variant="ghost"
             size="sm"
             icon="pi pi-pencil"
@@ -215,6 +238,7 @@ async function confirmDelete(): Promise<void> {
             @click="openEdit(row)"
           />
           <BaseButton
+            v-if="permissions.canDelete.value"
             variant="ghost"
             size="sm"
             icon="pi pi-trash"
@@ -225,7 +249,12 @@ async function confirmDelete(): Promise<void> {
       </template>
 
       <template #emptyAction>
-        <BaseButton icon="pi pi-plus" label="New event" @click="openCreate" />
+        <BaseButton
+          v-if="permissions.canCreate.value"
+          icon="pi pi-plus"
+          label="New event"
+          @click="openCreate"
+        />
       </template>
     </BaseDataTable>
 

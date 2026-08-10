@@ -5,7 +5,15 @@ import type { Category } from '@/features/categories/types'
 import { db, nextId, nowIso, syncDerivedCounts } from '@/mocks/db'
 import { API_BASE } from '@/mocks/handlers/base'
 import { runQuery } from '@/mocks/query'
-import { errorResponse, notFound, parseBody, preflight, requireAuth, touch } from '@/mocks/support'
+import {
+  errorResponse,
+  notFound,
+  parseBody,
+  preflight,
+  requireAuth,
+  requirePermission,
+  touch,
+} from '@/mocks/support'
 
 const RESOURCE = `${API_BASE}/categories`
 
@@ -57,6 +65,8 @@ export const categoryHandlers: RequestHandler[] = [
     if (failure) return failure
     const auth = requireAuth(request)
     if (!auth.ok) return auth.response
+    const forbidden = requirePermission(auth.user, 'create')
+    if (forbidden) return forbidden
 
     const parsed = await parseBody(request, categorySchema)
     if (!parsed.ok) return parsed.response
@@ -86,6 +96,8 @@ export const categoryHandlers: RequestHandler[] = [
     if (failure) return failure
     const auth = requireAuth(request)
     if (!auth.ok) return auth.response
+    const forbidden = requirePermission(auth.user, 'update')
+    if (forbidden) return forbidden
 
     const category = findCategory(String(params['id']))
     if (!category) return notFound('category')
@@ -111,6 +123,8 @@ export const categoryHandlers: RequestHandler[] = [
     if (failure) return failure
     const auth = requireAuth(request)
     if (!auth.ok) return auth.response
+    const forbidden = requirePermission(auth.user, 'delete')
+    if (forbidden) return forbidden
 
     const id = String(params['id'])
     const category = findCategory(id)

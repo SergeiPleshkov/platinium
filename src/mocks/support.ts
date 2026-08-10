@@ -1,7 +1,8 @@
 import { HttpResponse } from 'msw'
 import type { z } from 'zod'
 
-import type { User } from '@/features/auth/types'
+import { roleCan, type Permission } from '@/features/auth/permissions'
+import { USER_ROLE_LABELS, type User } from '@/features/auth/types'
 import { db } from '@/mocks/db'
 import { delay, forcedFailureStatus } from '@/mocks/config'
 import type { ApiErrorBody } from '@/shared/types/api'
@@ -76,6 +77,24 @@ export function requireAuth(request: Request): AuthResult {
   }
 
   return { ok: true, user }
+}
+
+/**
+ * Re-checks a capability that the UI has already checked.
+ *
+ * The duplication is the whole point. Hiding a delete button stops an honest mistake; it does
+ * nothing about a request sent from the console, a stale tab whose role has since been
+ * downgraded, or a client bug. A permission model enforced only in the client is a styling
+ * decision, so the server refuses independently — against the *same* table the UI reads, so
+ * the two cannot disagree.
+ */
+export function requirePermission(user: User, permission: Permission): Response | null {
+  if (roleCan(user.role, permission)) return null
+
+  return errorResponse(
+    403,
+    `Your role (${USER_ROLE_LABELS[user.role].toLowerCase()}) cannot ${permission} records.`,
+  )
 }
 
 export type ParseResult<T> = { ok: true; data: T } | { ok: false; response: Response }

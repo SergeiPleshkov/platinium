@@ -7,7 +7,15 @@ import { API_BASE } from '@/mocks/handlers/base'
 import { toCsv } from '@/mocks/csv'
 import { applyQuery, runQuery } from '@/mocks/query'
 import type { EntityRef } from '@/shared/types/entity'
-import { errorResponse, notFound, parseBody, preflight, requireAuth, touch } from '@/mocks/support'
+import {
+  errorResponse,
+  notFound,
+  parseBody,
+  preflight,
+  requireAuth,
+  requirePermission,
+  touch,
+} from '@/mocks/support'
 
 const RESOURCE = `${API_BASE}/tickets`
 
@@ -96,6 +104,8 @@ export const ticketHandlers: RequestHandler[] = [
     if (failure) return failure
     const auth = requireAuth(request)
     if (!auth.ok) return auth.response
+    const forbidden = requirePermission(auth.user, 'export')
+    if (forbidden) return forbidden
 
     /*
      * `applyQuery`, not `runQuery`: the list endpoint caps `perPage` at 100 so a client cannot
@@ -158,6 +168,8 @@ export const ticketHandlers: RequestHandler[] = [
     if (failure) return failure
     const auth = requireAuth(request)
     if (!auth.ok) return auth.response
+    const forbidden = requirePermission(auth.user, 'create')
+    if (forbidden) return forbidden
 
     const parsed = await parseBody(request, ticketSchema)
     if (!parsed.ok) return parsed.response
@@ -184,6 +196,8 @@ export const ticketHandlers: RequestHandler[] = [
     if (failure) return failure
     const auth = requireAuth(request)
     if (!auth.ok) return auth.response
+    const forbidden = requirePermission(auth.user, 'update')
+    if (forbidden) return forbidden
 
     const ticket = findTicket(String(params['id']))
     if (!ticket) return notFound('ticket')
@@ -206,6 +220,8 @@ export const ticketHandlers: RequestHandler[] = [
     if (failure) return failure
     const auth = requireAuth(request)
     if (!auth.ok) return auth.response
+    const forbidden = requirePermission(auth.user, 'delete')
+    if (forbidden) return forbidden
 
     const id = String(params['id'])
     if (!findTicket(id)) return notFound('ticket')
