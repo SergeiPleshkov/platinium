@@ -1,11 +1,12 @@
 import '@testing-library/jest-dom/vitest'
 
 import { cleanup } from '@testing-library/vue'
-import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 
 import { resetMockConfig } from '@/mocks/config'
 import { resetDb } from '@/mocks/db'
 import { server } from '@/mocks/server'
+import { installMatchMedia, resetViewportWidth } from '@tests/utils/viewport'
 
 /**
  * Global test environment.
@@ -28,26 +29,19 @@ beforeAll(() => {
    * than a silent network attempt.
    */
   server.listen({ onUnhandledRequest: 'error' })
+})
 
+/*
+ * Re-stubbed per test, not once in `beforeAll`: `unstubGlobals` in vitest.config.ts clears
+ * stubbed globals after every test, so a single up-front stub survives exactly one case and
+ * then silently disappears — which surfaced as "matchMedia is not a function" the moment a
+ * component used the breakpoint composable.
+ */
+beforeEach(() => {
   if (!hasDom) return
 
-  /*
-   * jsdom implements neither of these, and PrimeVue's overlay components call both.
-   * Stubbing them here keeps the noise out of individual specs.
-   */
-  vi.stubGlobal(
-    'matchMedia',
-    vi.fn((query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
-  )
+  /* jsdom implements neither of these, and PrimeVue's overlay components call both. */
+  installMatchMedia()
 
   vi.stubGlobal(
     'ResizeObserver',
@@ -61,6 +55,7 @@ beforeAll(() => {
 
 afterEach(() => {
   // Drop any per-test handler overrides, then restore pristine seed data and mock settings.
+  resetViewportWidth()
   server.resetHandlers()
   resetDb()
   resetMockConfig()

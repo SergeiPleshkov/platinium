@@ -10,6 +10,7 @@ export {
   useResponsiveLayout,
   type BreakpointName,
 } from '@/shared/composables/useBreakpoint'
+export { useTable, type UseTable, type UseTableOptions } from '@/shared/composables/useTable'
 export {
   resetNotifications,
   useNotifications,

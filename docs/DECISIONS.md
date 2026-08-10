@@ -99,6 +99,22 @@ so the browser and Vitest use the same transport rather than XHR and Node's `htt
 **Revisit if:** bundle size becomes a real constraint — `ky` is a drop-in behind this same
 wrapper, which is the point of having the wrapper.
 
+## 2026-08-10 — `matchMedia` stub models a real viewport width
+
+**Chose:** a test `matchMedia` that parses `(min-width: Npx)` and evaluates it against a
+settable width, defaulting to desktop, with `setViewportWidth()` for narrower cases.
+**Over:** the usual stub returning `matches: false` for every query.
+**Because:** jsdom has no layout, so the naive stub reports "narrower than every breakpoint"
+— which silently ran **every component test in the mobile layout**. It surfaced when the
+data table's column-header assertions failed: the component was correctly rendering its card
+list, and the desktop grid had no coverage at all. A stub that always answers the same way is
+not a stub, it is a hard-coded branch.
+**Costs:** the width is module state, reset in `afterEach`; a test that renders before calling
+`setViewportWidth` gets the desktop default.
+**Related:** the stub also has to be installed in `beforeEach`, not `beforeAll` —
+`unstubGlobals` clears stubbed globals after every test, so an up-front stub survives exactly
+one case and then vanishes.
+
 ## 2026-08-10 — No generic resource factory, and no per-feature `api.ts`
 
 **Chose:** stores call `http` directly. `shared/api` is exactly two things — an axios client

@@ -9,7 +9,10 @@
  * use rather than guessed at up front.
  */
 export { default as BaseButton } from '@/shared/ui/BaseButton/BaseButton.vue'
+export { default as BaseDataTable } from '@/shared/ui/BaseDataTable/BaseDataTable.vue'
+export { default as BaseEmptyState } from '@/shared/ui/BaseEmptyState/BaseEmptyState.vue'
 export { default as BaseFormField } from '@/shared/ui/BaseFormField/BaseFormField.vue'
 export { default as BaseInput } from '@/shared/ui/BaseInput/BaseInput.vue'
 export { default as BaseToaster } from '@/shared/ui/BaseToaster/BaseToaster.vue'
 export type { ButtonSize, ButtonVariant } from '@/shared/ui/BaseButton/types'
+export type { TableColumn } from '@/shared/ui/BaseDataTable/types'

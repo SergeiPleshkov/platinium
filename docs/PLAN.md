@@ -59,7 +59,7 @@ Portal layout: responsive sidebar (off-canvas below `lg`), topbar, user menu, ro
 **Exit:** protected routes redirect; login → dashboard → reload keeps session → logout
 returns to login; all covered by an integration test.
 
-## Phase 4 — Data table engine
+## Phase 4 — Data table engine ✅ (done)
 
 The piece the three entity slices are built on, so it's built once and built well.
 `useTable` composable — debounced search, typed filters, multi-column sort, pagination, all
