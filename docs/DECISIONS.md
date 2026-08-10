@@ -99,6 +99,34 @@ so the browser and Vitest use the same transport rather than XHR and Node's `htt
 **Revisit if:** bundle size becomes a real constraint — `ky` is a drop-in behind this same
 wrapper, which is the point of having the wrapper.
 
+## 2026-08-10 — No generic resource factory, and no per-feature `api.ts`
+
+**Chose:** stores call `http` directly. `shared/api` is exactly two things — an axios client
+with interceptors, and the `ApiError` contract — plus a shared `serialiseListQuery` helper.
+**Over:** the `createResource<T, P>()` factory and per-feature `api.ts` modules that were
+built first, and are now deleted.
+**Because:** measured rather than assumed. Written out for the three entity slices, the
+layered version was 12 lines of call sites plus a 50-line factory — **62 lines** — against
+**25 lines** of direct `http` calls. The abstraction cost 2.5× what it saved. Break-even for
+a generic CRUD factory is somewhere past five entities, and this application has three.
+Worse, the factory had *zero consumers* when it was written: it was an abstraction built
+before its first caller, which is the exact risk this project's own plan lists.
+
+The per-feature `api.ts` was thinner still — for categories it was one line
+(`export const categoriesApi = createResource(...)`) in its own file, behind its own import
+hop, under a doc comment longer than the code.
+
+**What we give up:** `encodeURIComponent` and query serialisation now appear once per entity
+instead of once globally. The encoding is defensive anyway — ids are `cat_001`, not
+user-supplied — and `serialiseListQuery` is still shared. A future generic wrapper (bulk
+actions, optimistic updates) can be written against the store interface instead.
+**What we keep, and why it does earn itself:** the client and error layer has 18+ call sites
+and holds decisions that must not be re-made per call — base URL, token injection, timeout,
+cancellation, the single 401 hook, and turning every failure mode into one `ApiError`. The
+fetch→axios swap is the proof: one file changed, 22 tests passed untouched.
+**Revisit if:** the entity count passes roughly five, or several resources need identical
+cross-cutting behaviour wrapped around all five operations.
+
 ## 2026-08-10 — Correction: the phase 1 contrast finding was wrong
 
 **What I claimed:** Aura's muted text (`surface.500`) fails WCAG AA at roughly 4.0:1.

@@ -76,7 +76,9 @@ decision-making, overall software craftsmanship — not only "does it work".
       state, `shared/api` owns transport; all four enforced by lint
 - [x] Reusable composables — `useAsyncAction`, `useNotifications`, `useBreakpoint`
 - [ ] Clean state management — auth store done; entity stores in phases 5–7
-- [x] Reusable API layer — `shared/api`: axios behind `ApiError`, generic `createResource`
+- [x] Reusable API layer — `shared/api`: axios behind our `ApiError` contract, with token
+      injection, timeouts, cancellation and one central 401 hook; `serialiseListQuery` shared
+      by every list call
 - [ ] Maintainable project structure
 
 ### Testing

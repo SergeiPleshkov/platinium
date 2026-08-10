@@ -7,6 +7,7 @@ import {
   networkError,
   timeoutError,
 } from '@/shared/api/errors'
+import type { ListQuery } from '@/shared/types/api'
 
 /**
  * The single place this application talks to the network.
@@ -147,6 +148,24 @@ function toApiError(error: unknown): ApiError {
   }
 
   return networkError(error)
+}
+
+/**
+ * Flattens a `ListQuery` into request parameters.
+ *
+ * Filters are spread as top-level params rather than nested, so the URL stays readable and
+ * shareable (`?status=on_sale&status=draft`) and matches what the handlers parse. Reserved
+ * keys are written last, so a filter named `page` cannot hijack pagination.
+ */
+export function serialiseListQuery(query: ListQuery): Record<string, QueryValue> {
+  return {
+    ...query.filters,
+    search: query.search,
+    sort: query.sort,
+    order: query.order,
+    page: query.page,
+    perPage: query.perPage,
+  }
 }
 
 export interface RequestOptions {

@@ -127,7 +127,7 @@ const permitted: Array<{ description: string; relativePath: string; code: string
   {
     description: 'a feature may import from shared',
     relativePath: `src/features/${PROBE_ALPHA}/probe-allowed-shared.ts`,
-    code: `import { createResource } from '@/shared/api'\nexport const probe = createResource\n`,
+    code: `import { http } from '@/shared/api'\nexport const probe = http\n`,
   },
 ]
 

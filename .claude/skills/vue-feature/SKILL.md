@@ -30,7 +30,7 @@ app → features → shared
 | Reusable stateful behaviour | composable |
 | Server state, cross-view state | Pinia store |
 | Pure transformation | `shared/utils` (fully unit-tested) |
-| HTTP, error normalisation | `shared/api` + feature `api.ts` |
+| HTTP, error normalisation | `shared/api` (endpoint calls sit in the feature's store) |
 
 If a component's `<script setup>` grows past ~120 lines, behaviour is escaping into it —
 extract a composable. If a composable touches `document` or component internals, it's
@@ -95,14 +95,14 @@ The core ones this app leans on:
 
 ## API layer
 
-- `shared/api/http.ts` — the single `fetch` wrapper. Base URL, JSON encode/decode, timeout,
-  `AbortSignal`, auth header injection.
+- `shared/api/http.ts` — the single HTTP client (axios + interceptors). Base URL, timeout,
+  `AbortSignal`, auth-header injection, and one central 401 hook.
 - `shared/api/errors.ts` — every failure becomes an `ApiError { status, message, fieldErrors? }`.
   Network failure, timeout, 4xx and 5xx all arrive at callers in that one shape.
-- `shared/api/createResource.ts` — generic typed CRUD factory. Entities get their resource
-  from it instead of hand-rolling five near-identical methods.
+- `shared/api/http.ts` also exports `serialiseListQuery`, so every list call flattens its
+  query the same way. There is no generic CRUD-resource factory — see docs/DECISIONS.md.
 
-Nothing outside `shared/api` calls `fetch`.
+Nothing outside `shared/api` calls `fetch` or imports axios. Both are lint-blocked.
 
 ## Error and loading discipline
 

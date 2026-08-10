@@ -41,7 +41,8 @@ server-side, not client-side.
 ## Phase 3 — App shell, API layer, auth ✅ (done)
 
 `shared/api`: `http.ts` (axios instance, interceptors for auth and 401), `errors.ts`
-(`ApiError` normalisation), `createResource.ts` (typed CRUD factory).
+(`ApiError` normalisation). No generic CRUD factory — measured, it cost more than it saved;
+stores call `http` directly. See docs/DECISIONS.md.
 `shared/ui` adapter layer over PrimeVue: Button, Input, Select, Textarea, DatePicker, Modal,
 Badge, Skeleton, EmptyState, ConfirmDialog, FileUpload, Toast host — each with our own prop
 API, so features never see PrimeVue. Core composables: `useAsyncAction`, `useNotifications`,

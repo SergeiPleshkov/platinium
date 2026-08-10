@@ -1,9 +1,20 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-import { authApi } from '@/features/auth/api'
-import type { LoginPayload, User, UserRole } from '@/features/auth/types'
-import { ApiError } from '@/shared/api'
+import type { AuthSession, LoginPayload, User, UserRole } from '@/features/auth/types'
+import { ApiError, http } from '@/shared/api'
+
+/**
+ * Endpoints live beside the state that uses them rather than in a separate `api.ts`. At three
+ * calls, the indirection cost a file and an import hop and bought nothing — the URL being
+ * visible at the call site is worth more. See docs/DECISIONS.md.
+ */
+const authApi = {
+  login: (payload: LoginPayload) => http.post<AuthSession>('/auth/login', payload),
+  /** Validates a restored token against the server. */
+  me: () => http.get<User>('/auth/me'),
+  logout: () => http.post<void>('/auth/logout'),
+}
 
 const TOKEN_STORAGE_KEY = 'app.auth.token'
 

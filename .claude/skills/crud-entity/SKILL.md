@@ -1,15 +1,15 @@
 ---
 name: crud-entity
-description: Scaffold or extend a full CRUD entity slice (types, zod schema, fixtures, MSW handlers, API resource, Pinia store, table page, form dialog, tests) in this Vue 3 admin portal. Use when adding or reworking Events, Categories, Tickets, or any new domain entity, or when a CRUD slice is missing a layer.
+description: Scaffold or extend a full CRUD entity slice (types, zod schema, fixtures, MSW handlers, Pinia store with its endpoint calls, table page, form dialog, tests) in this Vue 3 admin portal. Use when adding or reworking Events, Categories, Tickets, or any new domain entity, or when a CRUD slice is missing a layer.
 ---
 
 # CRUD entity slice
 
-Every domain entity in this app is one vertical slice with the same nine layers, in the same
+Every domain entity in this app is one vertical slice with the same eight layers, in the same
 order. Build them in order — each layer only depends on the ones above it. Skipping a layer
 or inlining it somewhere else is the thing this skill exists to prevent.
 
-## The nine layers
+## The eight layers
 
 Given entity `Foo` (plural `foos`):
 
@@ -63,18 +63,21 @@ artificial latency so loading states are real. Validate the body and return `422
 `{ message, errors: Record<string, string> }` on bad input — the error path must be
 exercisable, not theoretical.
 
-### 5. API resource — `src/features/foos/api.ts`
+### 5. Store — `src/features/foos/store.ts`
 
-Built on `shared/api/createResource`, never on bare `fetch`. No component or store ever
-touches `fetch` directly.
+Endpoint calls live at the top of the store, using `http` from `@/shared/api` — never bare
+`fetch`, and never axios directly (both are lint-blocked).
 
 ```ts
-export const foosApi = createResource<Foo, FooPayload>('/api/foos')
+const listFoos = (query: ListQuery, signal?: AbortSignal) =>
+  http.get<ListResponse<Foo>>('/foos', { query: serialiseListQuery(query), signal })
+const createFoo = (payload: FooPayload) => http.post<Foo>('/foos', payload)
 ```
 
-Only add hand-written methods here for genuinely entity-specific endpoints.
-
-### 6. Store — `src/features/foos/store.ts`
+There is deliberately **no** generic resource factory and no separate `api.ts`: measured
+against three entities, both cost more code than they saved, and a store reads more plainly
+when the endpoint it hits is visible at the call site. An entity only graduates to its own
+`api.ts` once it accumulates three or more endpoints beyond the standard five.
 
 Pinia setup store. Owns: collection, item cache, query state, loading and error flags.
 Owns no DOM, no toasts, no router.
@@ -97,7 +100,7 @@ export const useFoosStore = defineStore('foos', () => {
 Mutations re-fetch the current page (or patch optimistically, if optimistic UI is in scope)
 and rethrow a normalised `ApiError` so the caller can decide how to surface it.
 
-### 7. List page — `src/features/foos/pages/FoosPage.vue`
+### 6. List page — `src/features/foos/pages/FoosPage.vue`
 
 Composes `BaseDataTable` + `useTable` (the composable that owns search debounce, filter,
 sort and page state, and syncs them to the URL query so a filtered view is shareable and
@@ -106,14 +109,14 @@ survives reload). The page wires store ↔ table; it does not reimplement either
 Required states, all of them: loading skeleton, empty ("no foos yet" + create CTA), no
 results for the current filters (with a clear-filters action), and error with retry.
 
-### 8. Form — `src/features/foos/components/FooFormDialog.vue`
+### 7. Form — `src/features/foos/components/FooFormDialog.vue`
 
 One dialog for create and edit, driven by an optional `foo` prop. vee-validate +
 `toTypedSchema(fooSchema)`. Submit disabled while pending; server-side `422` field errors
 mapped back onto the matching form fields; success closes the dialog and fires a
 notification.
 
-### 9. Tests — colocated `*.spec.ts`
+### 8. Tests — colocated `*.spec.ts`
 
 Minimum bar per entity, no exceptions:
 
@@ -132,7 +135,7 @@ Minimum bar per entity, no exceptions:
 
 ## Checklist before calling a slice done
 
-- [ ] All nine layers exist; no layer inlined into another
+- [ ] All eight layers exist; no layer inlined into another
 - [ ] Server-side search / filter / sort / pagination, verified in the network tab
 - [ ] Loading, empty, no-results and error states all reachable in the UI
 - [ ] Relations resolve (a ticket shows its event and category names, not raw ids)

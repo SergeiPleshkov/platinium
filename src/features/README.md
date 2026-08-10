@@ -8,8 +8,7 @@ features/<name>/
   index.ts        # the ONLY thing other layers may import from
   types.ts        # domain types
   schema.ts       # zod schemas — the single source of truth for validation
-  api.ts          # resource built on @/shared/api, never bare fetch
-  store.ts        # Pinia setup store: server state, query state, loading/error flags
+  store.ts        # Pinia setup store: endpoint calls, server state, loading/error flags
   composables/    # feature-specific reactive behaviour
   components/     # feature-specific components (forms, dialogs, cells)
   pages/          # route-level components, lazy-loaded by the router

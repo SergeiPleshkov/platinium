@@ -2,7 +2,7 @@
  * The contract between the client and the (mock) backend.
  *
  * Every list endpoint speaks the same envelope and accepts the same query parameters, which
- * is what lets `createResource` and `useTable` be written once and reused by every entity.
+ * is what lets `serialiseListQuery` and `useTable` be written once and reused by every entity.
  */
 
 export type SortOrder = 'asc' | 'desc'

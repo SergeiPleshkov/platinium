@@ -41,7 +41,7 @@ strategy and craftsmanship count as much as features.
 src/
   app/            # bootstrap: app entry, router, pinia, global providers, styles
   shared/         # cross-feature, feature-agnostic
-    api/          # http client, error normalisation, resource factory
+    api/          # http client, error normalisation, query serialisation
     ui/           # presentational primitives (Base*), zero domain knowledge
     composables/  # useTable, useAsyncAction, useNotifications, useBreakpoint, ...
     utils/        # pure functions, fully unit-tested
