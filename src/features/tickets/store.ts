@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed } from 'vue'
 
 import { ticketsApi } from '@/features/tickets/api'
-import type { TicketPayload, TicketWithRelations } from '@/features/tickets/types'
+import type { TicketPayload, TicketStatus, TicketWithRelations } from '@/features/tickets/types'
 import { ApiError, isAbortError } from '@/shared/api'
 import { useCollectionState } from '@/shared/composables/useCollectionState'
 import type { ListQuery } from '@/shared/types/api'
@@ -70,6 +70,41 @@ export const useTicketsStore = defineStore('tickets', () => {
     }
   }
 
+  /**
+   * Changes one ticket's status from the row, without waiting for the server.
+   *
+   * The case optimism is actually for: a frequent, low-risk, one-click change where the user
+   * stays on the page and a 200ms pause reads as lag. Contrast the edit dialog, which stays
+   * open until the server agrees — there, optimism would buy nothing and cost the field-level
+   * error messages a 422 carries.
+   *
+   * `collection.optimistic` owns the snapshot and the rollback; this only says what changes
+   * and how to commit it.
+   */
+  async function setStatus(id: string, status: TicketStatus): Promise<void> {
+    const ticket = collection.items.value.find((candidate) => candidate.id === id)
+    if (!ticket || ticket.status === status) return
+
+    await collection.optimistic(id, { status }, async () => {
+      try {
+        // The whole payload, because the endpoint validates against the full schema — the
+        // mock backend is deliberately not more forgiving than a real one would be.
+        const updated = await ticketsApi.update(id, {
+          name: ticket.name,
+          priceMinor: ticket.priceMinor,
+          currency: ticket.currency,
+          quantity: ticket.quantity,
+          status,
+          eventId: ticket.eventId,
+          categoryId: ticket.categoryId,
+        })
+        collection.upsert(updated)
+      } catch (caught) {
+        throw asApiError(caught)
+      }
+    })
+  }
+
   async function update(id: string, payload: TicketPayload): Promise<TicketWithRelations> {
     try {
       const updated = await ticketsApi.update(id, payload)
@@ -103,6 +138,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     pageValueByCurrency,
     fetchList,
     fetchWindow,
+    setStatus,
     exportCsv,
     create,
     update,

@@ -9,6 +9,7 @@ import {
   TICKET_STATUS_LABELS,
   TICKET_STATUS_OPTIONS,
   TICKET_STATUS_TONES,
+  type TicketStatus,
   type TicketWithRelations,
 } from '@/features/tickets/types'
 import { usePermissions } from '@/features/auth'
@@ -136,6 +137,23 @@ const eventOptions = computed(() =>
 const categoryOptions = computed(() =>
   categoriesStore.options.map((option) => ({ value: option.id, label: option.name })),
 )
+
+/* ---- inline status ---- */
+
+/**
+ * The row shows the new status immediately; the store restores the old one if the server
+ * refuses. Only the toast is deferred to the outcome — showing "saved" before it is saved
+ * would be the one lie an optimistic UI must not tell.
+ */
+async function onStatusChange(row: TicketWithRelations, event: Event): Promise<void> {
+  const status = (event.target as HTMLSelectElement).value as TicketStatus
+
+  try {
+    await store.setStatus(row.id, status)
+  } catch (caught) {
+    notifications.fromError(caught, `Could not change the status of “${row.name}”.`)
+  }
+}
 
 /* ---- create / edit ---- */
 
@@ -369,8 +387,25 @@ async function confirmDelete(): Promise<void> {
         <span class="tabular-nums">{{ row.quantity.toLocaleString('en-GB') }}</span>
       </template>
 
+      <!--
+        Editable in place for anyone who may update, a plain badge for anyone who may not.
+        Status is the one field that changes often enough to be worth a click rather than a
+        dialog, which is also what makes it the field worth doing optimistically.
+      -->
       <template #cell-status="{ row }">
+        <select
+          v-if="permissions.canUpdate.value"
+          class="rounded-md border border-border bg-surface-0 px-2 py-1 text-xs font-medium text-content dark:bg-surface-900"
+          :value="row.status"
+          :aria-label="`Status for ${row.name}`"
+          @change="onStatusChange(row, $event)"
+        >
+          <option v-for="option in TICKET_STATUS_OPTIONS" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
         <BaseBadge
+          v-else
           :label="TICKET_STATUS_LABELS[row.status]"
           :tone="TICKET_STATUS_TONES[row.status]"
         />

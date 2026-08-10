@@ -44,6 +44,18 @@ async function selectRows(count: number): Promise<void> {
   }
 }
 
+/**
+ * Finds an option inside the open dropdown overlay.
+ *
+ * Scoped to the `listbox` deliberately: the table's inline status controls are native
+ * `<select>` elements whose `<option>`s also carry the `option` role, so an unscoped query
+ * matches a dozen rows as well as the dropdown.
+ */
+async function findOverlayOption(name: string): Promise<HTMLElement> {
+  const listbox = await screen.findByRole('listbox')
+  return within(listbox).getByRole('option', { name })
+}
+
 beforeEach(() => {
   localStorage.clear()
 })
@@ -112,7 +124,7 @@ describe('bulk actions', () => {
       const ids = store.items.slice(0, 3).map((ticket) => ticket.id)
 
       await userEvent.click(screen.getByLabelText('Set status for selected'))
-      await userEvent.click(await screen.findByRole('option', { name: 'Paused' }))
+      await userEvent.click(await findOverlayOption('Paused'))
       await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
 
       await waitFor(() => {
@@ -127,7 +139,7 @@ describe('bulk actions', () => {
       await selectRows(2)
 
       await userEvent.click(screen.getByLabelText('Set status for selected'))
-      await userEvent.click(await screen.findByRole('option', { name: 'Paused' }))
+      await userEvent.click(await findOverlayOption('Paused'))
       await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
 
       expect(await screen.findByText('2 tickets updated')).toBeInTheDocument()

@@ -55,6 +55,17 @@ function columnCells(header: string): string[] {
   )
 }
 
+/**
+ * The first option in the open dropdown overlay.
+ *
+ * Scoped to the `listbox`: the table's inline status controls are native `<select>` elements,
+ * and their `<option>`s carry the same role, so an unscoped query picks a table row.
+ */
+async function firstOverlayOption(): Promise<HTMLElement> {
+  const listbox = await screen.findByRole('listbox')
+  return within(listbox).getAllByRole('option')[0]!
+}
+
 beforeEach(() => {
   localStorage.clear()
 })
@@ -116,10 +127,10 @@ describe('tickets', () => {
     await userEvent.type(within(dialog).getByLabelText(/^Name/), 'Integration Test Tier')
 
     await userEvent.click(within(dialog).getByLabelText(/Event/))
-    await userEvent.click((await screen.findAllByRole('option'))[0]!)
+    await userEvent.click(await firstOverlayOption())
 
     await userEvent.click(within(dialog).getByLabelText(/Category/))
-    await userEvent.click((await screen.findAllByRole('option'))[0]!)
+    await userEvent.click(await firstOverlayOption())
 
     const priceField = within(dialog).getByLabelText(/Price/)
     await userEvent.clear(priceField)

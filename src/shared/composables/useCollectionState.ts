@@ -90,6 +90,29 @@ export interface CollectionState<TEntity> {
   /** Applies a server-returned record to the cached list without a full refetch. */
   upsert: (entity: TEntity & { id: string }) => void
   removeById: (id: string) => void
+  /**
+   * Applies part of a record immediately and returns the version it replaced.
+   *
+   * The return value is the point: it is the snapshot a rollback needs. Reconstructing "what
+   * it was before" from the change alone is not possible once several fields are involved.
+   */
+  patch: (id: string, changes: Partial<TEntity>) => TEntity | null
+  /**
+   * Shows a change before the server has agreed to it, and undoes it if the server does not.
+   *
+   * Lives here rather than in each store because getting it wrong is silent: an optimistic
+   * update that forgets to roll back leaves the screen confidently displaying something that
+   * was refused, and nothing about the page looks broken. Written once, every entity inherits
+   * a correct version.
+   *
+   * `commit` is expected to rethrow — the caller still needs the error for its toast — so this
+   * restores the snapshot and rethrows rather than swallowing.
+   */
+  optimistic: <TResult>(
+    id: string,
+    changes: Partial<TEntity>,
+    commit: () => Promise<TResult>,
+  ) => Promise<TResult>
   reset: () => void
 }
 
@@ -112,6 +135,24 @@ export function useCollectionState<TEntity extends { id: string }>(
       id: `__pending_${index}`,
       __pending: true as const,
     }))
+  }
+
+  /**
+   * Replaces one row wherever it is held.
+   *
+   * The paginated list and the virtual buffer are two views of the same records, so a write
+   * that reaches only one of them makes the change appear to undo itself the moment the user
+   * switches rendering mode.
+   */
+  function writeRow(id: string, entity: TEntity): void {
+    items.value = items.value.map((candidate) => (candidate.id === id ? entity : candidate))
+
+    const buffered = buffer.value.findIndex((candidate) => candidate.id === id)
+    if (buffered !== -1) {
+      const next = buffer.value.slice()
+      next[buffered] = entity
+      buffer.value = next
+    }
   }
 
   function beginLoad(): void {
@@ -203,25 +244,38 @@ export function useCollectionState<TEntity extends { id: string }>(
       buffer.value = []
     },
 
-    upsert(entity) {
-      const index = items.value.findIndex((candidate) => candidate.id === entity.id)
-      if (index !== -1) {
-        items.value = items.value.map((candidate) =>
-          candidate.id === entity.id ? entity : candidate,
-        )
-      }
+    patch(id, changes) {
+      const existing = items.value.find((candidate) => candidate.id === id) ?? null
+      if (existing === null) return null
 
-      /*
-       * Safe on the buffer too, because an edit replaces a row in place. A *delete* is not —
-       * it shifts every later row — so `removeById` deliberately invalidates the buffer
-       * instead of trying to patch it.
-       */
-      const buffered = buffer.value.findIndex((candidate) => candidate.id === entity.id)
-      if (buffered !== -1) {
-        const next = buffer.value.slice()
-        next[buffered] = entity
-        buffer.value = next
+      writeRow(id, { ...existing, ...changes })
+      return existing
+    },
+
+    async optimistic(id, changes, commit) {
+      const snapshot = items.value.find((candidate) => candidate.id === id) ?? null
+      if (snapshot !== null) writeRow(id, { ...snapshot, ...changes })
+
+      try {
+        return await commit()
+      } catch (caught) {
+        /*
+         * Restore the exact record, not the inverse of `changes`. Reconstructing the previous
+         * value from the delta stops being possible as soon as more than one field is
+         * involved, and gets subtly wrong when a field was already at the new value.
+         */
+        if (snapshot !== null) writeRow(id, snapshot)
+        throw caught
       }
+    },
+
+    /*
+     * Safe on the buffer as well as the list, because an edit replaces a row in place. A
+     * *delete* is not — it shifts every later row — so `removeById` deliberately invalidates
+     * the buffer instead of trying to patch it.
+     */
+    upsert(entity) {
+      writeRow(entity.id, entity)
     },
 
     removeById(id) {

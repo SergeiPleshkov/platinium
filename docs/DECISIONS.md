@@ -557,3 +557,35 @@ is refused exactly as they are on `DELETE /:id`. There is a test for precisely t
 rows and then filtering to a different set would leave those ids selected but invisible, and
 the next "delete selected" would hit records nobody can see. "Select all" means the rows on
 screen, never the whole result set — the user cannot consent to what they cannot see.
+
+## 2026-08-10 — Optimistic updates only where the wait is the problem
+
+**Chose:** optimism for the inline status change on a ticket row, and nowhere else. The
+snapshot-and-rollback lives in `useCollectionState.optimistic`, not in each store.
+**Over:** making every mutation optimistic, which is the usual way this feature is
+demonstrated and the wrong way to ship it.
+
+**Where it earns itself.** A frequent, low-risk, one-click change where the user stays on the
+page and a 200ms round trip reads as lag. That is a status dropdown in a table row, so the
+status cell became one.
+
+**Where it does not, and why the edit dialog was left alone.** A form stays open until the
+server agrees, and it *needs* the server's answer: a 422 carries field-level messages that
+have to land on individual inputs. Closing the dialog optimistically and reopening it on
+failure would be worse than waiting. The same argument rules out an optimistic single delete —
+the confirm dialog currently explains a 409 ("still has 25 tickets") in place, which is more
+useful than a row that vanishes and reappears.
+
+**Why the rollback lives in the state layer.** Its failure mode is silent. An optimistic
+update that forgets to undo itself leaves the screen confidently displaying a value the
+server refused, and nothing about the page looks broken — no error state, no missing data,
+just a wrong number. Written once in `optimistic()`, every entity inherits a correct version
+instead of three chances to omit it.
+
+**Restore the snapshot, not the inverse of the change.** Reconstructing "what it was" from the
+delta stops being possible with more than one field, and is already wrong when the field was
+already at the new value. The previous record is captured whole and written back whole.
+
+**Success is silent.** No toast when it works — the row said so the moment it was clicked, and
+confirming it afterwards is noise. Only the failure speaks, and it uses the *server's* message
+in preference to the page's fallback.
