@@ -1,0 +1,101 @@
+# Requirements traceability
+
+Verbatim requirement inventory extracted from `Technical test - Senior Frontend Developer.pdf`
+(SHA-256 `0ec7e1df2eb0df20a98416a9035bd3c6c7c0cd1a28ed68f3cec1c6bc241100ee`, 6 pages,
+Google Docs export, audited — no active content).
+
+This file is the single source of truth for "is the task done". Every box must be ticked
+before submission. Do not silently reinterpret a requirement — if a decision deviates,
+record it in `TECHNICAL_REVIEW.md` under accepted trade-offs.
+
+## Context
+
+> Build a Ticket Management Admin Portal allowing administrators to manage Events, Ticket
+> Categories and Tickets. Designed with scalability, maintainability, performance and
+> developer experience in mind. Assume this application is the foundation of a real
+> production admin platform that will continue to evolve over time.
+
+Graded on: frontend architecture, engineering practices, testing strategy, technical
+decision-making, overall software craftsmanship — not only "does it work".
+
+## Functional
+
+### Authentication
+- [ ] Simple login page
+- [ ] Authentication fully mocked
+- [ ] Authenticated users reach the administration portal (unauthenticated ones cannot)
+
+### Dashboard
+- [ ] Manage Events
+- [ ] Manage Categories
+- [ ] Manage Tickets
+- [ ] Search
+- [ ] Filtering
+- [ ] Sorting
+- [ ] Pagination
+
+### CRUD — complete Create / Read / Update / Delete for all three entities
+- [ ] Ticket — Name, Price, Currency, Quantity, Status, Event, Category
+- [ ] Event — Name, Country, Venue, Start Date, End Date, Status
+- [ ] Category — Name, Description
+
+### Validation & error handling
+- [ ] Form validation
+- [ ] User-friendly validation messages
+- [ ] Proper loading states
+- [ ] Graceful API error handling
+- [ ] Success / error notifications
+
+### Responsive
+- [ ] Desktop
+- [ ] Mobile
+- [ ] Tablet
+
+## Technical
+
+### Mandatory stack
+- [ ] Vue 3
+- [ ] Pinia **or** Vuex
+- [ ] Vue Router
+- [ ] TypeScript
+- [ ] Docker
+
+### Mock API
+- [ ] Data fixtures simulating backend data
+- [ ] MSW / MirageJS / json-server / equivalent
+
+### Architecture — must demonstrate
+- [ ] Scalable folder organization
+- [ ] Reusable components
+- [ ] Separation of concerns
+- [ ] Reusable composables
+- [ ] Clean state management
+- [ ] Reusable API layer
+- [ ] Maintainable project structure
+
+### Testing
+- [ ] Unit tests — components, stores, composables, utilities
+- [ ] Integration tests — complete user interactions and business flows
+
+## Deliverables
+
+- [ ] Fully functional Vue 3 application
+- [ ] Docker configuration
+- [ ] Mock API implementation
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] `README.md` — project overview, installation, Docker setup, development commands,
+      build commands, testing commands, project structure, architecture overview,
+      technical decisions, assumptions and trade-offs
+- [ ] `TECHNICAL_REVIEW.md` — main architectural decisions; what you'd improve with two
+      more days; technical debt intentionally accepted; what you'd refactor first; how
+      you'd scale to hundreds of thousands of tickets and many concurrent admins; coding
+      standards and quality checks you'd introduce for the team; how AI fits your daily
+      development workflow on this project
+- [ ] Pushed to a public Git repository, URL shared
+
+## Bonus (optional, "if time permits")
+
+Dark mode · Bulk actions · CSV import/export · Dashboard statistics · Role-based
+permissions · Optimistic UI updates · Drag & drop ordering · Infinite scrolling · anything
+else that demonstrates engineering skill.
