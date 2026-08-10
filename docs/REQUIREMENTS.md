@@ -110,11 +110,20 @@ Selected for this submission (phase 8, in build order — all after mandatory wo
 - [x] Dark mode — light/dark/system, persisted, pre-paint so a reload never flashes
 - [x] Dashboard statistics — aggregated server-side via `/api/stats`; the browser never
       loads a collection to count it
-- [ ] Bulk actions (multi-select delete / status change, partial-failure reporting)
+- [x] Bulk actions — multi-select delete and status change across all three entities,
+      per-record reporting (207 + reasons), enforced against the same permission matrix
 - [x] CSV export — of the current filtered query, server-rendered; 27 tests
-- [ ] CSV import (per-row validation, preview, error report)
-- [ ] Optimistic UI updates (with rollback)
-- [ ] Role-based permissions (enforced in UI *and* at the mock API boundary)
+- [x] CSV import — dry-run preview from the same endpoint that commits, per-row errors by
+      file line number, hand-written RFC 4180 parser round-tripped against the exporter
+- [x] Optimistic UI updates — inline ticket status, snapshot-and-rollback in the state
+      layer; deliberately *not* applied to the form dialogs, which need the server's 422
+- [x] Role-based permissions — a capability matrix imported by both the UI and the mock
+      backend; every forbidden call is tested against the API, not just hidden in the UI
 
-Not selected: drag & drop ordering, infinite scrolling — both conflict with the mandated
-sortable, paginated table, and neither adds signal the above don't already provide.
+Also built, beyond the brief's list:
+
+- [x] Virtual scrolling — selectable against pagination from a switch on every list page, so
+      both strategies can be compared over the identical server-side query
+
+Not selected: drag & drop ordering — a manual order conflicts with the mandated sortable
+column headers, and reconciling the two would be a product decision nobody has made.

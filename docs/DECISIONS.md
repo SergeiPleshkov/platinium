@@ -262,7 +262,7 @@ not a stub, it is a hard-coded branch.
 `unstubGlobals` clears stubbed globals after every test, so an up-front stub survives exactly
 one case and then vanishes.
 
-## 2026-08-10 — No generic resource factory, and no per-feature `api.ts`
+## 2026-08-10 — No generic resource factory, and no per-feature `api.ts` *(partly superseded)*
 
 **Chose:** stores call `http` directly. `shared/api` is exactly two things — an axios client
 with interceptors, and the `ApiError` contract — plus a shared `serialiseListQuery` helper.
@@ -289,6 +289,19 @@ cancellation, the single 401 hook, and turning every failure mode into one `ApiE
 fetch→axios swap is the proof: one file changed, 22 tests passed untouched.
 **Revisit if:** the entity count passes roughly five, or several resources need identical
 cross-cutting behaviour wrapped around all five operations.
+
+> **Superseded in part, later the same day.** The half of this entry about the *factory*
+> stands and the factory is still gone. The half about per-feature `api.ts` modules does not:
+> they were reinstated at the reviewer's direction, and the reinstatement has since earned
+> itself in a way the original measurement could not have predicted. Each `api.ts` has grown
+> endpoints that are genuinely per-entity — `exportCsv`, `import`, `bulk`, `listCountries` —
+> and the `Resource<T, P> & { … }` intersection is where those are declared. The original
+> measurement was honest about what existed at the time; it was wrong about what would.
+>
+> The lesson worth keeping is not "the reviewer was right and the measurement was wrong". It
+> is that "this abstraction has one line in it today" measures the present, and a *file* is a
+> cheaper place to be wrong than an abstraction is. Deleting the factory cost nothing to
+> reverse. Deleting the files cost a re-import in every store.
 
 ## 2026-08-10 — Correction: the phase 1 contrast finding was wrong
 

@@ -74,7 +74,7 @@ docker run --rm -p 8080:8080 ticket-admin-portal
 | `pnpm typecheck` | `vue-tsc` across app, test and config projects |
 | `pnpm lint` | ESLint, including the architectural boundary rules |
 | `pnpm format` / `pnpm format:check` | Prettier |
-| `pnpm test` | Full suite — 386 tests |
+| `pnpm test` | Full suite — 617 tests |
 | `pnpm test:unit` | Unit and component tests only (`src/`) |
 | `pnpm test:integration` | Integration flows only (`tests/integration/`) |
 | `pnpm test:watch` | Vitest in watch mode |
@@ -107,9 +107,10 @@ src/
   app/                  bootstrap: entry, router + guards, layouts, theme tokens, plugins
   shared/               cross-feature and domain-agnostic
     api/                axios client, ApiError normalisation, query serialisation
-    composables/        useTable, useCollectionState, useAsyncAction, useNotifications,
-                        useBreakpoint, useTheme
-    ui/                 15 Base* primitives — the only place PrimeVue is imported
+    composables/        useTable, useListView, useCollectionState, useVirtualRows,
+                        useRowSelection, useBulkAction, useAsyncAction, useNotifications,
+                        useRouteLoading, useBreakpoint, useTheme, useSidebar
+    ui/                 18 Base* primitives — the only place PrimeVue is imported
     utils/              money, dates — pure and fully unit-tested
     types/              API envelope and entity contracts
     validation/         our zod ↔ vee-validate adapter
@@ -124,7 +125,7 @@ tests/
   utils/                render helpers, viewport and contrast helpers
 ```
 
-Roughly 7,100 lines of source and 4,000 of tests.
+Roughly 10,500 lines of source and 7,400 of tests.
 
 ---
 
@@ -180,7 +181,7 @@ This is the difference between a UI that looks right at 250 rows and one that st
 
 ### PrimeVue is a replaceable dependency
 
-Feature code consumes 15 `Base*` adapters with our own prop APIs. Tests query by role, label
+Feature code consumes 18 `Base*` adapters with our own prop APIs. Tests query by role, label
 and visible text — never PrimeVue classnames — so the suite would survive replacing the kit.
 The boundary has already earned itself twice: it caught a direct PrimeVue import in a new
 dashboard component, and it forced `BaseButton` to stop leaking PrimeVue's icon-only
@@ -199,7 +200,7 @@ assert on specific rows and page boundaries.
 
 ### Testing strategy
 
-386 tests across six kinds, each with a distinct job:
+617 tests across six kinds, each with a distinct job:
 
 | Kind | Job |
 |---|---|
@@ -217,7 +218,7 @@ MSW is the only mock. No stubbed stores, no stubbed API modules, no stubbed chil
 
 ## Technical decisions
 
-Sixteen entries with full reasoning are in [docs/DECISIONS.md](docs/DECISIONS.md). The ones
+Twenty-nine entries with full reasoning are in [docs/DECISIONS.md](docs/DECISIONS.md). The ones
 that shaped the most code:
 
 **PrimeVue 4.5.5, pinned — not 5.x.** PrimeVue 5 is no longer open source: it carries the
@@ -268,9 +269,10 @@ beat downgrading every schema to satisfy a dependency that cannot follow us forw
   intentional debt here — see [TECHNICAL_REVIEW.md](TECHNICAL_REVIEW.md).
 - **MSW is ~162 kB gzipped** in the production bundle. It is lazy-imported behind an env flag
   and only loads because this application intentionally ships its own backend.
-- **Four bonus features were scoped and not built** — bulk actions, CSV export, CSV import,
-  optimistic updates and RBAC. Mandatory requirements came first by design; the plan named
-  the bonus phase as the cut line before any of it was written.
+- **Only drag & drop ordering was left unbuilt** from the bonus list. A manual order fights
+  the mandated sortable column headers, and reconciling the two is a product decision nobody
+  has made. Everything else selected — dark mode, dashboard statistics, CSV export and import,
+  bulk actions, optimistic updates, role-based permissions, plus virtual scrolling — shipped.
 - **No E2E layer.** The integration tests drive the real router, real stores and real mock
   backend in jsdom, which covers the same journeys; Playwright would add real-browser
   fidelity and CI time.
