@@ -31,16 +31,7 @@
       "Bash(docker compose config:*)",
       "Bash(docker compose build:*)"
     ],
-    "ask": [
-      "Bash(git push:*)",
-      "Bash(gh repo create:*)",
-      "Bash(docker compose up:*)"
-    ],
-    "deny": [
-      "Bash(git push --force:*)",
-      "Bash(rm -rf:*)",
-      "Read(./.env)",
-      "Read(./.env.*)"
-    ]
+    "ask": ["Bash(git push:*)", "Bash(gh repo create:*)", "Bash(docker compose up:*)"],
+    "deny": ["Bash(git push --force:*)", "Bash(rm -rf:*)", "Read(./.env)", "Read(./.env.*)"]
   }
 }

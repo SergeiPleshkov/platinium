@@ -54,10 +54,10 @@ decision-making, overall software craftsmanship — not only "does it work".
 ## Technical
 
 ### Mandatory stack
-- [ ] Vue 3
-- [ ] Pinia **or** Vuex
-- [ ] Vue Router
-- [ ] TypeScript
+- [x] Vue 3 — `src/app/main.ts`, `<script setup>` enforced by `vue/component-api-style`
+- [x] Pinia **or** Vuex — Pinia registered in `src/app/main.ts`; stores land with the slices
+- [x] Vue Router — `src/app/router/`, lazy-loaded routes
+- [x] TypeScript — `tsconfig.base.json`, strict + `exactOptionalPropertyTypes`
 - [ ] Docker
 
 ### Mock API
@@ -65,8 +65,9 @@ decision-making, overall software craftsmanship — not only "does it work".
 - [ ] MSW / MirageJS / json-server / equivalent
 
 ### Architecture — must demonstrate
-- [ ] Scalable folder organization
-- [ ] Reusable components
+- [x] Scalable folder organization — `src/features/README.md`; layering enforced by
+      `eslint.config.js` and proven by `tests/architecture/boundaries.spec.ts`
+- [ ] Reusable components — `shared/ui` layer started (`BaseButton`), built out in phase 3
 - [ ] Separation of concerns
 - [ ] Reusable composables
 - [ ] Clean state management

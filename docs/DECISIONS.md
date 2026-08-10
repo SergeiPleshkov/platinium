@@ -47,3 +47,50 @@ widening a wrapper rather than reaching for it inline.
 **Revisit if:** the wrappers start out-massing what they wrap, or PrimeVue's theming fights
 the design more than it helps — at which point the swap is a change to `shared/ui` alone,
 which is the property being bought here.
+
+## 2026-08-10 — Pinned to PrimeVue 4.5.5, not 5.x
+
+**Chose:** `primevue@4.5.5` and `@primeuix/themes@2.0.3`, both exact pins, both MIT.
+**Over:** the current latest, `primevue@5.0.0`.
+**Because:** PrimeVue 5 is no longer open source. Its licence is "SEE LICENSE IN LICENSE.md",
+which is the PrimeTek dual Community/Commercial licence: a licence key is required, an
+offline verifier ships as a runtime dependency (`@primeui/license-manager`), and a missing or
+expired key "may cause the software to display a license notice" in the running app. The
+Community tier is also revenue- and headcount-gated with annual re-confirmation. None of that
+belongs in a public assessment repository that a reviewer will clone and run. 4.5.5 is the
+last MIT release and its dependency tree carries no licence manager.
+**Costs:** we forgo PrimeVue 5 features and will not get 5.x security patches on this line.
+**Revisit if:** the app needs a v5-only component, or the organisation buys a licence — and
+note the adapter layer above makes leaving PrimeVue entirely a bounded change either way.
+
+## 2026-08-10 — Maximal TypeScript strictness, including `exactOptionalPropertyTypes`
+
+**Chose:** `strict` plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`,
+`noImplicitOverride`, `noUnusedLocals`/`Parameters`, `noFallthroughCasesInSwitch`.
+**Over:** plain `strict: true`.
+**Because:** `noUncheckedIndexedAccess` is what makes paginated array access honest, and
+`exactOptionalPropertyTypes` stops "the property is present and undefined" bugs at the API
+boundary — exactly the class of bug a mock-backed CRUD app invites.
+**Costs:** real friction. It rejected `withDefaults(..., { icon: undefined })` on the first
+component written, and it forces conditional spreads instead of passing possibly-undefined
+values into optional properties. Both are the rule working as intended.
+**Revisit if:** never, on a greenfield project. Retrofitting these onto an existing codebase
+is a different calculation.
+
+## 2026-08-10 — Architecture boundaries are lint rules with their own tests
+
+**Chose:** encode the `app → features → shared` layering, feature isolation, the PrimeVue
+containment and the "no `fetch` outside `shared/api`" rule as ESLint rules, then test the
+rules themselves in `tests/architecture/boundaries.spec.ts` by writing deliberate violations
+to disk and asserting each is rejected. The feature list is read from the filesystem at lint
+time, so a new slice is covered the moment it exists.
+**Over:** documenting the boundaries in the README and relying on review.
+**Because:** the first version of the config was silently broken — the per-feature
+`no-restricted-imports` block *replaced* the UI-kit restriction instead of adding to it
+(flat config overwrites rule options rather than merging them), so any feature could have
+imported PrimeVue directly with `pnpm lint` fully green. Nothing but an executable check
+would have caught that, and nothing but a test would stop it regressing.
+**Costs:** the architecture suite writes temporary files under `src/` and boots ESLint, so it
+runs in about a second — slower than a normal unit test.
+**Revisit if:** the rule set grows past what `no-restricted-imports` can express, at which
+point a dedicated boundaries plugin earns its dependency.

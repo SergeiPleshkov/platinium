@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    /*
+     * Application code gets browser types only. Node's globals are deliberately absent so a
+     * `process.env` or `node:fs` import in a component fails to compile instead of failing
+     * in the browser.
+     */
+    "types": ["vite/client"],
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "env.d.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/**/__snapshots__/**", "node_modules", "dist"]
+}

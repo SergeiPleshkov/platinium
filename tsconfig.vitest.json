@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    /* Tests may use Node APIs — fixtures, the filesystem, the ESLint API. */
+    "types": ["vite/client", "node", "vitest/globals", "@testing-library/jest-dom"],
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.vitest.tsbuildinfo"
+  },
+  "include": ["src/**/*.spec.ts", "tests/**/*.ts", "env.d.ts"],
+  "exclude": ["node_modules", "dist"]
+}

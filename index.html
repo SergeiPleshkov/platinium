@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Administration portal for managing events, ticket categories and tickets."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>Ticket Admin Portal</title>
+    <script>
+      // Applied before first paint so a dark-mode reload never flashes a white screen.
+      // The real toggle lives in the theme composable; this only restores the last choice.
+      ;(() => {
+        try {
+          const stored = localStorage.getItem('app.theme')
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+          if (stored === 'dark' || (stored !== 'light' && prefersDark)) {
+            document.documentElement.classList.add('dark')
+          }
+        } catch {
+          /* Private mode or blocked storage — light theme is a fine fallback. */
+        }
+      })()
+    </script>
+  </head>
+  <body class="h-full">
+    <div id="app" class="h-full"></div>
+    <script type="module" src="/src/app/main.ts"></script>
+  </body>
+</html>

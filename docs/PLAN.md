@@ -14,7 +14,7 @@ Git repo, `CLAUDE.md`, requirements traceability, skills (`crud-entity`, `vue-fe
 
 ---
 
-## Phase 1 — Project skeleton & toolchain
+## Phase 1 — Project skeleton & toolchain ✅ (done)
 
 Scaffold Vite + Vue 3 + TS (`strict`, `noUncheckedIndexedAccess`), path alias `@ → src`.
 PrimeVue 4 with a custom Aura preset (our own colour/spacing tokens, `darkModeSelector: '.dark'`)
@@ -46,6 +46,11 @@ server-side, not client-side.
 Badge, Skeleton, EmptyState, ConfirmDialog, FileUpload, Toast host — each with our own prop
 API, so features never see PrimeVue. Core composables: `useAsyncAction`, `useNotifications`,
 `useBreakpoint`.
+
+Carried over from phase 1: Aura's default muted text (`slate-500` on white, ≈4.0:1) fails
+WCAG AA for normal text, and it is what the secondary and ghost button variants inherit.
+Darken the muted-text token as part of building out the kit, and add a contrast assertion to
+the UI-kit tests so it cannot regress.
 Auth feature: login page with validation, mocked credentials, session in a Pinia store
 persisted to `localStorage`, route guards, 401 interception, logout.
 Portal layout: responsive sidebar (off-canvas below `lg`), topbar, user menu, router views.
