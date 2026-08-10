@@ -3,6 +3,7 @@ import type { RequestHandler } from 'msw'
 import { authHandlers } from '@/mocks/handlers/auth'
 import { categoryHandlers } from '@/mocks/handlers/categories'
 import { eventHandlers } from '@/mocks/handlers/events'
+import { statsHandlers } from '@/mocks/handlers/stats'
 import { ticketHandlers } from '@/mocks/handlers/tickets'
 
 /**
@@ -16,6 +17,7 @@ export const handlers: RequestHandler[] = [
   ...authHandlers,
   ...categoryHandlers,
   ...eventHandlers,
+  ...statsHandlers,
   ...ticketHandlers,
 ]
 

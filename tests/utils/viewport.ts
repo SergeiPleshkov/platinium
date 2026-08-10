@@ -16,9 +16,13 @@ export const TABLET_WIDTH = 768
 export const MOBILE_WIDTH = 375
 
 let currentWidth = DESKTOP_WIDTH
+let currentPrefersDark = false
 
-/** Parses the `(min-width: 768px)` / `(max-width: 767px)` queries this app actually uses. */
+/** Parses the queries this app actually uses: width breakpoints and the colour scheme. */
 function evaluate(query: string, width: number): boolean {
+  if (query.includes('prefers-color-scheme: dark')) return currentPrefersDark
+  if (query.includes('prefers-color-scheme: light')) return !currentPrefersDark
+
   const min = /\(min-width:\s*(\d+)px\)/.exec(query)
   if (min?.[1]) return width >= Number(min[1])
 
@@ -55,6 +59,13 @@ export function setViewportWidth(width: number): void {
   installMatchMedia()
 }
 
+/** Sets what the OS-level colour-scheme query answers. */
+export function setPrefersDark(value: boolean): void {
+  currentPrefersDark = value
+  installMatchMedia()
+}
+
 export function resetViewportWidth(): void {
   currentWidth = DESKTOP_WIDTH
+  currentPrefersDark = false
 }

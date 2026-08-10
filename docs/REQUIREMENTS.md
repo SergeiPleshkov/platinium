@@ -111,8 +111,9 @@ anything else that demonstrates engineering skill.
 
 Selected for this submission (phase 8, in build order — all after mandatory work is green):
 
-- [ ] Dark mode
-- [ ] Dashboard statistics (aggregated server-side)
+- [x] Dark mode — light/dark/system, persisted, pre-paint so a reload never flashes
+- [x] Dashboard statistics — aggregated server-side via `/api/stats`; the browser never
+      loads a collection to count it
 - [ ] Bulk actions (multi-select delete / status change, partial-failure reporting)
 - [ ] CSV export (of the current filtered query, not just the visible page)
 - [ ] CSV import (per-row validation, preview, error report)

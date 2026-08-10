@@ -5,6 +5,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 
 import { resetMockConfig } from '@/mocks/config'
 import { resetNotifications } from '@/shared/composables/useNotifications'
+import { resetTheme } from '@/shared/composables/useTheme'
 import { resetDb } from '@/mocks/db'
 import { server } from '@/mocks/server'
 import { installMatchMedia, resetViewportWidth } from '@tests/utils/viewport'
@@ -67,6 +68,7 @@ afterEach(() => {
   // The notification queue is module state; a toast raised in one test would otherwise be
   // handed to the next test's toast host.
   resetNotifications()
+  resetTheme()
   server.resetHandlers()
   resetDb()
   resetMockConfig()

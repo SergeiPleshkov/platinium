@@ -13,6 +13,12 @@ export {
 export { useCollectionState, type CollectionState } from '@/shared/composables/useCollectionState'
 export { useTable, type UseTable, type UseTableOptions } from '@/shared/composables/useTable'
 export {
+  initTheme,
+  resetTheme,
+  useTheme,
+  type ThemePreference,
+} from '@/shared/composables/useTheme'
+export {
   resetNotifications,
   useNotifications,
   type Notification,

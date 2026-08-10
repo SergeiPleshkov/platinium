@@ -6,6 +6,7 @@ import { installPrimeVue } from '@/app/plugins/primevue'
 import { router } from '@/app/router'
 import { useAuthStore } from '@/features/auth'
 import { configureHttp } from '@/shared/api'
+import { initTheme } from '@/shared/composables'
 
 import '@/app/assets/main.css'
 
@@ -19,6 +20,9 @@ async function bootstrap(): Promise<void> {
     const { startMockApi } = await import('@/mocks/browser')
     await startMockApi()
   }
+
+  // Re-applies the stored preference the inline script in index.html set pre-paint.
+  initTheme()
 
   const app = createApp(App)
   const pinia = createPinia()

@@ -4,7 +4,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/features/auth'
 import { NAVIGATION, RouteName } from '@/app/router/routes'
-import { useResponsiveLayout } from '@/shared/composables'
+import { useResponsiveLayout, useTheme } from '@/shared/composables'
 import { BaseButton } from '@/shared/ui'
 
 /**
@@ -18,6 +18,7 @@ const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const { isDesktop } = useResponsiveLayout()
+const theme = useTheme()
 
 const drawerOpen = ref(false)
 
@@ -76,6 +77,13 @@ async function signOut(): Promise<void> {
         >
           {{ auth.initials }}
         </span>
+        <BaseButton
+          variant="ghost"
+          size="sm"
+          :icon="theme.isDark.value ? 'pi pi-sun' : 'pi pi-moon'"
+          :aria-label="theme.isDark.value ? 'Switch to light theme' : 'Switch to dark theme'"
+          @click="theme.toggle"
+        />
         <BaseButton variant="secondary" size="sm" @click="signOut">Sign out</BaseButton>
       </div>
     </header>
