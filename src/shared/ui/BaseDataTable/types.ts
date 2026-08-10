@@ -1,3 +1,9 @@
+/**
+ * How the grid renders its rows. Mirrors `TableViewMode` in `useTableViewMode`, declared here
+ * so `shared/ui` does not have to depend on a composable to state its own prop's type.
+ */
+export type TableViewMode = 'paginated' | 'virtual'
+
 export interface TableColumn {
   /** Matches the sort key the API accepts, and the `cell-<field>` slot name. */
   field: string

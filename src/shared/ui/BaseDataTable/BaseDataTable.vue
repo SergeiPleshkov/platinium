@@ -3,11 +3,13 @@ import Column from 'primevue/column'
 import DataTable, { type DataTablePageEvent, type DataTableSortEvent } from 'primevue/datatable'
 import Paginator, { type PageState } from 'primevue/paginator'
 import Skeleton from 'primevue/skeleton'
+import type { VirtualScrollerLazyEvent } from 'primevue/virtualscroller'
 import { computed } from 'vue'
 
 import { useResponsiveLayout } from '@/shared/composables/useBreakpoint'
+import { isPendingRow, type BufferRow } from '@/shared/composables/useCollectionState'
 import type { ListMeta, SortOrder } from '@/shared/types/api'
-import type { TableColumn } from '@/shared/ui/BaseDataTable/types'
+import type { TableColumn, TableViewMode } from '@/shared/ui/BaseDataTable/types'
 import BaseButton from '@/shared/ui/BaseButton/BaseButton.vue'
 import BaseEmptyState from '@/shared/ui/BaseEmptyState/BaseEmptyState.vue'
 
@@ -40,6 +42,17 @@ interface Props {
   emptyTitle?: string | undefined
   emptyDescription?: string | undefined
   rowsPerPageOptions?: readonly number[] | undefined
+  /**
+   * `paginated` renders one server page with a paginator. `virtual` renders the whole result
+   * set as a scrollable window, fetching pages as they come into view. Grid only — see the
+   * note on `useVirtualGrid` below.
+   */
+  mode?: TableViewMode | undefined
+  /** Length-`meta.total` buffer, unfetched pages standing in as placeholders. Virtual mode only. */
+  virtualRows?: ReadonlyArray<BufferRow<TRow>> | undefined
+  virtualLoading?: boolean | undefined
+  /** Height of the virtual viewport. Fixed by necessity: the scroller needs a known box. */
+  scrollHeight?: string | undefined
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -49,6 +62,10 @@ const props = withDefaults(defineProps<Props>(), {
   isFilteredEmpty: false,
   emptyTitle: 'Nothing here yet',
   rowsPerPageOptions: () => [10, 25, 50, 100],
+  mode: 'paginated',
+  virtualRows: () => [],
+  virtualLoading: false,
+  scrollHeight: '32rem',
 })
 
 const emit = defineEmits<{
@@ -57,6 +74,8 @@ const emit = defineEmits<{
   'update:perPage': [perPage: number]
   retry: []
   clearFilters: []
+  /** Virtual mode: the visible window moved. Indices are zero-based, `last` inclusive. */
+  rangeChange: [first: number, last: number]
 }>()
 
 defineSlots<{
@@ -65,6 +84,14 @@ defineSlots<{
   actions?: (props: { row: TRow }) => unknown
   emptyAction?: () => unknown
 }>()
+
+/**
+ * Virtual rows must be a fixed, known height — the scroller positions row *n* at
+ * `n × itemSize`, so a row that renders taller than this makes the scrollbar lie about how
+ * much data there is and drifts further with every screen. Enforced on the cells below rather
+ * than left to the content.
+ */
+const VIRTUAL_ROW_HEIGHT = 52
 
 const { isMobile } = useResponsiveLayout()
 
@@ -106,6 +133,60 @@ function onPage(event: DataTablePageEvent | PageState): void {
 const showEmptyState = computed(
   () => !props.initialising && (props.isEmpty || props.isFilteredEmpty),
 )
+
+/**
+ * Virtual mode is a *grid* mode.
+ *
+ * Below `md` this component renders cards, whose height depends on how much text each row
+ * carries — and a virtual scroller needs every item to be exactly `itemSize` tall or the
+ * scrollbar misreports the length of the list. Forcing cards to a fixed height to satisfy the
+ * scroller would be letting the technique dictate the design. Narrow viewports therefore keep
+ * the paginator, and the page hides the switch there rather than offering a control that
+ * silently does nothing.
+ */
+const useVirtualGrid = computed(() => props.mode === 'virtual' && !isMobile.value)
+
+const virtualScrollerOptions = computed(() => ({
+  lazy: true,
+  itemSize: VIRTUAL_ROW_HEIGHT,
+  /*
+   * Rows rendered beyond the viewport. Enough that a flick-scroll lands on real rows rather
+   * than placeholders, not so many that the DOM advantage is given back.
+   */
+  numToleratedItems: 10,
+  showLoader: false,
+  loading: props.virtualLoading,
+  onLazyLoad: (event: VirtualScrollerLazyEvent) => {
+    emit('rangeChange', Number(event.first), Number(event.last))
+  },
+}))
+
+/**
+ * Vertical padding is removed and the height fixed, so a row is exactly `VIRTUAL_ROW_HEIGHT`
+ * whatever it contains. The inner wrapper restores the visual centring and clips overflow —
+ * without it a long venue name wraps to two lines, the row grows, and the scroller's
+ * arithmetic (position = index × itemSize) silently stops matching the page.
+ */
+const virtualCellStyle = {
+  height: `${VIRTUAL_ROW_HEIGHT}px`,
+  paddingTop: '0',
+  paddingBottom: '0',
+}
+
+/**
+ * Narrows a buffer slot for the template.
+ *
+ * A template cannot apply a generic type guard inline, so the check and the narrowing are
+ * split: `pending` gates the branch, `asRow` states the conclusion. The two are only correct
+ * together, which is why they live side by side.
+ */
+function pending(row: BufferRow<TRow>): boolean {
+  return isPendingRow(row)
+}
+
+function asRow(row: unknown): TRow {
+  return row as TRow
+}
 </script>
 
 <template>
@@ -190,6 +271,58 @@ const showEmptyState = computed(
         @page="onPage"
       />
     </template>
+
+    <!--
+      Tablet and up, virtual mode: one scroll surface over the whole result set. No paginator —
+      the scrollbar *is* the position indicator — and pages arrive as their rows come into view.
+    -->
+    <DataTable
+      v-else-if="useVirtualGrid"
+      :value="virtualRows"
+      scrollable
+      :scroll-height="scrollHeight"
+      :virtual-scroller-options="virtualScrollerOptions"
+      :sort-field="sortField"
+      :sort-order="primeSortOrder"
+      :aria-label="label"
+      data-key="id"
+      lazy
+      removable-sort
+      @sort="onSort"
+    >
+      <Column
+        v-for="column in columns"
+        :key="column.field"
+        :field="column.field"
+        :header="column.header"
+        :sortable="column.sortable ?? false"
+        :body-class="column.cellClass"
+        :body-style="virtualCellStyle"
+      >
+        <template #body="{ data }">
+          <div class="flex h-full items-center overflow-hidden whitespace-nowrap">
+            <Skeleton v-if="pending(data as BufferRow<TRow>)" width="70%" height="1rem" />
+            <slot v-else :name="`cell-${column.field}`" :row="asRow(data)">
+              {{ cellValue(asRow(data), column.field) }}
+            </slot>
+          </div>
+        </template>
+      </Column>
+
+      <Column
+        v-if="$slots.actions"
+        header="Actions"
+        :style="{ width: '1%' }"
+        :body-style="virtualCellStyle"
+      >
+        <template #body="{ data }">
+          <div class="flex h-full items-center">
+            <Skeleton v-if="pending(data as BufferRow<TRow>)" width="4rem" height="1rem" />
+            <slot v-else name="actions" :row="asRow(data)" />
+          </div>
+        </template>
+      </Column>
+    </DataTable>
 
     <!-- Tablet and up: a real grid, with server-driven paging and sorting. -->
     <DataTable

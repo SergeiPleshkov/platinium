@@ -5,12 +5,13 @@ import CategoryFormDialog from '@/features/categories/components/CategoryFormDia
 import { useCategoriesStore } from '@/features/categories/store'
 import type { Category } from '@/features/categories/types'
 import { ApiError } from '@/shared/api'
-import { useNotifications, useTable } from '@/shared/composables'
+import { useListView, useNotifications } from '@/shared/composables'
 import {
   BaseButton,
   BaseConfirmDialog,
   BaseDataTable,
   BaseSearchInput,
+  TableViewModeSwitch,
   type TableColumn,
 } from '@/shared/ui'
 
@@ -25,8 +26,10 @@ import {
 const store = useCategoriesStore()
 const notifications = useNotifications()
 
-const table = useTable({
-  onQuery: (query, signal) => store.fetchList(query, signal),
+const { table, viewMode, virtual, onRangeChange } = useListView({
+  fetchList: (query, signal) => store.fetchList(query, signal),
+  fetchWindow: (query, signal) => store.fetchWindow(query, signal),
+  resetBuffer: () => store.resetBuffer(),
   defaultSort: 'name',
   defaultOrder: 'asc',
 })
@@ -112,8 +115,11 @@ async function confirmDelete(): Promise<void> {
       <BaseButton icon="pi pi-plus" label="New category" @click="openCreate" />
     </header>
 
-    <div class="mb-4 sm:max-w-xs">
-      <BaseSearchInput v-model="table.search.value" label="Search categories" />
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="w-full sm:w-auto sm:max-w-xs sm:min-w-64">
+        <BaseSearchInput v-model="table.search.value" label="Search categories" />
+      </div>
+      <TableViewModeSwitch />
     </div>
 
     <BaseDataTable
@@ -127,6 +133,9 @@ async function confirmDelete(): Promise<void> {
       :is-filtered-empty="store.isEmpty && table.hasActiveFilters.value"
       :sort-field="table.sortField.value"
       :sort-order="table.sortOrder.value"
+      :mode="viewMode.mode.value"
+      :virtual-rows="store.buffer"
+      :virtual-loading="virtual.isLoading.value"
       label="Categories"
       empty-title="No categories yet"
       empty-description="Ticket tiers group tickets across events. Create the first one."
@@ -135,6 +144,7 @@ async function confirmDelete(): Promise<void> {
       @update:per-page="table.setPerPage"
       @retry="table.refresh"
       @clear-filters="table.clearFilters"
+      @range-change="onRangeChange"
     >
       <template #cell-description="{ row }">
         <span class="text-content-muted">{{ row.description || '—' }}</span>

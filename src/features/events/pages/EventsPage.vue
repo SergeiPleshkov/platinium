@@ -10,7 +10,7 @@ import {
   type Event,
 } from '@/features/events/types'
 import { ApiError } from '@/shared/api'
-import { useNotifications, useTable } from '@/shared/composables'
+import { useListView, useNotifications } from '@/shared/composables'
 import { formatDateRange } from '@/shared/utils/date'
 import {
   BaseBadge,
@@ -19,6 +19,7 @@ import {
   BaseDataTable,
   BaseSearchInput,
   BaseSelect,
+  TableViewModeSwitch,
   type TableColumn,
 } from '@/shared/ui'
 
@@ -27,8 +28,10 @@ import {
 const store = useEventsStore()
 const notifications = useNotifications()
 
-const table = useTable({
-  onQuery: (query, signal) => store.fetchList(query, signal),
+const { table, viewMode, virtual, onRangeChange } = useListView({
+  fetchList: (query, signal) => store.fetchList(query, signal),
+  fetchWindow: (query, signal) => store.fetchWindow(query, signal),
+  resetBuffer: () => store.resetBuffer(),
   defaultSort: 'startDate',
   defaultOrder: 'asc',
   // Declared so these survive a reload and stay in a shared link.
@@ -153,6 +156,10 @@ async function confirmDelete(): Promise<void> {
       />
     </div>
 
+    <div class="mb-4 flex justify-end">
+      <TableViewModeSwitch />
+    </div>
+
     <BaseDataTable
       :rows="store.items"
       :columns="columns"
@@ -164,6 +171,9 @@ async function confirmDelete(): Promise<void> {
       :is-filtered-empty="store.isEmpty && table.hasActiveFilters.value"
       :sort-field="table.sortField.value"
       :sort-order="table.sortOrder.value"
+      :mode="viewMode.mode.value"
+      :virtual-rows="store.buffer"
+      :virtual-loading="virtual.isLoading.value"
       label="Events"
       empty-title="No events yet"
       empty-description="Create an event before adding tickets to it."
@@ -172,6 +182,7 @@ async function confirmDelete(): Promise<void> {
       @update:per-page="table.setPerPage"
       @retry="table.refresh"
       @clear-filters="table.clearFilters"
+      @range-change="onRangeChange"
     >
       <template #cell-startDate="{ row }">
         <span class="whitespace-nowrap">{{ formatDateRange(row.startDate, row.endDate) }}</span>

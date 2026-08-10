@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/features/auth'
 import { NAVIGATION, RouteName } from '@/app/router/routes'
-import { useResponsiveLayout, useTheme } from '@/shared/composables'
+import { useResponsiveLayout, useSidebar, useTheme } from '@/shared/composables'
 import { BaseButton } from '@/shared/ui'
 
 /**
@@ -12,6 +12,12 @@ import { BaseButton } from '@/shared/ui'
  *
  * Below `lg` the sidebar becomes an off-canvas drawer rather than shrinking — a 200px-wide
  * nav column on a phone leaves no room for the tables this portal exists to show.
+ *
+ * At `lg` and up it is collapsible to an icon rail. The expanded width is `max-content`
+ * rather than a fixed column: the nav is exactly as wide as its longest label needs, so
+ * renaming an item or adding a fifth cannot leave dead space or a clipped label. That is
+ * only safe because the labels are ours and short — a nav fed from user data would need a
+ * `max-w` and truncation, since `max-content` has no upper bound.
  */
 
 const auth = useAuthStore()
@@ -19,8 +25,17 @@ const router = useRouter()
 const route = useRoute()
 const { isDesktop } = useResponsiveLayout()
 const theme = useTheme()
+const sidebar = useSidebar()
 
 const drawerOpen = ref(false)
+
+/**
+ * Only the desktop rail collapses. Deriving this instead of reading `sidebar.collapsed`
+ * directly means a user who collapses the rail, narrows to a phone and opens the drawer gets
+ * a labelled drawer rather than a mystery strip of icons — the stored preference is about the
+ * desktop rail, and it stays scoped to it.
+ */
+const isRailCollapsed = computed(() => isDesktop.value && sidebar.collapsed.value)
 
 // Navigating from the drawer should close it; leaving it open covers the page just reached.
 watch(
@@ -100,7 +115,7 @@ async function signOut(): Promise<void> {
       <nav
         id="primary-navigation"
         :class="[
-          'z-40 w-64 shrink-0 border-r border-border bg-surface-0 p-3 dark:bg-surface-900',
+          'z-40 flex w-max shrink-0 flex-col border-r border-border bg-surface-0 p-3 dark:bg-surface-900',
           isDesktop
             ? 'sticky top-16 h-[calc(100dvh-4rem)]'
             : 'fixed top-16 bottom-0 left-0 transition-transform duration-200',
@@ -113,14 +128,35 @@ async function signOut(): Promise<void> {
           <li v-for="item in NAVIGATION" :key="item.name">
             <RouterLink
               :to="{ name: item.name }"
-              class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-content transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
+              :class="[
+                'flex items-center gap-3 rounded-md py-2 text-sm font-medium text-content transition-colors hover:bg-surface-100 dark:hover:bg-surface-800',
+                isRailCollapsed ? 'justify-center px-2.5' : 'px-3',
+              ]"
               active-class="bg-brand-50 text-brand-700 dark:bg-surface-800 dark:text-brand-400"
+              :title="isRailCollapsed ? item.label : undefined"
             >
-              <i :class="item.icon" aria-hidden="true" />
-              {{ item.label }}
+              <i :class="[item.icon, 'shrink-0']" aria-hidden="true" />
+              <!--
+                Hidden visually, never removed. Deleting the text would strip the link's
+                accessible name and leave a screen reader announcing four unlabelled links;
+                `sr-only` is absolutely positioned, so it costs the rail no width.
+              -->
+              <span :class="isRailCollapsed ? 'sr-only' : undefined">{{ item.label }}</span>
             </RouterLink>
           </li>
         </ul>
+
+        <BaseButton
+          v-if="isDesktop"
+          class="mt-auto self-start"
+          variant="ghost"
+          size="sm"
+          :icon="sidebar.collapsed.value ? 'pi pi-angle-double-right' : 'pi pi-angle-double-left'"
+          :aria-label="sidebar.collapsed.value ? 'Expand sidebar' : 'Collapse sidebar'"
+          :aria-expanded="sidebar.expanded.value"
+          aria-controls="primary-navigation"
+          @click="sidebar.toggle"
+        />
       </nav>
 
       <main id="main-content" class="min-w-0 flex-1 p-4 sm:p-6">

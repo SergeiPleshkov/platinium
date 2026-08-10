@@ -12,7 +12,7 @@ import {
   type TicketWithRelations,
 } from '@/features/tickets/types'
 import { ApiError } from '@/shared/api'
-import { useNotifications, useTable } from '@/shared/composables'
+import { useListView, useNotifications } from '@/shared/composables'
 import { formatMoney } from '@/shared/utils/money'
 import {
   BaseBadge,
@@ -21,6 +21,7 @@ import {
   BaseDataTable,
   BaseSearchInput,
   BaseSelect,
+  TableViewModeSwitch,
   type TableColumn,
 } from '@/shared/ui'
 
@@ -36,8 +37,10 @@ const eventsStore = useEventsStore()
 const categoriesStore = useCategoriesStore()
 const notifications = useNotifications()
 
-const table = useTable({
-  onQuery: (query, signal) => store.fetchList(query, signal),
+const { table, viewMode, virtual, onRangeChange } = useListView({
+  fetchList: (query, signal) => store.fetchList(query, signal),
+  fetchWindow: (query, signal) => store.fetchWindow(query, signal),
+  resetBuffer: () => store.resetBuffer(),
   defaultSort: 'createdAt',
   defaultOrder: 'desc',
   filterKeys: ['status', 'eventId', 'categoryId'],
@@ -199,6 +202,10 @@ async function confirmDelete(): Promise<void> {
       />
     </div>
 
+    <div class="mb-4 flex justify-end">
+      <TableViewModeSwitch />
+    </div>
+
     <BaseDataTable
       :rows="store.items"
       :columns="columns"
@@ -210,6 +217,9 @@ async function confirmDelete(): Promise<void> {
       :is-filtered-empty="store.isEmpty && table.hasActiveFilters.value"
       :sort-field="table.sortField.value"
       :sort-order="table.sortOrder.value"
+      :mode="viewMode.mode.value"
+      :virtual-rows="store.buffer"
+      :virtual-loading="virtual.isLoading.value"
       label="Tickets"
       empty-title="No tickets yet"
       empty-description="Create a ticket against an event to start selling."
@@ -218,6 +228,7 @@ async function confirmDelete(): Promise<void> {
       @update:per-page="table.setPerPage"
       @retry="table.refresh"
       @clear-filters="table.clearFilters"
+      @range-change="onRangeChange"
     >
       <!-- Relations render as names, embedded by the API. No id ever reaches the screen. -->
       <template #cell-event="{ row }">

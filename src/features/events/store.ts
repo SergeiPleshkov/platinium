@@ -42,6 +42,18 @@ export const useEventsStore = defineStore('events', () => {
     }
   }
 
+  /** Loads one page into the virtual buffer. See the categories store for why it is separate. */
+  async function fetchWindow(query: ListQuery, signal?: AbortSignal): Promise<void> {
+    collection.beginLoad()
+
+    try {
+      collection.setWindow(await eventsApi.list(query, signal))
+    } catch (caught) {
+      if (isAbortError(caught)) return
+      collection.setError(caught, 'Could not load events. Try again.')
+    }
+  }
+
   /**
    * Loads the country filter's options.
    *
@@ -106,6 +118,7 @@ export const useEventsStore = defineStore('events', () => {
     countries,
     options,
     fetchList,
+    fetchWindow,
     fetchCountries,
     fetchOptions,
     create,

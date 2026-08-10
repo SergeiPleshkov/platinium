@@ -46,6 +46,24 @@ export const useCategoriesStore = defineStore('categories', () => {
     }
   }
 
+  /**
+   * Loads one page into the virtual buffer instead of replacing the visible page.
+   *
+   * Sibling of `fetchList` rather than a flag on it, because the two differ in the one thing
+   * that matters: `fetchList` *replaces* what is on screen, `fetchWindow` *adds* to it. A
+   * boolean parameter would hide that difference behind a call site reading `fetchList(q, true)`.
+   */
+  async function fetchWindow(query: ListQuery, signal?: AbortSignal): Promise<void> {
+    collection.beginLoad()
+
+    try {
+      collection.setWindow(await categoriesApi.list(query, signal))
+    } catch (caught) {
+      if (isAbortError(caught)) return
+      collection.setError(caught, 'Could not load categories. Try again.')
+    }
+  }
+
   /** Loads relation-picker options. See the note on the events store about scale. */
   async function fetchOptions(): Promise<void> {
     try {
@@ -97,6 +115,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     options,
     fetchOptions,
     fetchList,
+    fetchWindow,
     create,
     update,
     remove,

@@ -339,3 +339,56 @@ would have caught that, and nothing but a test would stop it regressing.
 runs in about a second — slower than a normal unit test.
 **Revisit if:** the rule set grows past what `no-restricted-imports` can express, at which
 point a dedicated boundaries plugin earns its dependency.
+
+## 2026-08-10 — The sidebar sizes to its content and collapses to a rail
+
+**Chose:** `w-max` on the nav, plus a desktop-only collapse to an icon rail, persisted.
+**Over:** the fixed `w-64` column it replaced, and over collapsing at every width.
+**Because:** the fixed width was a guess that happened to be 107px too wide — measured, the
+nav's content needs 149px. `max-content` cannot drift when a label is renamed or a fifth
+destination is added. This is only safe because the labels are ours and short; a nav fed from
+user data would need a `max-w` and truncation, since `max-content` has no upper bound.
+
+The collapse is scoped to `lg` and up by deriving `isRailCollapsed = isDesktop && collapsed`
+rather than reading the stored flag directly. Below `lg` the sidebar is already an off-canvas
+drawer; honouring the flag there would overlay the page with a 61px strip of unlabelled
+glyphs — a faithful reading of the preference, and a worse experience than ignoring it.
+
+Labels are hidden with `sr-only`, never removed from the DOM. Deleting the text would strip
+each link's accessible name and leave a screen reader announcing four unlabelled links, which
+is how an "icon-only" mode usually regresses. `sr-only` is absolutely positioned, so it costs
+the collapsed rail no width.
+**What we give up:** the main content area's width now shifts by 88px when the rail toggles.
+Acceptable — that is what the control is for, and the tables reflow.
+
+## 2026-08-10 — Both pagination and virtual scrolling, behind a demo switch
+
+**Chose:** ship both row-rendering strategies over the same server-side query, selectable at
+the top of every list page, labelled "DEMO" in the UI.
+**Over:** picking one, which is what a production portal should do.
+**Because:** the brief lists infinite scrolling among the bonuses, and the interesting claim
+is not that either technique works — it is that *neither changes what the server is asked
+for*. Both drive the same `{ search, filter, sort, page, perPage }` query; only the number of
+rows on screen at once differs. Putting them side by side makes that checkable instead of
+asserted. Verified in a browser at 250 rows: the scroll surface reports 13,049px (250 × 52px
+rows), ~30 rows exist in the DOM, and scrolling to row 180 fetched pages 18–22 — nine of
+twenty-five pages, never the whole collection.
+
+**Where the rows live:** in the store's buffer, beside `items`, not in the scrolling
+composable. `useVirtualRows` owns *bookkeeping only* — which pages have been asked for — for
+the same reason `useTable` owns no rows. One copy of server state, in one place.
+
+**Two things this cost, both worth naming.** First, a virtual row must be exactly `itemSize`
+tall, because the scroller positions row *n* at `n × itemSize`; the first build let a long
+venue name wrap to two lines, and the scrollbar drifted further with every screen. Cell
+padding is now zeroed and the height fixed. Second, this is why virtual mode is grid-only:
+below `md` the table renders cards whose height depends on their content, and forcing them to
+a fixed height to satisfy the scroller would let the technique dictate the design. The switch
+is hidden there rather than offered and ignored.
+
+**A bug the tests caught:** the switch originally bound `v-model` straight to the mode ref,
+bypassing the setter that persists it — the UI updated and nothing was saved. Fixed by making
+the ref read-only and routing writes through `setMode`, so the mistake is now a type error
+rather than a silent one. `useSidebar` had the same shape and got the same treatment.
+**Revisit if:** a screen needs virtual scrolling on mobile, which would mean committing to
+fixed-height cards.
