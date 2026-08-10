@@ -26,11 +26,11 @@ describe('BaseButton', () => {
 
   it('blocks interaction and reports busy state while loading', async () => {
     const { emitted } = await renderWithApp(BaseButton, {
-      props: { loading: true, label: 'Saving' },
+      props: { loading: true },
       slots: { default: 'Save' },
     })
 
-    const button = screen.getByRole('button', { name: 'Saving' })
+    const button = screen.getByRole('button', { name: 'Save' })
     expect(button).toBeDisabled()
     expect(button).toHaveAttribute('aria-busy', 'true')
 
@@ -51,7 +51,8 @@ describe('BaseButton', () => {
 
   it('exposes an accessible name for icon-only buttons', async () => {
     await renderWithApp(BaseButton, {
-      props: { icon: 'pi pi-trash', label: 'Delete ticket' },
+      props: { icon: 'pi pi-trash' },
+      attrs: { 'aria-label': 'Delete ticket' },
     })
 
     expect(screen.getByRole('button', { name: 'Delete ticket' })).toBeInTheDocument()

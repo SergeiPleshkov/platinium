@@ -44,6 +44,12 @@ export const routes: RouteRecordRaw[] = [
     children: [
       { path: '', redirect: { name: RouteName.Dashboard } },
       {
+        path: 'categories',
+        name: RouteName.Categories,
+        component: () => import('@/features/categories/pages/CategoriesPage.vue'),
+        meta: { title: 'Categories' },
+      },
+      {
         path: 'dashboard',
         name: RouteName.Dashboard,
         component: () => import('@/features/dashboard/pages/DashboardPage.vue'),
@@ -68,4 +74,5 @@ export interface NavigationItem {
 
 export const NAVIGATION: NavigationItem[] = [
   { name: RouteName.Dashboard, label: 'Dashboard', icon: 'pi pi-chart-bar' },
+  { name: RouteName.Categories, label: 'Categories', icon: 'pi pi-tags' },
 ]

@@ -75,7 +75,7 @@ with retry, and a stacked card layout below `md`.
 for every table state, written against roles and text so they survive the wrapper's
 internals changing.
 
-## Phase 5 — Categories slice
+## Phase 5 — Categories slice ✅ (done)
 
 Simplest entity first — it proves the vertical-slice pattern end to end and shakes out the
 table engine. Nine layers per the `crud-entity` skill: types, schema, fixtures, handlers,

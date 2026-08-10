@@ -11,6 +11,7 @@ import { configureHttp } from '@/shared/api'
 
 export interface RenderWithAppOptions {
   props?: Record<string, unknown>
+  attrs?: Record<string, unknown>
   slots?: Record<string, string>
   /** Path to start at. Defaults to `/`. */
   initialRoute?: string
@@ -52,6 +53,7 @@ export async function renderWithApp(
 
   const utils = render(component, {
     ...(options.props ? { props: options.props } : {}),
+    ...(options.attrs ? { attrs: options.attrs } : {}),
     ...(options.slots ? { slots: options.slots } : {}),
     global: {
       plugins: [pinia, router, installPrimeVue],

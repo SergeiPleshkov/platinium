@@ -52,7 +52,7 @@ async function signOut(): Promise<void> {
         v-if="!isDesktop"
         variant="ghost"
         icon="pi pi-bars"
-        :label="drawerOpen ? 'Close navigation' : 'Open navigation'"
+        :aria-label="drawerOpen ? 'Close navigation' : 'Open navigation'"
         :aria-expanded="drawerOpen"
         aria-controls="primary-navigation"
         @click="drawerOpen = !drawerOpen"

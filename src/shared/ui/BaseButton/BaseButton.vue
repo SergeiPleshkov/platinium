@@ -24,8 +24,12 @@ interface Props {
   /** Stretch to the width of the container — useful for mobile and dialog footers. */
   block?: boolean | undefined
   /**
-   * Accessible name, required when the button renders an icon with no visible text.
-   * An icon-only button without this is unusable with a screen reader.
+   * Visible text, as an alternative to the default slot.
+   *
+   * Prefer this whenever the button also has an `icon`: PrimeVue decides its icon-only
+   * styling from `hasIcon && !label` and does *not* look at slot content, so `icon` plus a
+   * slot renders as a 40px icon button with the text clipped. An icon-only button should
+   * instead pass `aria-label`, which falls through to the element.
    */
   label?: string | undefined
 }
@@ -66,7 +70,13 @@ const isInteractionBlocked = computed(() => props.disabled || props.loading)
 </script>
 
 <template>
+  <!--
+    A button never shrinks below its label and never wraps it. In a tight flex row — a page
+    header on a narrow viewport — the default `flex-shrink: 1` squeezed "New category" down
+    to 40px and clipped it mid-word.
+  -->
   <PrimeButton
+    class="shrink-0 whitespace-nowrap"
     :severity="appearance.severity"
     :outlined="appearance.outlined"
     :text="appearance.text"
@@ -75,8 +85,8 @@ const isInteractionBlocked = computed(() => props.disabled || props.loading)
     :disabled="isInteractionBlocked"
     :icon="icon"
     :icon-pos="iconPosition"
+    :label="label"
     :fluid="block"
-    :aria-label="label"
     :aria-busy="loading"
     @click="$emit('click', $event)"
   >

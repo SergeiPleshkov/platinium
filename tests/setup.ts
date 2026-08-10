@@ -4,6 +4,7 @@ import { cleanup } from '@testing-library/vue'
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 
 import { resetMockConfig } from '@/mocks/config'
+import { resetNotifications } from '@/shared/composables/useNotifications'
 import { resetDb } from '@/mocks/db'
 import { server } from '@/mocks/server'
 import { installMatchMedia, resetViewportWidth } from '@tests/utils/viewport'
@@ -43,19 +44,29 @@ beforeEach(() => {
   /* jsdom implements neither of these, and PrimeVue's overlay components call both. */
   installMatchMedia()
 
+  /*
+   * A class, not an arrow function returning an object: PrimeVue's auto-resizing Textarea
+   * calls `new ResizeObserver(...)`, and an arrow function is not a constructor. The stub
+   * threw inside a `mounted` hook, which Vue rethrows when no error handler is installed —
+   * so the *whole app* failed to mount and the failure surfaced as an unrelated null `$el`
+   * several tests later.
+   */
   vi.stubGlobal(
     'ResizeObserver',
-    vi.fn(() => ({
-      observe: vi.fn(),
-      unobserve: vi.fn(),
-      disconnect: vi.fn(),
-    })),
+    class ResizeObserverStub {
+      observe = vi.fn()
+      unobserve = vi.fn()
+      disconnect = vi.fn()
+    },
   )
 })
 
 afterEach(() => {
   // Drop any per-test handler overrides, then restore pristine seed data and mock settings.
   resetViewportWidth()
+  // The notification queue is module state; a toast raised in one test would otherwise be
+  // handed to the next test's toast host.
+  resetNotifications()
   server.resetHandlers()
   resetDb()
   resetMockConfig()

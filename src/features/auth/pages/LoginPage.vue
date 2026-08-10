@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { loginSchema } from '@/features/auth/schema'
 import { useAuthStore } from '@/features/auth/store'
+import { zodSchema } from '@/shared/validation/zodSchema'
 import { BaseButton, BaseInput } from '@/shared/ui'
 
 /**
@@ -21,7 +21,7 @@ const route = useRoute()
 const submitting = ref(false)
 
 const { defineField, handleSubmit, errors } = useForm({
-  validationSchema: toTypedSchema(loginSchema),
+  validationSchema: zodSchema(loginSchema),
   initialValues: { email: '', password: '' },
 })
 

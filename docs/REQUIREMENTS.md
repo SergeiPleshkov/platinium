@@ -38,14 +38,14 @@ decision-making, overall software craftsmanship — not only "does it work".
 ### CRUD — complete Create / Read / Update / Delete for all three entities
 - [ ] Ticket — Name, Price, Currency, Quantity, Status, Event, Category
 - [ ] Event — Name, Country, Venue, Start Date, End Date, Status
-- [ ] Category — Name, Description
+- [x] Category — Name, Description
 
 ### Validation & error handling
-- [ ] Form validation
-- [ ] User-friendly validation messages
-- [ ] Proper loading states
-- [ ] Graceful API error handling
-- [ ] Success / error notifications
+- [x] Form validation — one zod schema per entity, shared by form and mock API
+- [x] User-friendly validation messages — say what to do; server 422s map onto their fields
+- [x] Proper loading states — skeletons before first load, never a spinner over an empty grid
+- [x] Graceful API error handling — error state with retry; conflicts explained in the dialog
+- [x] Success / error notifications — `useNotifications` queue rendered by `BaseToaster`
 
 ### Responsive
 - [ ] Desktop
@@ -75,7 +75,8 @@ decision-making, overall software craftsmanship — not only "does it work".
 - [x] Separation of concerns — components render, composables hold behaviour, stores hold
       state, `shared/api` owns transport; all four enforced by lint
 - [x] Reusable composables — `useAsyncAction`, `useNotifications`, `useBreakpoint`
-- [ ] Clean state management — auth store done; entity stores in phases 5–7
+- [x] Clean state management — Pinia stores own server state; `useCollectionState` shares
+      state+getters across entities; `useTable` owns query state only, so no data lives twice
 - [x] Reusable API layer — `shared/api`: axios behind our `ApiError` contract, with token
       injection, timeouts, cancellation and one central 401 hook; `serialiseListQuery` shared
       by every list call

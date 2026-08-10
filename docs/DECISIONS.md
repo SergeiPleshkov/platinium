@@ -99,6 +99,22 @@ so the browser and Vitest use the same transport rather than XHR and Node's `htt
 **Revisit if:** bundle size becomes a real constraint — `ky` is a drop-in behind this same
 wrapper, which is the point of having the wrapper.
 
+## 2026-08-10 — Our own zod adapter for vee-validate
+
+**Chose:** `src/shared/validation/zodSchema.ts`, ~40 lines implementing vee-validate's
+`TypedSchema` against Zod 4. `@vee-validate/zod` removed.
+**Over:** keeping the official adapter, or downgrading to Zod 3.
+**Because:** `@vee-validate/zod@4.15.1` peer-depends on `zod@^3` and reads Zod 3 internals —
+`_def.defaultValue()`, which in Zod 4 is a value rather than a function. Any schema using
+`.default()` throws during form setup; it took the category dialog down on first render, and
+the login form had only been surviving by not using a default. vee-validate 4.15 has no
+Standard Schema support either, so there is no supported path. Downgrading would mean
+rewriting every schema in the application to satisfy a dependency that cannot follow us
+forward.
+**Costs:** ~40 lines of adapter to own, including the issue-grouping vee-validate expects.
+**Revisit if:** vee-validate 5 ships Standard Schema support, at which point the adapter
+deletes itself.
+
 ## 2026-08-10 — Store owns the data; `useTable` owns the query; state+getters are shared
 
 Revisits the previous entry after a challenge about extensibility. Three parts:
