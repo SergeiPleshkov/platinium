@@ -39,15 +39,11 @@ export const useTicketsStore = defineStore('tickets', () => {
   }
 
   /** Loads one page into the virtual buffer. See the categories store for why it is separate. */
-  async function fetchWindow(query: ListQuery, signal?: AbortSignal): Promise<void> {
-    collection.beginLoad()
-
-    try {
-      collection.setWindow(await ticketsApi.list(query, signal))
-    } catch (caught) {
-      if (isAbortError(caught)) return
-      collection.setError(caught, 'Could not load tickets. Try again.')
-    }
+  function fetchWindow(query: ListQuery, signal?: AbortSignal): Promise<void> {
+    return collection.loadWindow(
+      () => ticketsApi.list(query, signal),
+      'Could not load tickets. Try again.',
+    )
   }
 
   /**

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import App from '@/app/App.vue'
 import { db } from '@/mocks/db'
 import { useTicketsStore } from '@/features/tickets'
+import { createListQuery } from '@/shared/types/api'
 import { renderWithApp } from '@tests/utils/renderWithApp'
 import { MOBILE_WIDTH, setViewportWidth } from '@tests/utils/viewport'
 
@@ -123,6 +124,61 @@ describe('pagination ↔ virtual scrolling', () => {
     await switchTo('Virtual')
 
     expect(localStorage.getItem('app.table.viewMode')).toBe('virtual')
+  })
+
+  describe('loading a further page', () => {
+    /**
+     * The behaviour these three pin is the difference between virtual scrolling that feels
+     * smooth and virtual scrolling that flickers: a page arriving must *add* rows, never
+     * disturb the ones already on screen and never blank the grid.
+     */
+    async function loadSecondPage(pinia: Parameters<typeof useTicketsStore>[0]): Promise<{
+      store: ReturnType<typeof useTicketsStore>
+      before: readonly unknown[]
+    }> {
+      const store = useTicketsStore(pinia)
+      await switchTo('Virtual')
+      await waitFor(() => expect(store.buffer).toHaveLength(db.tickets.length))
+
+      const before = store.buffer.slice(0, 10)
+      await store.fetchWindow({ ...createListQuery(), page: 2 })
+      return { store, before }
+    }
+
+    it('leaves the rows already loaded untouched', async () => {
+      const { pinia } = await openTickets()
+      const { store, before } = await loadSecondPage(pinia)
+
+      // Identity, not just equality: replacing these is what makes the grid re-render.
+      expect(store.buffer.slice(0, 10)).toEqual(before)
+    })
+
+    it('keeps the buffer array itself stable, so the scroller does not re-measure', async () => {
+      const { pinia } = await openTickets()
+      const store = useTicketsStore(pinia)
+      await switchTo('Virtual')
+      await waitFor(() => expect(store.buffer).toHaveLength(db.tickets.length))
+
+      const array = store.buffer
+      await store.fetchWindow({ ...createListQuery(), page: 2 })
+
+      /*
+       * A virtual scroller watches its `items` reference to decide when to tear down and
+       * re-measure. Reassigning the buffer on every page is what made the grid rebuild
+       * mid-scroll; rows are written in place instead.
+       */
+      expect(store.buffer).toBe(array)
+    })
+
+    it('never puts the collection back into a loading state', async () => {
+      const { pinia } = await openTickets()
+      const { store } = await loadSecondPage(pinia)
+
+      // `isInitialising` drives the skeleton; flipping it here would blank the whole grid.
+      expect(store.isInitialising).toBe(false)
+      expect(store.isEmpty).toBe(false)
+      expect(store.buffer.filter((row) => !('__pending' in row))).toHaveLength(20)
+    })
   })
 
   it('hides the switch below md, where the grid is a card list', async () => {

@@ -52,16 +52,15 @@ export const useCategoriesStore = defineStore('categories', () => {
    * Sibling of `fetchList` rather than a flag on it, because the two differ in the one thing
    * that matters: `fetchList` *replaces* what is on screen, `fetchWindow` *adds* to it. A
    * boolean parameter would hide that difference behind a call site reading `fetchList(q, true)`.
+   *
+   * The status rules — only the first window may put the collection into `loading` — live in
+   * `loadWindow`, shared so they cannot drift between the three entities.
    */
-  async function fetchWindow(query: ListQuery, signal?: AbortSignal): Promise<void> {
-    collection.beginLoad()
-
-    try {
-      collection.setWindow(await categoriesApi.list(query, signal))
-    } catch (caught) {
-      if (isAbortError(caught)) return
-      collection.setError(caught, 'Could not load categories. Try again.')
-    }
+  function fetchWindow(query: ListQuery, signal?: AbortSignal): Promise<void> {
+    return collection.loadWindow(
+      () => categoriesApi.list(query, signal),
+      'Could not load categories. Try again.',
+    )
   }
 
   /** Loads relation-picker options. See the note on the events store about scale. */

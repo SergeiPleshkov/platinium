@@ -43,15 +43,11 @@ export const useEventsStore = defineStore('events', () => {
   }
 
   /** Loads one page into the virtual buffer. See the categories store for why it is separate. */
-  async function fetchWindow(query: ListQuery, signal?: AbortSignal): Promise<void> {
-    collection.beginLoad()
-
-    try {
-      collection.setWindow(await eventsApi.list(query, signal))
-    } catch (caught) {
-      if (isAbortError(caught)) return
-      collection.setError(caught, 'Could not load events. Try again.')
-    }
+  function fetchWindow(query: ListQuery, signal?: AbortSignal): Promise<void> {
+    return collection.loadWindow(
+      () => eventsApi.list(query, signal),
+      'Could not load events. Try again.',
+    )
   }
 
   /**

@@ -8,6 +8,7 @@ import { registerGuards } from '@/app/router/guards'
 import { routes } from '@/app/router/routes'
 import { useAuthStore } from '@/features/auth'
 import { configureHttp } from '@/shared/api'
+import { trackRouteLoading } from '@/shared/composables'
 
 export interface RenderWithAppOptions {
   props?: Record<string, unknown>
@@ -39,6 +40,8 @@ export async function renderWithApp(
 
   // A per-test router instance, so navigation state never leaks between cases.
   const router = createRouter({ history: createMemoryHistory(), routes })
+  // Matches `createAppRouter`: the tracker goes on before any guard that could redirect.
+  trackRouteLoading(router)
   if (options.withGuards) registerGuards(router)
 
   const auth = useAuthStore(pinia)

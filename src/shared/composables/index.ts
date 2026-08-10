@@ -22,6 +22,12 @@ export {
   type UseListView,
   type UseListViewOptions,
 } from '@/shared/composables/useListView'
+export {
+  resetRouteLoading,
+  trackRouteLoading,
+  useRouteLoading,
+  type UseRouteLoading,
+} from '@/shared/composables/useRouteLoading'
 export { resetSidebar, useSidebar, type UseSidebar } from '@/shared/composables/useSidebar'
 export {
   resetTableViewMode,

@@ -5,6 +5,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 
 import { resetMockConfig } from '@/mocks/config'
 import { resetNotifications } from '@/shared/composables/useNotifications'
+import { resetRouteLoading } from '@/shared/composables/useRouteLoading'
 import { resetSidebar } from '@/shared/composables/useSidebar'
 import { resetTableViewMode } from '@/shared/composables/useTableViewMode'
 import { resetTheme } from '@/shared/composables/useTheme'
@@ -71,6 +72,7 @@ afterEach(() => {
   // handed to the next test's toast host.
   resetNotifications()
   resetTheme()
+  resetRouteLoading()
   resetSidebar()
   resetTableViewMode()
   server.resetHandlers()

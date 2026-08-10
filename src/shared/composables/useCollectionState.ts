@@ -1,6 +1,6 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
 
-import { ApiError } from '@/shared/api'
+import { ApiError, isAbortError } from '@/shared/api'
 import {
   DEFAULT_PER_PAGE,
   type AsyncStatus,
@@ -70,6 +70,20 @@ export interface CollectionState<TEntity> {
    * point of a buffer.
    */
   setWindow: (response: ListResponse<TEntity>) => void
+  /**
+   * Loads one page into the buffer, with the status rules virtual scrolling needs.
+   *
+   * Shared rather than written into each store because the rule is subtle and must not drift:
+   * **only the first window drives the collection's status.** Calling `beginLoad` on every
+   * page put the whole collection into `loading` on each scroll, which flashed the skeleton
+   * and re-rendered the grid — the exact thing virtual scrolling exists to avoid. Later pages
+   * are background fills; a failure among them is rethrown so the scroller can forget the page
+   * and retry it, leaving the rows already on screen untouched.
+   */
+  loadWindow: (
+    fetchPage: () => Promise<ListResponse<TEntity>>,
+    fallbackMessage: string,
+  ) => Promise<void>
   /** Drops every buffered row. Call when the query changes or a mutation invalidates order. */
   resetBuffer: () => void
   setError: (error: unknown, fallback?: string) => void
@@ -100,6 +114,50 @@ export function useCollectionState<TEntity extends { id: string }>(
     }))
   }
 
+  function beginLoad(): void {
+    status.value = 'loading'
+    // The previous error is cleared on the attempt, not on its result: a retry that is
+    // still in flight should not keep showing the failure it is trying to replace.
+    error.value = null
+  }
+
+  function setError(caught: unknown, fallback = 'Could not load this list. Try again.'): void {
+    error.value =
+      caught instanceof ApiError
+        ? caught
+        : new ApiError({ kind: 'network', status: 0, message: fallback, cause: caught })
+    status.value = 'error'
+  }
+
+  function setWindow(response: ListResponse<TEntity>): void {
+    /*
+     * Re-seed on a changed total rather than patching in place. A total that moved means rows
+     * shifted, so every previously fetched page is now potentially off by one — and a buffer
+     * that is quietly wrong is worse than one that reloads.
+     */
+    if (buffer.value.length !== response.meta.total) {
+      buffer.value = placeholdersFor(response.meta.total)
+    }
+
+    /*
+     * Written **in place**, deliberately.
+     *
+     * Replacing the array — `buffer.value = next` — changes its identity, and a virtual
+     * scroller watches its `items` reference to decide when to re-measure. Every page that
+     * arrived therefore tore the whole grid down and rebuilt it mid-scroll. Index writes are
+     * reactive on a `ref` array, so the rendered rows still update; the reference the scroller
+     * is watching does not.
+     */
+    const offset = (response.meta.page - 1) * response.meta.perPage
+    response.data.forEach((row, index) => {
+      buffer.value[offset + index] = row
+    })
+
+    meta.value = response.meta
+    status.value = 'success'
+    hasLoadedOnce.value = true
+  }
+
   return {
     items,
     buffer,
@@ -114,12 +172,9 @@ export function useCollectionState<TEntity extends { id: string }>(
     errorMessage: computed(() => error.value?.message),
     total: computed(() => meta.value.total),
 
-    beginLoad() {
-      status.value = 'loading'
-      // The previous error is cleared on the attempt, not on its result: a retry that is
-      // still in flight should not keep showing the failure it is trying to replace.
-      error.value = null
-    },
+    beginLoad,
+    setError,
+    setWindow,
 
     setResult(response) {
       items.value = response.data
@@ -128,38 +183,24 @@ export function useCollectionState<TEntity extends { id: string }>(
       hasLoadedOnce.value = true
     },
 
-    setWindow(response) {
-      /*
-       * Re-seed on a changed total rather than patching in place. A total that moved means
-       * rows shifted, so every previously fetched page is now potentially off by one — and a
-       * buffer that is quietly wrong is worse than one that reloads.
-       */
-      if (buffer.value.length !== response.meta.total) {
-        buffer.value = placeholdersFor(response.meta.total)
+    async loadWindow(fetchPage, fallbackMessage) {
+      const isFirstWindow = buffer.value.length === 0
+      if (isFirstWindow) beginLoad()
+
+      try {
+        setWindow(await fetchPage())
+      } catch (caught) {
+        if (isAbortError(caught)) return
+
+        // A first window that fails leaves nothing on screen, so it becomes the table's error
+        // state. A later one leaves the rows that did arrive alone, and is retried on scroll.
+        if (!isFirstWindow) throw caught
+        setError(caught, fallbackMessage)
       }
-
-      const offset = (response.meta.page - 1) * response.meta.perPage
-      const next = buffer.value.slice()
-      response.data.forEach((row, index) => {
-        next[offset + index] = row
-      })
-      buffer.value = next
-
-      meta.value = response.meta
-      status.value = 'success'
-      hasLoadedOnce.value = true
     },
 
     resetBuffer() {
       buffer.value = []
-    },
-
-    setError(caught, fallback = 'Could not load this list. Try again.') {
-      error.value =
-        caught instanceof ApiError
-          ? caught
-          : new ApiError({ kind: 'network', status: 0, message: fallback, cause: caught })
-      status.value = 'error'
     },
 
     upsert(entity) {

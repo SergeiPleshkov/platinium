@@ -392,3 +392,49 @@ the ref read-only and routing writes through `setMode`, so the mistake is now a 
 rather than a silent one. `useSidebar` had the same shape and got the same treatment.
 **Revisit if:** a screen needs virtual scrolling on mobile, which would mean committing to
 fixed-height cards.
+
+## 2026-08-10 — Virtual rows are written in place; only the first window sets status
+
+**Chose:** mutate the buffer array by index and let only the *first* window drive the
+collection's `loading` status.
+**Over:** the first implementation, which replaced the array on every page (`buffer.value =
+next`) and called `beginLoad()` each time.
+**Because:** both were wrong for the same reason, and together they made virtual scrolling
+worse than pagination. Replacing the array changes its identity, and a virtual scroller
+watches its `items` reference to decide when to tear down and re-measure — so every page that
+arrived rebuilt the grid mid-scroll. Calling `beginLoad()` per page flipped the whole
+collection into `loading`, which is the state that renders skeletons over everything. The
+result was a table that blanked and re-rendered each time it fetched, which is precisely what
+the technique exists to avoid.
+
+Index writes are reactive on a `ref` array, so the rendered rows still update while the
+reference the scroller watches does not. Verified in a browser with a `MutationObserver`
+across a five-step scroll through 250 rows: the `<tbody>` element survived, and there were
+zero wholesale row removals.
+
+The status rule lives in `useCollectionState.loadWindow` rather than in each store. It is
+subtle enough that three hand-written copies would drift, and the failure mode is a flicker
+nobody attributes to the right cause. A later window that fails is rethrown instead, so the
+scroller forgets the page and retries it on the next pass, leaving the rows already on screen
+untouched.
+
+## 2026-08-10 — Two loading overlays, and exactly one live region each
+
+**Chose:** a non-blocking overlay over the grid while pages stream in, and a full-screen
+overlay while a lazy route chunk downloads — the latter only after a 150ms threshold.
+**Over:** no feedback (the original state), and over a spinner on every navigation.
+
+Route components are lazy-loaded, so a first visit means fetching a chunk. Until it lands the
+router does not swap the outlet: the old page stays and the click looks like it did nothing.
+The threshold matters as much as the overlay — a cached chunk resolves in a few milliseconds,
+and a spinner that flashes on every click reads as jank rather than as feedback.
+
+The tracker is **not** reference-counted, deliberately. A redirect is two navigations, and a
+counter that missed one `afterEach` would strand the overlay over a page that will never
+change. A single restarting timer cannot get stuck. `onError` is wired for the same reason:
+a chunk that 404s after a deploy rejects without ever completing.
+
+**One live region per overlay.** `BaseSpinner` is a live region on its own, but nesting it
+inside a container that is *also* one announces the same wait twice. It grew a `decorative`
+prop so the outer region wins; the test asserts `getAllByRole('status')` has length one,
+because "announced twice" is invisible in a screenshot and obvious to a screen reader.

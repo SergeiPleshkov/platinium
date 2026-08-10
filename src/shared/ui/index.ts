@@ -22,6 +22,7 @@ export { default as BaseSearchInput } from '@/shared/ui/BaseSearchInput/BaseSear
 export { default as BaseSegmentedControl } from '@/shared/ui/BaseSegmentedControl/BaseSegmentedControl.vue'
 export { default as BaseSelect } from '@/shared/ui/BaseSelect/BaseSelect.vue'
 export { default as BaseSkeleton } from '@/shared/ui/BaseSkeleton/BaseSkeleton.vue'
+export { default as BaseSpinner } from '@/shared/ui/BaseSpinner/BaseSpinner.vue'
 export { default as BaseTextarea } from '@/shared/ui/BaseTextarea/BaseTextarea.vue'
 export { default as BaseToaster } from '@/shared/ui/BaseToaster/BaseToaster.vue'
 export { default as TableViewModeSwitch } from '@/shared/ui/TableViewModeSwitch/TableViewModeSwitch.vue'
