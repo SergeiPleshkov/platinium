@@ -143,7 +143,7 @@ async function confirmDelete(): Promise<void> {
       <BaseButton icon="pi pi-plus" label="New ticket" @click="openCreate" />
     </header>
 
-    <div class="mb-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_10rem_14rem_12rem]">
+    <div class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_10rem_14rem_12rem]">
       <BaseSearchInput v-model="table.search.value" label="Search tickets" />
       <BaseSelect
         v-model="statusFilter"

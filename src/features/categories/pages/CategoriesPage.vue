@@ -112,7 +112,7 @@ async function confirmDelete(): Promise<void> {
       <BaseButton icon="pi pi-plus" label="New category" @click="openCreate" />
     </header>
 
-    <div class="mb-4">
+    <div class="mb-4 sm:max-w-xs">
       <BaseSearchInput v-model="table.search.value" label="Search categories" />
     </div>
 

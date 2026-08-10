@@ -30,7 +30,12 @@ const inputId = `search-${useId()}`
 </script>
 
 <template>
-  <div class="w-full sm:max-w-xs">
+  <!--
+    No width of its own: a shared primitive that sizes itself fights whatever grid places it.
+    Capping at `max-w-xs` here left the search 320px beside 720px filter selects on a tablet.
+    The page owns the track; this fills it.
+  -->
+  <div class="w-full">
     <label :for="inputId" class="sr-only">{{ label }}</label>
     <IconField>
       <InputIcon class="pi pi-search" />
