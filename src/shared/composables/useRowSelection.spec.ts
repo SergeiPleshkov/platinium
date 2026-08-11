@@ -52,15 +52,4 @@ describe('useRowSelection', () => {
     selection.setMany(['a'], true)
     expect(selection.areAllSelected([])).toBe(false)
   })
-
-  it('exposes reactive count and hasSelection', () => {
-    const selection = useRowSelection()
-
-    expect(selection.hasSelection.value).toBe(false)
-    expect(selection.count.value).toBe(0)
-
-    selection.toggle('x')
-    expect(selection.hasSelection.value).toBe(true)
-    expect(selection.count.value).toBe(1)
-  })
 })

@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { useEventsStore } from '@/features/events/store'
+import { db } from '@/mocks/db'
 import { server } from '@/mocks/server'
 import { configureHttp, resetHttpConfig, type ApiError } from '@/shared/api'
 import { createListQuery } from '@/shared/types/api'
@@ -44,25 +45,18 @@ describe('events store', () => {
     expect(store.meta.total).toBe(30)
   })
 
-  it('filters by status on the server', async () => {
-    await store.fetchList(createListQuery({ perPage: 100, filters: { status: 'published' } }))
-
-    expect(store.items.length).toBeGreaterThan(0)
-    expect(store.items.every((event) => event.status === 'published')).toBe(true)
-    expect(store.items.length).toBeLessThan(30)
-  })
-
-  it('filters by country on the server', async () => {
+  /*
+   * One test, not one per filter. Filtering correctness belongs to `src/mocks/query.spec.ts` and
+   * `tests/mock-api/querying.spec.ts`. What only this layer shows is that the store sends the
+   * query onward and keeps the response, instead of loading everything and narrowing it here.
+   * Country is the filter used because nothing else in the suite covers it.
+   */
+  it('sends the query to the server rather than filtering locally', async () => {
     await store.fetchList(createListQuery({ perPage: 100, filters: { country: 'France' } }))
 
+    expect(store.items.length).toBeGreaterThan(0)
+    expect(store.items.length).toBeLessThan(db.events.length)
     expect(store.items.every((event) => event.country === 'France')).toBe(true)
-  })
-
-  it('sorts by start date across the whole collection', async () => {
-    await store.fetchList(createListQuery({ sort: 'startDate', order: 'asc', perPage: 100 }))
-
-    const dates = store.items.map((event) => Date.parse(event.startDate))
-    expect(dates).toEqual([...dates].sort((a, b) => a - b))
   })
 
   describe('countries', () => {

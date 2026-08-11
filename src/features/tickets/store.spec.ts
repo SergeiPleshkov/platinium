@@ -54,65 +54,19 @@ describe('tickets store', () => {
     }
   })
 
-  describe('filters', () => {
-    it('filters by event', async () => {
-      const event = db.events[0]!
-      await store.fetchList(createListQuery({ perPage: 100, filters: { eventId: event.id } }))
-
-      expect(store.items.length).toBeGreaterThan(0)
-      expect(store.items.every((ticket) => ticket.eventId === event.id)).toBe(true)
-      expect(store.meta.total).toBe(event.ticketCount)
-    })
-
-    it('filters by category', async () => {
-      const category = db.categories.find((candidate) => candidate.ticketCount > 0)!
-      await store.fetchList(createListQuery({ perPage: 100, filters: { categoryId: category.id } }))
-
-      expect(store.items.every((ticket) => ticket.categoryId === category.id)).toBe(true)
-    })
-
-    it('filters by status', async () => {
-      await store.fetchList(createListQuery({ perPage: 100, filters: { status: 'sold_out' } }))
-
-      expect(store.items.every((ticket) => ticket.status === 'sold_out')).toBe(true)
-    })
-
-    it('combines an event filter with a status filter', async () => {
-      const event = db.events[0]!
-      await store.fetchList(
-        createListQuery({ perPage: 100, filters: { eventId: event.id, status: 'on_sale' } }),
-      )
-
-      expect(
-        store.items.every((ticket) => ticket.eventId === event.id && ticket.status === 'on_sale'),
-      ).toBe(true)
-    })
-
-    it('applies a price range', async () => {
-      await store.fetchList(
-        createListQuery({ perPage: 100, filters: { minPrice: '5000', maxPrice: '10000' } }),
-      )
-
-      expect(store.items.length).toBeGreaterThan(0)
-      expect(
-        store.items.every((ticket) => ticket.priceMinor >= 5000 && ticket.priceMinor <= 10_000),
-      ).toBe(true)
-    })
-  })
-
-  it('sorts by price across the whole collection, not the page', async () => {
-    await store.fetchList(createListQuery({ sort: 'priceMinor', order: 'asc', perPage: 1 }))
-
-    const cheapest = Math.min(...db.tickets.map((ticket) => ticket.priceMinor))
-    expect(store.items[0]?.priceMinor).toBe(cheapest)
-  })
-
-  it('searches through the embedded event name', async () => {
+  /*
+   * One test, not one per filter. Whether the *engine* filters correctly is proven directly in
+   * `src/mocks/query.spec.ts` and over HTTP in `tests/mock-api/querying.spec.ts`. What only this
+   * layer can show is that the store hands the query to the server and keeps what comes back,
+   * instead of fetching everything and narrowing it here.
+   */
+  it('sends the query to the server rather than filtering locally', async () => {
     const event = db.events[0]!
-    await store.fetchList(createListQuery({ search: event.name, perPage: 100 }))
+    await store.fetchList(createListQuery({ perPage: 100, filters: { eventId: event.id } }))
 
     expect(store.items.length).toBeGreaterThan(0)
-    expect(store.items.every((ticket) => ticket.event.name === event.name)).toBe(true)
+    expect(store.items.length).toBeLessThan(db.tickets.length)
+    expect(store.items.every((ticket) => ticket.eventId === event.id)).toBe(true)
   })
 
   describe('page value', () => {

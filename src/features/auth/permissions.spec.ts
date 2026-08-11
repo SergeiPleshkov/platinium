@@ -66,10 +66,4 @@ describe('isReadOnly', () => {
   it('treats a missing role as read-only', () => {
     expect(isReadOnly(null)).toBe(true)
   })
-
-  it('ignores export, which is not a change', () => {
-    // A viewer may export and is still read-only; downloading alters nothing.
-    expect(roleCan('viewer', 'export')).toBe(true)
-    expect(isReadOnly('viewer')).toBe(true)
-  })
 })

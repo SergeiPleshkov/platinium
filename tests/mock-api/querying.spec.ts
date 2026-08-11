@@ -94,6 +94,36 @@ describe('querying is server-side', () => {
     expect(result.body.data.every((ticket) => ticket.status === 'sold_out')).toBe(true)
   })
 
+  it('filters tickets by category', async () => {
+    const category = db.categories.find((candidate) => candidate.ticketCount > 0)!
+    const result = await tickets(`categoryId=${category.id}&perPage=100`)
+
+    expect(result.body.meta.total).toBe(category.ticketCount)
+    expect(result.body.data.every((ticket) => ticket.categoryId === category.id)).toBe(true)
+  })
+
+  it('filters events by status', async () => {
+    const publishedInDb = db.events.filter((event) => event.status === 'published').length
+    const result = await events('status=published&perPage=100')
+
+    expect(publishedInDb).toBeGreaterThan(0)
+    expect(result.body.meta.total).toBe(publishedInDb)
+    expect(result.body.data.every((event) => event.status === 'published')).toBe(true)
+  })
+
+  /*
+   * Cross-checks two things the handlers maintain separately: the filtered `meta.total`, and the
+   * `ticketCount` that `syncDerivedCounts` denormalises onto the event. They are computed by
+   * different code, so they are free to disagree, and a stale counter is invisible on screen.
+   */
+  it('reports a filtered total matching the denormalised ticketCount', async () => {
+    const event = db.events[0]!
+    const result = await tickets(`eventId=${event.id}&perPage=100`)
+
+    expect(event.ticketCount).toBeGreaterThan(0)
+    expect(result.body.meta.total).toBe(event.ticketCount)
+  })
+
   it('searches through embedded relation names, not just the ticket', async () => {
     const event = db.events[0]!
     const result = await tickets(`search=${encodeURIComponent(event.name)}&perPage=100`)
