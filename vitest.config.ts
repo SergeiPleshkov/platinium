@@ -18,6 +18,8 @@ export default mergeConfig(
       env: { TZ: 'UTC' },
       environment: 'jsdom',
       setupFiles: ['./tests/setup.ts'],
+      // Integration journeys (login → list → dialog) need headroom under coverage in CI.
+      testTimeout: 15_000,
       // Component styles are not asserted on; skipping them keeps runs fast.
       css: false,
       include: ['src/**/*.spec.ts', 'tests/**/*.spec.ts'],

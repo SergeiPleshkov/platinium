@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import App from '@/app/App.vue'
 import { db } from '@/mocks/db'
 import { renderWithApp } from '@tests/utils/renderWithApp'
+import { signInViaUi } from '@tests/utils/signInViaUi'
 
 /**
  * The tickets journey, the relational slice, and the one the 250-row dataset exists for.
@@ -12,11 +13,7 @@ import { renderWithApp } from '@tests/utils/renderWithApp'
 
 async function openTickets(path = '/tickets'): Promise<Awaited<ReturnType<typeof renderWithApp>>> {
   const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-
-  await userEvent.type(await screen.findByLabelText(/Email address/), 'admin@ticketing.test')
-  await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-  await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-  await screen.findByRole('heading', { name: 'Dashboard' })
+  await signInViaUi()
 
   await rendered.router.push(path)
   await screen.findByRole('heading', { name: 'Tickets' })

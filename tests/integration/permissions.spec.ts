@@ -1,4 +1,3 @@
-import userEvent from '@testing-library/user-event'
 import { screen, waitFor, within } from '@testing-library/vue'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -6,6 +5,7 @@ import App from '@/app/App.vue'
 import type { UserRole } from '@/features/auth/types'
 import { db } from '@/mocks/db'
 import { renderWithApp } from '@tests/utils/renderWithApp'
+import { signInViaUi, type DemoAccountEmail } from '@tests/utils/signInViaUi'
 
 /**
  * Role-based permissions, as the user experiences them.
@@ -16,7 +16,7 @@ import { renderWithApp } from '@tests/utils/renderWithApp'
  * rather than silently rendering fewer buttons.
  */
 
-const EMAILS: Record<UserRole, string> = {
+const EMAILS: Record<UserRole, DemoAccountEmail> = {
   admin: 'admin@ticketing.test',
   editor: 'editor@ticketing.test',
   viewer: 'viewer@ticketing.test',
@@ -24,11 +24,7 @@ const EMAILS: Record<UserRole, string> = {
 
 async function openCategoriesAs(role: UserRole): Promise<void> {
   const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-
-  await userEvent.type(await screen.findByLabelText(/Email address/), EMAILS[role])
-  await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-  await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-  await screen.findByRole('heading', { name: 'Dashboard' })
+  await signInViaUi(EMAILS[role])
 
   await rendered.router.push('/categories')
   await screen.findByRole('heading', { name: 'Categories' })
@@ -108,10 +104,7 @@ describe('permissions in the UI', () => {
 
     it('may still export, which changes nothing', async () => {
       const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-      await userEvent.type(await screen.findByLabelText(/Email address/), EMAILS.viewer)
-      await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-      await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-      await screen.findByRole('heading', { name: 'Dashboard' })
+      await signInViaUi(EMAILS.viewer)
 
       await rendered.router.push('/tickets')
       await screen.findByRole('heading', { name: 'Tickets' })
@@ -127,10 +120,7 @@ describe('permissions in the UI', () => {
        * did not come from a button. The UI gate is a convenience; this is the guarantee.
        */
       const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-      await userEvent.type(await screen.findByLabelText(/Email address/), EMAILS.viewer)
-      await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-      await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-      await screen.findByRole('heading', { name: 'Dashboard' })
+      await signInViaUi(EMAILS.viewer)
 
       const { useCategoriesStore } = await import('@/features/categories')
       const store = useCategoriesStore(rendered.pinia)
@@ -147,10 +137,7 @@ describe('permissions in the UI', () => {
       // The 401 hook ends the session. A 403 means "not allowed", not "not signed in"
       // conflating them would eject a viewer from the app for clicking the wrong thing.
       const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-      await userEvent.type(await screen.findByLabelText(/Email address/), EMAILS.viewer)
-      await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-      await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-      await screen.findByRole('heading', { name: 'Dashboard' })
+      await signInViaUi(EMAILS.viewer)
 
       const { useCategoriesStore } = await import('@/features/categories')
       const { useAuthStore } = await import('@/features/auth')

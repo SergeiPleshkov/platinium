@@ -7,6 +7,7 @@ import App from '@/app/App.vue'
 import { db } from '@/mocks/db'
 import { server } from '@/mocks/server'
 import { renderWithApp } from '@tests/utils/renderWithApp'
+import { signInViaUi } from '@tests/utils/signInViaUi'
 
 /**
  * The complete category journey, through the router, against the real mock backend.
@@ -19,12 +20,7 @@ const ORIGIN = window.location.origin
 
 async function signInAndOpenCategories(): Promise<Awaited<ReturnType<typeof renderWithApp>>> {
   const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-
-  await userEvent.type(await screen.findByLabelText(/Email address/), 'admin@ticketing.test')
-  await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-  await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-
-  await screen.findByRole('heading', { name: 'Dashboard' })
+  await signInViaUi()
   await rendered.router.push('/categories')
   await screen.findByRole('heading', { name: 'Categories' })
 
@@ -203,10 +199,7 @@ describe('categories CRUD', () => {
 
   it('restores search from the URL on load', async () => {
     const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-    await userEvent.type(await screen.findByLabelText(/Email address/), 'admin@ticketing.test')
-    await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-    await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-    await screen.findByRole('heading', { name: 'Dashboard' })
+    await signInViaUi()
 
     await rendered.router.push('/categories?search=VIP')
 

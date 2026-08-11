@@ -8,6 +8,7 @@ import { useTicketsStore } from '@/features/tickets'
 import { createListQuery } from '@/shared/types/api'
 import { renderWithApp } from '@tests/utils/renderWithApp'
 import { MOBILE_WIDTH, setViewportWidth } from '@tests/utils/viewport'
+import { signInViaUi } from '@tests/utils/signInViaUi'
 
 /**
  * Switching between paginated and virtual rendering, end to end.
@@ -23,11 +24,7 @@ import { MOBILE_WIDTH, setViewportWidth } from '@tests/utils/viewport'
 
 async function openTickets(): Promise<Awaited<ReturnType<typeof renderWithApp>>> {
   const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-
-  await userEvent.type(await screen.findByLabelText(/Email address/), 'admin@ticketing.test')
-  await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-  await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-  await screen.findByRole('heading', { name: 'Dashboard' })
+  await signInViaUi()
 
   await rendered.router.push('/tickets')
   await screen.findByRole('heading', { name: 'Tickets' })

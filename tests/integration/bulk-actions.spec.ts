@@ -7,6 +7,7 @@ import { db } from '@/mocks/db'
 import { useTicketsStore } from '@/features/tickets'
 import { post, signIn } from '@tests/utils/apiClient'
 import { renderWithApp } from '@tests/utils/renderWithApp'
+import { signInViaUi } from '@tests/utils/signInViaUi'
 
 /**
  * Bulk actions, through the UI.
@@ -16,13 +17,11 @@ import { renderWithApp } from '@tests/utils/renderWithApp'
  * success nor a failure, and that the selection behaves sensibly around a changing query.
  */
 
-async function openTickets(role = 'admin'): Promise<Awaited<ReturnType<typeof renderWithApp>>> {
+async function openTickets(
+  role: 'admin' | 'editor' | 'viewer' = 'admin',
+): Promise<Awaited<ReturnType<typeof renderWithApp>>> {
   const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-
-  await userEvent.type(await screen.findByLabelText(/Email address/), `${role}@ticketing.test`)
-  await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-  await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-  await screen.findByRole('heading', { name: 'Dashboard' })
+  await signInViaUi(`${role}@ticketing.test`)
 
   await rendered.router.push('/tickets')
   await screen.findByRole('heading', { name: 'Tickets' })
@@ -202,10 +201,7 @@ describe('bulk actions', () => {
      */
     async function openCategories(): Promise<Awaited<ReturnType<typeof renderWithApp>>> {
       const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-      await userEvent.type(await screen.findByLabelText(/Email address/), 'admin@ticketing.test')
-      await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-      await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-      await screen.findByRole('heading', { name: 'Dashboard' })
+      await signInViaUi()
 
       await rendered.router.push('/categories')
       await screen.findByRole('heading', { name: 'Categories' })

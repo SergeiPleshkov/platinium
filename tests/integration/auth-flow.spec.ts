@@ -24,9 +24,15 @@ afterEach(() => {
 })
 
 async function signIn(email = 'admin@ticketing.test', password = 'password123'): Promise<void> {
-  await userEvent.type(await screen.findByLabelText(/Email address/), email)
-  await userEvent.type(screen.getByLabelText(/Password/), password)
-  await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
+  // Instant typing: vee-validate re-renders on each key under coverage and mangles values.
+  const user = userEvent.setup({ delay: null })
+  const emailField = await screen.findByLabelText(/Email address/)
+  await user.clear(emailField)
+  await user.type(emailField, email)
+  const passwordField = screen.getByLabelText(/Password/)
+  await user.clear(passwordField)
+  await user.type(passwordField, password)
+  await user.click(screen.getByRole('button', { name: /Sign in/ }))
 }
 
 describe('authentication flow', () => {
@@ -78,7 +84,9 @@ describe('authentication flow', () => {
   it('validates the form before sending anything to the server', async () => {
     await renderWithApp(App, { initialRoute: '/login', withGuards: true })
 
-    await userEvent.type(await screen.findByLabelText(/Email address/), 'not-an-email')
+    await userEvent
+      .setup({ delay: null })
+      .type(await screen.findByLabelText(/Email address/), 'not-an-email')
     await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
 
     expect(await screen.findByText('Enter a valid email address')).toBeInTheDocument()

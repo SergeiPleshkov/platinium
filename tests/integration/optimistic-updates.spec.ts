@@ -8,6 +8,7 @@ import { useTicketsStore } from '@/features/tickets'
 import { db } from '@/mocks/db'
 import { server } from '@/mocks/server'
 import { renderWithApp } from '@tests/utils/renderWithApp'
+import { signInViaUi } from '@tests/utils/signInViaUi'
 
 /**
  * Optimistic status changes, and the rollback that makes them safe to ship.
@@ -22,11 +23,7 @@ const ORIGIN = window.location.origin
 
 async function openTickets(): Promise<Awaited<ReturnType<typeof renderWithApp>>> {
   const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-
-  await userEvent.type(await screen.findByLabelText(/Email address/), 'admin@ticketing.test')
-  await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-  await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-  await screen.findByRole('heading', { name: 'Dashboard' })
+  await signInViaUi()
 
   await rendered.router.push('/tickets')
   await screen.findByRole('heading', { name: 'Tickets' })
@@ -172,10 +169,7 @@ describe('optimistic status changes', () => {
 
   it('gives a viewer a badge rather than a control', async () => {
     const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-    await userEvent.type(await screen.findByLabelText(/Email address/), 'viewer@ticketing.test')
-    await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-    await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-    await screen.findByRole('heading', { name: 'Dashboard' })
+    await signInViaUi('viewer@ticketing.test')
     await rendered.router.push('/tickets')
     await screen.findByRole('heading', { name: 'Tickets' })
 

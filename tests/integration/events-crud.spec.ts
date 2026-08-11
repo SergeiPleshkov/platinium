@@ -6,16 +6,13 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import App from '@/app/App.vue'
 import { server } from '@/mocks/server'
 import { renderWithApp } from '@tests/utils/renderWithApp'
+import { signInViaUi } from '@tests/utils/signInViaUi'
 
 /** The events journey, through the router, against the real mock backend. */
 
 async function openEvents(path = '/events'): Promise<Awaited<ReturnType<typeof renderWithApp>>> {
   const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-
-  await userEvent.type(await screen.findByLabelText(/Email address/), 'admin@ticketing.test')
-  await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-  await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-  await screen.findByRole('heading', { name: 'Dashboard' })
+  await signInViaUi()
 
   await rendered.router.push(path)
   await screen.findByRole('heading', { name: 'Events' })

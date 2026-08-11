@@ -9,6 +9,7 @@ import { useAuthStore } from '@/features/auth'
 import { db } from '@/mocks/db'
 import { server } from '@/mocks/server'
 import { renderWithApp } from '@tests/utils/renderWithApp'
+import { signInViaUi } from '@tests/utils/signInViaUi'
 
 /**
  * Rearranging the dashboard tiles.
@@ -40,11 +41,7 @@ const DEFAULT_ORDER = [
 
 async function openDashboard(): Promise<Awaited<ReturnType<typeof renderWithApp>>> {
   const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
-
-  await userEvent.type(await screen.findByLabelText(/Email address/), 'admin@ticketing.test')
-  await userEvent.type(screen.getByLabelText(/Password/), 'password123')
-  await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-  await screen.findByRole('heading', { name: 'Dashboard' })
+  await signInViaUi()
   await screen.findByRole('button', { name: /Reorder Events/ })
 
   return rendered
