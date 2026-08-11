@@ -83,7 +83,8 @@ export const foosApi: Resource<Foo, FooPayload> & {
 ```
 
 Use `http` from `@/shared/api` — never bare `fetch`, never axios directly. Both are
-lint-blocked outside `shared/api`.
+lint-blocked outside `shared/api`. `src/shared/api/README.md` has the copyable template,
+including why ids are `encodeURIComponent`-wrapped and why nothing here needs a `try`/`catch`.
 
 > An earlier version of this skill said there was no per-feature `api.ts`. That was true when
 > measured against three entities with five endpoints each, and stopped being true as soon as

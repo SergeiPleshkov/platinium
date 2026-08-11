@@ -27,8 +27,14 @@ const config = {
     host: true,
   },
   build: {
-    // Surface bundle regressions early rather than at review time.
-    chunkSizeWarningLimit: 600,
+    /*
+     * A tripwire for bundle regressions, set just above where the shared vendor chunk
+     * legitimately sits (~630 kB raw / ~150 kB gzipped: Vue, Pinia, the router, axios and
+     * PrimeVue's core). Grouping the vendors into named chunks by hand was tried and reverted
+     * — it pulls route-specific PrimeVue components in eagerly and made the dashboard's first
+     * load 276 kB gzipped instead of 207. The default route-aware splitting wins.
+     */
+    chunkSizeWarningLimit: 700,
     sourcemap: true,
   },
 } satisfies UserConfig

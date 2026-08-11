@@ -113,7 +113,7 @@ clearest piece of debt in the codebase and the first thing I would fix. The reme
 localised: `BaseSelect` already supports `filterable`, so it is a matter of making that filter
 server-backed and pinning the selected option so it survives falling outside the result page.
 
-**MSW ships in the production bundle** — ~162 kB gzipped, lazy-imported behind an env flag.
+**MSW ships in the production bundle** — ~164 kB gzipped, lazy-imported behind an env flag.
 Deliberate: this application has no other backend and the brief asks for a demonstrable one. A
 real deployment sets `VITE_ENABLE_MOCK_API=false` and the chunk never loads.
 

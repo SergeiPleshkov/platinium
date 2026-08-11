@@ -33,3 +33,6 @@ this directory at lint time, so a new slice is covered the moment it exists.
 
 Follow the nine layers in `.claude/skills/crud-entity/SKILL.md`, in order. Register the route
 in `src/app/router/routes.ts` and the MSW handlers in `src/mocks/handlers/index.ts`.
+
+The `api.ts` layer implements the shared `Resource<T, P>` contract —
+[`src/shared/api/README.md`](../shared/api/README.md) has the template and the reasoning.

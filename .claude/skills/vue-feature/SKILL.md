@@ -117,6 +117,9 @@ third caller needed it; adding a fourth caller to an existing one is nearly alwa
 
 ## API layer
 
+`src/shared/api/README.md` documents this layer in full — read it before changing anything in
+`shared/api` or adding an endpoint. The rules that matter most:
+
 - `shared/api/http.ts` — the single HTTP client (axios + interceptors). Base URL, timeout,
   `AbortSignal`, auth-header injection, and one central 401 hook.
 - `shared/api/errors.ts` — every failure becomes an `ApiError { status, message, fieldErrors? }`.

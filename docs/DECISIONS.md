@@ -25,7 +25,8 @@ PrimeVue's icon-only semantics, which had been clipping a labelled button to 40p
 **axios for transport, our own `ApiError` for the contract.** axios handles the plumbing;
 `ApiError` with `fieldErrors` / `isValidation` / `isConflict` / `isRetryable` / `isAborted` is
 application vocabulary. The evidence that the boundary sits in the right place: replacing a
-hand-rolled `fetch` wrapper with axios changed one file, and all 22 API tests passed unmodified.
+hand-rolled `fetch` wrapper with axios changed one file — `http.ts` — and every test in the
+layer passed unmodified. `src/shared/api/README.md` documents the layer in full.
 
 **Our own zod ↔ vee-validate adapter, ~40 lines.** `@vee-validate/zod` peer-depends on zod 3
 and reads Zod 3 internals — any schema using `.default()` throws at form setup. Forty lines
@@ -353,6 +354,13 @@ winning; every client-side route 404'd until it became two COPY lines.
 **CI starts the container and curls it** — healthcheck, root, and a client-side deep link.
 A build that succeeds is not evidence the image serves the app.
 
+**Vendor chunks are left to the bundler, and that was measured.** Grouping PrimeVue, Vue, zod
+and axios into hand-named chunks looked like the obvious caching win; built, it made the
+dashboard's first load **276 kB gzipped instead of 207**, because naming a PrimeVue chunk drags
+every route's components into it eagerly and undoes the route-level splitting. Reverted. The
+size tripwire (`chunkSizeWarningLimit`) now sits at 700 kB, just above where the shared vendor
+chunk legitimately lands — a warning that fires on every build is one nobody reads.
+
 ---
 
 ## 14 · Accepted debt
@@ -361,7 +369,7 @@ A build that succeeds is not evidence the image serves the app.
 past a few hundred events, where it would silently omit some. The clearest piece of intentional
 debt here; the fix is a server-backed type-ahead.
 
-**MSW ships in the production image** (~162 kB gzipped, lazy-imported behind an env flag),
+**MSW ships in the production image** (~164 kB gzipped, lazy-imported behind an env flag),
 because this application intentionally ships its own backend. Sessions live in memory, so a
 page reload ends the session — handled correctly rather than hidden: the stored token is
 validated on boot and discarded if the server no longer knows it.

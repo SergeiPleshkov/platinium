@@ -1,10 +1,13 @@
 /**
- * The application's HTTP surface.
+ * The application's HTTP surface: one client, one error type, one contract.
  *
- * Deliberately just a client and an error type. There is no generic CRUD-resource factory:
- * measured against three entities it cost more code than the direct calls it replaced, and
- * stores read more plainly when the endpoint they hit is visible at the call site. See
- * docs/DECISIONS.md — "No generic resource factory".
+ * Feature code imports from `@/shared/api`, never from a file inside it. There is no generic
+ * CRUD-resource factory — measured against three entities it cost more code than the direct
+ * calls it replaced, and stores read more plainly when the endpoint they hit is visible at the
+ * call site. What survives is `Resource<T, P>`, the interface each feature's `api.ts`
+ * implements, so cross-cutting behaviour is written once.
+ *
+ * `./README.md` documents the layer in full; docs/DECISIONS.md §4 has the measurement.
  */
 export { ApiError, asApiError, isAbortError, type ApiErrorKind } from '@/shared/api/errors'
 export { withSignal, type Resource } from '@/shared/api/types'

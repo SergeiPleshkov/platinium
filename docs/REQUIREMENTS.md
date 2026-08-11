@@ -82,7 +82,8 @@ decision-making, overall software craftsmanship — not only "does it work".
       state+getters across entities; `useTable` owns query state only, so no data lives twice
 - [x] Reusable API layer — `shared/api`: axios behind our `ApiError` contract, with token
       injection, timeouts, cancellation and one central 401 hook; `serialiseListQuery` shared
-      by every list call
+      by every list call; each feature's `api.ts` implements `Resource<T, P>`. Documented in
+      `src/shared/api/README.md`
 - [x] Maintainable project structure — three slices on one shape; the third cost a fraction
       of the first
 
@@ -98,7 +99,10 @@ decision-making, overall software craftsmanship — not only "does it work".
 - [x] Mock API implementation — MSW, `src/mocks/`, 149 endpoint tests
 - [x] Unit tests — utilities, schemas, composables, stores, components, architecture
 - [x] Integration tests — 11 journeys through the real router and mock backend
-- [x] `README.md` — all ten bullets covered
+- [x] `README.md` — the brief's ten bullets are its ten numbered sections, in the brief's
+      order: project overview · installation · Docker setup · development commands · build
+      commands · testing commands · project structure · architecture overview · technical
+      decisions · assumptions and trade-offs
 - [x] `TECHNICAL_REVIEW.md` — all seven questions answered
 - [ ] Pushed to a public Git repository, URL shared
 
