@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { useAuthStore } from '@/features/auth'
 import StatTile from '@/features/dashboard/components/StatTile.vue'
 import { useDashboardStore } from '@/features/dashboard/store'
 import { EVENT_STATUS_LABELS } from '@/features/events'
 import { formatDate } from '@/shared/utils/date'
+import { useSortableList } from '@/shared/composables'
 import { formatMoney } from '@/shared/utils/money'
 import { BaseBadge, BaseButton } from '@/shared/ui'
 
@@ -38,6 +39,87 @@ const stats = computed(() => dashboard.stats)
 const inventoryValues = computed(() =>
   (stats.value?.inventoryValue ?? []).map((entry) => formatMoney(entry.totalMinor, entry.currency)),
 )
+
+/* ---- arrangeable tiles ---- */
+
+interface TileDescriptor {
+  id: string
+  label: string
+  icon: string
+  value?: string
+  values?: string[]
+  detail: string
+}
+
+/**
+ * The tiles as *data*, in their default order.
+ *
+ * Written out as four `<StatTile>` elements before, which is perfectly readable and cannot be
+ * reordered — you cannot permute markup at runtime. Describing them lets one `v-for` render
+ * whatever arrangement the user has chosen, and it is also where the stable ids come from:
+ * the persisted order refers to `events`, not to "the first one".
+ */
+const tiles = computed<TileDescriptor[]>(() => [
+  {
+    id: 'events',
+    label: 'Events',
+    icon: 'pi pi-calendar',
+    value: number.format(stats.value?.events.total ?? 0),
+    detail: `${stats.value?.events.published ?? 0} published · ${stats.value?.events.upcoming ?? 0} upcoming`,
+  },
+  {
+    id: 'tickets',
+    label: 'Tickets',
+    icon: 'pi pi-ticket',
+    value: number.format(stats.value?.tickets.total ?? 0),
+    detail: `${stats.value?.tickets.onSale ?? 0} on sale · ${stats.value?.tickets.soldOut ?? 0} sold out`,
+  },
+  {
+    id: 'inventory',
+    label: 'Inventory',
+    icon: 'pi pi-box',
+    value: number.format(stats.value?.tickets.inventory ?? 0),
+    detail: 'Tickets remaining across all events',
+  },
+  {
+    id: 'inventory-value',
+    label: 'Inventory value',
+    icon: 'pi pi-wallet',
+    values: inventoryValues.value.length > 0 ? inventoryValues.value : ['—'],
+    detail: 'Kept per currency, never summed across them',
+  },
+])
+
+/**
+ * Announced when a tile moves.
+ *
+ * A drag is self-evident to whoever performed it with a pointer and invisible to everyone
+ * else. Since the keyboard path exists precisely for people who will not see the tile slide,
+ * it has to say what happened.
+ */
+const moveAnnouncement = ref('')
+
+const arrangement = useSortableList({
+  ids: () => tiles.value.map((tile) => tile.id),
+  storageKey: 'app.dashboard.tileOrder',
+  onMove: (id, position, total) => {
+    const label = tiles.value.find((tile) => tile.id === id)?.label ?? id
+    moveAnnouncement.value = `${label} moved to position ${position} of ${total}.`
+  },
+})
+
+/** The tiles in the user's order, each carrying the drag state it needs to render. */
+const arrangedTiles = computed(() =>
+  arrangement.order.value.flatMap((id, index) => {
+    const tile = tiles.value.find((candidate) => candidate.id === id)
+    return tile ? [{ ...tile, index }] : []
+  }),
+)
+
+function resetArrangement(): void {
+  arrangement.reset()
+  moveAnnouncement.value = 'Tile order reset to the default.'
+}
 </script>
 
 <template>
@@ -70,36 +152,42 @@ const inventoryValues = computed(() =>
     </div>
 
     <template v-else>
-      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatTile
-          label="Events"
-          icon="pi pi-calendar"
-          :value="number.format(stats?.events.total ?? 0)"
-          :detail="`${stats?.events.published ?? 0} published · ${stats?.events.upcoming ?? 0} upcoming`"
-          :loading="dashboard.isLoading"
-        />
-        <StatTile
-          label="Tickets"
-          icon="pi pi-ticket"
-          :value="number.format(stats?.tickets.total ?? 0)"
-          :detail="`${stats?.tickets.onSale ?? 0} on sale · ${stats?.tickets.soldOut ?? 0} sold out`"
-          :loading="dashboard.isLoading"
-        />
-        <StatTile
-          label="Inventory"
-          icon="pi pi-box"
-          :value="number.format(stats?.tickets.inventory ?? 0)"
-          detail="Tickets remaining across all events"
-          :loading="dashboard.isLoading"
-        />
-        <StatTile
-          label="Inventory value"
-          icon="pi pi-wallet"
-          :values="inventoryValues.length ? inventoryValues : ['—']"
-          detail="Kept per currency, never summed across them"
-          :loading="dashboard.isLoading"
+      <div class="mb-2 flex items-center justify-end">
+        <BaseButton
+          v-if="arrangement.isCustomised.value"
+          variant="ghost"
+          size="sm"
+          icon="pi pi-undo"
+          label="Reset tile order"
+          @click="resetArrangement"
         />
       </div>
+
+      <!--
+        `aria-live` rather than a toast: a reorder is a small, repeatable action, and four
+        toasts for four arrow presses would be worse than silence. A polite live region says
+        it once, to the people who cannot see the tile move.
+      -->
+      <p class="sr-only" aria-live="polite">{{ moveAnnouncement }}</p>
+
+      <ul class="grid list-none gap-4 p-0 sm:grid-cols-2 xl:grid-cols-4">
+        <li v-for="tile in arrangedTiles" :key="tile.id" v-bind="arrangement.dragHandlers(tile.id)">
+          <StatTile
+            :label="tile.label"
+            :icon="tile.icon"
+            :value="tile.value"
+            :values="tile.values"
+            :detail="tile.detail"
+            :loading="dashboard.isLoading"
+            sortable
+            :is-dragging="arrangement.draggingId.value === tile.id"
+            :is-drop-target="arrangement.overId.value === tile.id"
+            :position="tile.index + 1"
+            :total="arrangedTiles.length"
+            @move="arrangement.moveBy(tile.id, $event)"
+          />
+        </li>
+      </ul>
 
       <div class="mt-6 grid gap-4 lg:grid-cols-2">
         <section class="rounded-lg border border-border bg-surface-0 p-4 dark:bg-surface-900">

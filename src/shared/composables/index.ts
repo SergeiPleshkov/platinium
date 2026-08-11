@@ -37,6 +37,13 @@ export {
 export { useRowSelection, type UseRowSelection } from '@/shared/composables/useRowSelection'
 export { resetSidebar, useSidebar, type UseSidebar } from '@/shared/composables/useSidebar'
 export {
+  moveTo,
+  reconcile,
+  useSortableList,
+  type UseSortableList,
+  type UseSortableListOptions,
+} from '@/shared/composables/useSortableList'
+export {
   resetTableViewMode,
   useTableViewMode,
   type TableViewMode,

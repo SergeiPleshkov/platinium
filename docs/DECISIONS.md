@@ -636,3 +636,40 @@ deliberately writes cannot become an import that reports every row as broken.
 written "On Sale" instead of "on_sale", and the `ID`/`Created` columns the export adds are all
 accepted. A round trip that failed because the file still had the column it was given would
 be a poor joke.
+
+## 2026-08-10 — Dashboard tiles are draggable, and equally reorderable by keyboard
+
+**Chose:** HTML5 drag and drop for pointers, arrow keys on a real `<button>` handle for
+everyone else, both routed through the same `moveTo`.
+**Over:** drag alone, which is how this feature is usually shipped.
+
+**HTML5 drag and drop has no keyboard equivalent. None.** There is no sequence of keys that
+starts a native drag. So a tile arrangement offered only by dragging is not "harder" for a
+keyboard or switch user — it does not exist for them. The handle is therefore a focusable
+button carrying its own position (`"Reorder Events — currently 1 of 4"`), and the arrows are
+not a fallback beside the real feature; they call the identical function the drop does.
+
+Both horizontal and vertical arrows move the tile, because the grid reflows: four across at
+`xl`, two at `sm`, one below that. "The next tile" is to the right on a desktop and below on
+a phone, and the user should not have to work out which.
+
+**A live region, not a toast.** A tile sliding is self-evident to whoever dragged it and
+invisible to everyone else. Four toasts for four arrow presses would be worse than silence,
+so a polite `aria-live` announces the new position once — and stays quiet when a move at the
+edge was refused, because announcing a move that did not happen is worse than announcing
+nothing.
+
+**Tiles became data.** They were four `<StatTile>` elements, which reads perfectly well and
+cannot be permuted — you cannot reorder markup at runtime. Describing them gives one `v-for`
+and, more importantly, stable ids: the stored order refers to `events`, not to "the first
+one".
+
+**The stored order is reconciled, never trusted.** `reconcile` drops ids that no longer exist
+and appends ids it has never seen, so a fifth tile added in a later release still appears
+instead of being suppressed by an arrangement someone made last month. Corrupt JSON falls
+back to the default rather than breaking the page.
+
+**Not applied to table rows.** A manual row order fights the mandated sortable column headers
+— what should a hand-placed row do when the user then sorts by price? That is a product
+question nobody has answered, and inventing an answer here would be worse than leaving the
+tables alone.
