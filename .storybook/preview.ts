@@ -3,6 +3,7 @@ import { setup, type Preview } from '@storybook/vue3-vite'
 import { installPrimeVue } from '@/app/plugins/primevue'
 
 import '@/app/assets/main.css'
+import './preview.css'
 
 /**
  * Stories render through the application's own bootstrap.
@@ -31,6 +32,8 @@ function applyScheme(scheme: string): void {
    * every story is one block among many, so each one became a viewport-tall mostly-empty
    * box and the page read as blank. On the body the background fills the canvas in story
    * view and the blocks size to their content in docs view.
+   *
+   * Docs chrome (`.sbdocs-*`) still paints its own background — see `preview.css`.
    */
   document.body.classList.add('bg-surface-50', 'text-content', 'dark:bg-surface-950')
 }

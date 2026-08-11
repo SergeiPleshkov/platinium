@@ -1,0 +1,75 @@
+/*
+ * Storybook Docs paints its own page chrome (`.sbdocs-*`, args tables, preview toolbar)
+ * from `parameters.docs.theme`, which defaults to light and does not follow our toolbar
+ * `scheme` global.
+ *
+ * The toolbar already toggles `.dark` on `<html>` for Tailwind and PrimeVue. These
+ * rules make the Docs surfaces read the same design tokens, so the page background
+ * and story frames match canvas view instead of staying white.
+ *
+ * `!important` is required: Docs styles are emotion hashes with equal specificity,
+ * injected after this file, so source-order alone cannot win.
+ */
+.sbdocs.sbdocs-wrapper,
+.sbdocs.sbdocs-preview {
+  background: var(--p-surface-50) !important;
+  color: var(--p-text-color) !important;
+}
+
+.dark .sbdocs.sbdocs-wrapper,
+.dark .sbdocs.sbdocs-preview {
+  background: var(--p-surface-950) !important;
+  color: var(--p-text-color) !important;
+}
+
+.dark .sbdocs.sbdocs-preview {
+  border-color: var(--p-content-border-color) !important;
+}
+
+.dark .sbdocs-preview [role='toolbar'] {
+  background: var(--p-surface-900) !important;
+  color: var(--p-text-color) !important;
+  border-color: var(--p-content-border-color) !important;
+}
+
+.dark .sbdocs-title,
+.dark .sbdocs.sbdocs-title,
+.dark .sbdocs.sbdocs-h1,
+.dark .sbdocs.sbdocs-h2,
+.dark .sbdocs.sbdocs-h3,
+.dark .sbdocs.sbdocs-h4,
+.dark .sbdocs.sbdocs-p,
+.dark .sbdocs.sbdocs-li,
+.dark .sbdocs.sbdocs-a {
+  color: var(--p-text-color) !important;
+}
+
+.dark .sbdocs.sbdocs-a {
+  text-decoration-color: var(--p-text-muted-color) !important;
+}
+
+.dark .docblock-argstable,
+.dark .docblock-argstable td,
+.dark .docblock-argstable th,
+.dark .docblock-argstable tr,
+.dark .sb-argstableBlock,
+.dark .sb-argstableBlock td,
+.dark .sb-argstableBlock th {
+  background: var(--p-surface-900) !important;
+  color: var(--p-text-color) !important;
+  border-color: var(--p-content-border-color) !important;
+}
+
+.dark .docblock-argstable-head th,
+.dark .sb-argstableBlock-head th {
+  background: var(--p-surface-800) !important;
+  color: var(--p-text-muted-color) !important;
+}
+
+.dark .docblock-argstable input,
+.dark .docblock-argstable select,
+.dark .docblock-argstable textarea {
+  background: var(--p-surface-950) !important;
+  color: var(--p-text-color) !important;
+  border-color: var(--p-content-border-color) !important;
+}
