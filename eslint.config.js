@@ -114,6 +114,7 @@ export default defineConfigWithVueTs(
     ignores: [
       '**/dist/**',
       '**/coverage/**',
+      '**/storybook-static/**',
       '**/node_modules/**',
       '**/.pnpm-store/**',
       'public/mockServiceWorker.js',

@@ -23,6 +23,7 @@
     "vitest.config.ts",
     "eslint.config.js",
     "playwright.config.ts",
+    ".storybook/main.ts",
     "e2e/**/*.ts"
   ]
 }

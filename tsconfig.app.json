@@ -9,6 +9,9 @@
     "types": ["vite/client"],
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo"
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "env.d.ts"],
+  /* `.storybook/preview.ts` is browser code: it touches the DOM, imports the app stylesheet
+   and calls the same PrimeVue bootstrap `main.ts` does, so it belongs here rather than in
+   the node project. `.storybook/main.ts` is build config and lives in tsconfig.node.json. */
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "env.d.ts", ".storybook/preview.ts"],
   "exclude": ["src/**/*.spec.ts", "src/**/__snapshots__/**", "node_modules", "dist"]
 }

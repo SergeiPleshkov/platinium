@@ -7,6 +7,7 @@ A Vue 3 admin portal for managing **Events**, **Ticket Categories** and **Ticket
 | Stack | Vue 3 · Pinia · Vue Router · TypeScript (strict) · Vite · PrimeVue · Tailwind · Docker |
 | Mock API | MSW — one handler set for the browser and the tests |
 | Tests | Vitest (unit through architecture) · Playwright smoke + axe |
+| Component docs | Storybook, 18 `shared/ui` components with an a11y panel |
 | Type safety | `strict`, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` |
 
 ---
@@ -64,7 +65,8 @@ referential integrity.
 | Infinite scrolling | Virtual scroller over a sparse buffer; switchable with pagination |
 
 Also: WCAG-AA contrast covered by a test, request cancellation on superseded queries, Playwright
-smoke + axe (`pnpm test:e2e`), and `pnpm verify` as the local/CI quality gate.
+smoke + axe (`pnpm test:e2e`), a Storybook of the UI kit (`pnpm storybook`), and `pnpm verify`
+as the local/CI quality gate.
 
 ---
 
@@ -138,6 +140,8 @@ broken SPA fallback fails the job.
 | `pnpm format` | Prettier write |
 | `pnpm format:check` | Prettier check (CI) |
 | `pnpm typecheck` | `vue-tsc --build --force` |
+| `pnpm storybook` | Storybook for the UI kit at http://localhost:6006 |
+| `pnpm build:storybook` | Static Storybook into `storybook-static/` |
 | `pnpm verify` | typecheck → lint → format:check → test → build |
 
 ---
@@ -181,7 +185,8 @@ src/
                         useVirtualRows, useRowSelection, useBulkAction,
                         useSortableList, useAsyncAction, …
     ui/                 Base* primitives (PrimeVue only here);
-                        BaseDataTable → Grid + Cards
+                        BaseDataTable → Grid + Cards;
+                        *.stories.ts beside each component
     utils/              money, date, locale, options, CSV
     types/              API envelope, shared entity contracts
     validation/         zod → vee-validate adapter
@@ -196,6 +201,7 @@ tests/
   mock-api/             mock backend contract without our client
   utils/                render, viewport, contrast helpers
 e2e/                    Playwright smoke + axe
+.storybook/             Storybook config: real theme, dark-mode toggle, a11y addon
 ```
 
 Unit and component tests live next to the code. Cross-boundary tests live under `tests/`.
@@ -251,6 +257,17 @@ Search, filter, sort and pagination run in the mock handler, in that order, behi
 
 Features use `Base*` components. PrimeVue stays behind the adapter. Tests query by role, label
 and text — not PrimeVue internals.
+
+`pnpm storybook` documents all 18 of them, 79 stories, one file beside each component. Stories
+run through the app's own `installPrimeVue` and `main.css`, so they show the real tokens rather
+than a second approximation of the theme that would immediately start to disagree. A toolbar
+toggle flips the same `.dark` class the app's theme switch does, and the a11y addon runs axe on
+every story.
+
+Only `shared/ui` has stories. That layer has no domain knowledge, so its components render from
+props alone; a feature component would need a store, a router and a mock backend to render,
+which is an integration test with a worse assertion model, and `tests/integration/` already
+owns that.
 
 ### Mock backend
 

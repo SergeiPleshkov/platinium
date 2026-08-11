@@ -39,6 +39,17 @@ The kit may include hand-written primitives. `BaseSegmentedControl` is not a wra
 `SelectButton`: that renders `aria-pressed` toggles (three independent buttons). A radio group
 needs roving tabindex and arrow keys.
 
+Storybook documents the kit: 18 components, 79 stories, `pnpm storybook`. It renders through the
+app's own `installPrimeVue` and `main.css`, because a Storybook with its own copy of the theme
+is a second source of truth and the first thing it does is disagree with the app. The stories
+carry the states that are awkward to reach by clicking: a table mid-skeleton, a filtered list
+with no matches, a delete refused by a 409, a bulk bar as an editor who cannot delete.
+
+The scope is `shared/ui` and nothing else, and that boundary is the same one the architecture
+already draws. Those components have no domain knowledge, so they render from props; a feature
+component needs a store, a router and a mock backend, which is an integration test wearing a
+different hat.
+
 ### One error type at the API boundary
 
 Every failure leaves `shared/api` as `ApiError` — network drop, timeout, 422, 500, deliberate
@@ -207,6 +218,9 @@ Most of this is already in the repo.
   weaken it to go green
 - CI smokes the running container (health, root, deep link), not only the image build
 - Add: Playwright + axe in CI, and a bundle-size budget that fails on regression
+- Add: the Storybook a11y addon is wired but only advisory. Running it under the Storybook
+  test runner in CI would make an axe regression in a primitive fail the build, which is
+  where it is cheapest to catch
 
 **Conventions (review)**
 
@@ -214,6 +228,8 @@ Most of this is already in the repo.
 - MSW is the only mock; many mocks usually means fix the design
 - Break new tests on purpose once before trusting them
 - Reasoning next to the surprising line, or in the layer README
+- A new `shared/ui` primitive ships with its stories. The variants and states are the API,
+  and a story is the cheapest place to see all of them at once
 - Conventional commits that explain why
 
 **Process**

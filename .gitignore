@@ -45,3 +45,6 @@ pnpm-debug.log*
 
 # Ephemeral planning and audit artefacts (see .claude/rules/audit-skill.md)
 plans/
+
+# Storybook build output
+storybook-static/
