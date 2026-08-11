@@ -51,9 +51,20 @@ doing a component's job.
 
 ## Shared UI primitives (`shared/ui`)
 
-`BaseButton`, `BaseInput`, `BaseSelect`, `BaseTextarea`, `BaseDatePicker`, `BaseModal`,
-`BaseDataTable`, `BasePagination`, `BaseBadge`, `BaseSkeleton`, `BaseEmptyState`,
-`BaseConfirmDialog`, `BaseFileUpload`.
+Eighteen `Base*` primitives, plus two composed ones. Check `src/shared/ui/index.ts` for the
+current list before adding anything — the barrel is the inventory.
+
+Form and input · `BaseInput` `BaseSelect` `BaseTextarea` `BaseDatePicker` `BaseMoneyInput`
+`BaseSearchInput` `BaseFormField` `BaseSegmentedControl`
+Display · `BaseBadge` `BaseSkeleton` `BaseSpinner` `BaseEmptyState` `BaseDataTable`
+Action and overlay · `BaseButton` `BaseModal` `BaseConfirmDialog` `BaseToaster`
+Bulk · `BaseBulkBar` `BaseBulkFailures`
+Composed · `TableViewModeSwitch`
+
+Not every one wraps PrimeVue. `BaseBadge`, `BaseSpinner` and `BaseSegmentedControl` are
+hand-written where the wrapper would have been fighting its wrapped component — see
+`docs/DECISIONS.md` §1. That the kit is *allowed* to contain hand-written primitives is the
+point of the kit being ours.
 
 These are **adapters over PrimeVue**, not re-exports. The point of the layer is that the
 rest of the app is written against our API, so PrimeVue can be replaced by in-house
@@ -86,12 +97,23 @@ must be safe to call outside a component.
 
 The core ones this app leans on:
 
-- `useTable` — search (debounced), filters, sort, pagination; two-way synced with the URL
-  query, so any view is shareable and reload-safe.
-- `useAsyncAction` — wraps an async call, exposes `{ run, pending, error }`, guarantees the
-  pending flag unwinds on both paths.
-- `useNotifications` — the only way to raise a toast.
-- `useBreakpoint` — the one place `matchMedia` is read.
+| Composable | Owns |
+|---|---|
+| `useTable` | search (debounced), filters, sort, page — synced to the URL. **No rows.** |
+| `useListView` | `useTable` + view mode + the virtual buffer, wired in the right order |
+| `useCollectionState` | `items` / `buffer` / `meta` / `status` / `error` + every derived flag, and `optimistic()` |
+| `useVirtualRows` | which pages have been requested. **No rows.** |
+| `useRowSelection` | ticked ids (ids, never records) |
+| `useBulkAction` | the three-outcome rule for a partial success |
+| `useSortableList` | a user-arranged order, drag *and* keyboard |
+| `useAsyncAction` | `{ run, pending, error }`, pending unwinds on both paths |
+| `useNotifications` | the only way to raise a toast |
+| `useBreakpoint` | the one place `matchMedia` is read |
+| `useTheme` `useSidebar` `useTableViewMode` | persisted per-browser preferences |
+| `useRouteLoading` | whether a lazy route chunk is in flight |
+
+**Search here before writing a new one.** Most of the list above was extracted only after a
+third caller needed it; adding a fourth caller to an existing one is nearly always right.
 
 ## API layer
 
@@ -100,7 +122,12 @@ The core ones this app leans on:
 - `shared/api/errors.ts` — every failure becomes an `ApiError { status, message, fieldErrors? }`.
   Network failure, timeout, 4xx and 5xx all arrive at callers in that one shape.
 - `shared/api/http.ts` also exports `serialiseListQuery`, so every list call flattens its
-  query the same way. There is no generic CRUD-resource factory — see docs/DECISIONS.md.
+  query the same way.
+- `asApiError(caught, fallback)` guarantees an `ApiError` in a `catch`. Use it rather than
+  re-deciding what to do with an `unknown` per store.
+- Endpoints live in each feature's `api.ts`, implementing `Resource<T, P>` widened by
+  intersection for anything entity-specific. There is no generic CRUD-resource *factory* —
+  see `docs/DECISIONS.md` §4 for the measurement, and for why the `api.ts` modules came back.
 
 Nothing outside `shared/api` calls `fetch` or imports axios. Both are lint-blocked.
 
@@ -121,8 +148,11 @@ Mobile-first Tailwind. Three breakpoints matter: 375 (mobile), 768 (tablet), 128
 
 - Data tables become stacked cards below `md`. Horizontal scrolling a table on a phone is
   not "responsive".
-- Sidebar nav collapses to an off-canvas drawer below `lg`.
+- Sidebar nav collapses to an off-canvas drawer below `lg`; above it, a content-width rail
+  that collapses to icons.
 - Touch targets ≥ 44px. Dialogs go full-screen on mobile.
+- A control that cannot work at a given width is **hidden**, not shown and ignored — the
+  view-mode switch below `md` is the precedent.
 
 ## Performance
 
@@ -131,10 +161,24 @@ Mobile-first Tailwind. Three breakpoints matter: 375 (mobile), 768 (tablet), 128
 - Debounce search input (300ms) and cancel the superseded request via `AbortSignal`.
 - Keep an eye on bundle size — no date/util megalibrary for three formatting calls.
 
+## Accessibility is a correctness property here
+
+Several decisions were made *against* the simpler implementation for it, and undoing them
+silently is a regression the tests are written to catch:
+
+- Anything a pointer can do, a keyboard must be able to do. HTML5 drag and drop has **no**
+  keyboard equivalent, so a drag feature ships with arrow keys calling the same function.
+- **Exactly one live region per announcement.** `BaseSpinner` takes `decorative` for when it
+  sits inside a container that is already one; two nested regions announce the wait twice.
+- Composite widgets (`Select`, `DatePicker`) render a `<div>` root, so `<label for>` binds to
+  nothing — use `BaseFormField`'s `labellable` distinction.
+- Colour never carries meaning alone.
+
 ## Before you commit
 
 - [ ] `pnpm typecheck` and `pnpm lint` clean
 - [ ] No `any`, no unexplained suppression comments
 - [ ] No cross-feature imports, no `fetch` outside `shared/api`
-- [ ] Keyboard-reachable, labelled, focus-visible
+- [ ] Keyboard-reachable, labelled, focus-visible, one live region
 - [ ] Works at 375px
+- [ ] Non-obvious decisions recorded in `docs/DECISIONS.md`

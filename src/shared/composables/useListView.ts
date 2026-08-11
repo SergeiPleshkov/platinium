@@ -8,14 +8,10 @@ import { createListQuery, type ListQuery } from '@/shared/types/api'
 /**
  * The glue between query state, render strategy and the store's two loaders.
  *
- * Written *after* all three list pages existed and needed the identical fifteen lines — which
- * is the standard this project applies to abstractions generally, and the reason there is no
- * generic CRUD factory (see docs/DECISIONS.md). Three consumers, one non-obvious ordering
- * problem, and a bug that is easy to reintroduce by hand: that earns a composable.
- *
- * The ordering problem: on a query change in virtual mode, three things must happen in this
- * order — cancel and forget the in-flight pages, empty the buffer, *then* ask for the first
- * window. Doing the last first splices rows for the old query into the new buffer.
+ * Extracted after all three pages needed the identical fifteen lines, not before. What earns
+ * it is the ordering: on a query change in virtual mode, the in-flight pages must be cancelled
+ * and forgotten, the buffer emptied, and *only then* the first window requested. Doing the
+ * last first splices rows for the old query into the new buffer.
  */
 
 export interface UseListViewOptions extends Omit<UseTableOptions, 'onQuery'> {

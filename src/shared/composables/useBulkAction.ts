@@ -12,17 +12,13 @@ import {
 /**
  * Runs a bulk request and turns its per-record result into something a person can act on.
  *
- * The reason this is a composable rather than four lines in each page: **a partial success is
- * not an error, and the naive handling gets it wrong in both directions.** Wrapped in a
- * try/catch it looks like a success and the failures vanish; treated as a failure it looks
- * like nothing happened and the successes are hidden. The rule is stated once here.
- *
- * Three outcomes, three different responses:
- *   - everything worked → a success toast, and the selection is cleared
- *   - everything failed → an error toast, and the selection is *kept*, so the user can retry
- *     or amend it without re-ticking
- *   - some worked → a warning naming the count, plus the per-record reasons on screen until
- *     dismissed, because a toast is the wrong place for a list someone has to read
+ * **A partial success is not an error, and the naive handling gets it wrong both ways** —
+ * a try/catch hides the failures, treating it as a failure hides the successes. Hence one
+ * place for the rule:
+ *   - all worked → success toast, selection cleared
+ *   - all failed → error toast, selection *kept*, so it can be amended without re-ticking
+ *   - some worked → warning, plus the reasons on screen, because a toast is the wrong
+ *     container for a list somebody has to read
  */
 
 export interface UseBulkActionOptions {

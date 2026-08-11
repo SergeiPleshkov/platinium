@@ -10,6 +10,7 @@ import { useBulkAction, useListView, useNotifications, useRowSelection } from '@
 import {
   BaseBadge,
   BaseBulkBar,
+  BaseBulkFailures,
   BaseButton,
   BaseConfirmDialog,
   BaseDataTable,
@@ -190,37 +191,7 @@ async function confirmDelete(): Promise<void> {
       @clear="selection.clear"
     />
 
-    <div
-      v-if="bulk.hasFailures.value"
-      class="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/40"
-      role="alert"
-      aria-label="Bulk action failures"
-    >
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-sm font-medium text-content">
-            {{ bulk.failures.value.length }} could not be changed
-          </p>
-          <ul class="mt-2 space-y-1">
-            <li
-              v-for="failure in bulk.failures.value"
-              :key="failure.id"
-              class="text-sm text-content-muted"
-            >
-              <span class="font-medium text-content">{{ failure.label }}</span>
-              — {{ failure.reason }}
-            </li>
-          </ul>
-        </div>
-        <BaseButton
-          variant="ghost"
-          size="sm"
-          icon="pi pi-times"
-          aria-label="Dismiss failure report"
-          @click="bulk.dismissFailures"
-        />
-      </div>
-    </div>
+    <BaseBulkFailures :failures="bulk.failures.value" @dismiss="bulk.dismissFailures" />
 
     <BaseDataTable
       :rows="store.items"

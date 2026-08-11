@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import { ticketsApi } from '@/features/tickets/api'
 import type { TicketPayload, TicketStatus, TicketWithRelations } from '@/features/tickets/types'
-import { ApiError, isAbortError } from '@/shared/api'
+import { asApiError, isAbortError } from '@/shared/api'
 import { useCollectionState } from '@/shared/composables/useCollectionState'
 import type { ListQuery } from '@/shared/types/api'
 import type { BulkRequest, BulkResult } from '@/shared/types/bulk'
@@ -163,14 +163,3 @@ export const useTicketsStore = defineStore('tickets', () => {
     bulk,
   }
 })
-
-function asApiError(caught: unknown): ApiError {
-  return caught instanceof ApiError
-    ? caught
-    : new ApiError({
-        kind: 'network',
-        status: 0,
-        message: 'Something went wrong. Try again.',
-        cause: caught,
-      })
-}

@@ -3,7 +3,7 @@ import { ref } from 'vue'
 
 import { eventsApi } from '@/features/events/api'
 import type { Event, EventPayload } from '@/features/events/types'
-import { ApiError, isAbortError } from '@/shared/api'
+import { asApiError, isAbortError } from '@/shared/api'
 import { useCollectionState } from '@/shared/composables/useCollectionState'
 import { createListQuery, type ListQuery } from '@/shared/types/api'
 import type { BulkRequest, BulkResult } from '@/shared/types/bulk'
@@ -133,14 +133,3 @@ export const useEventsStore = defineStore('events', () => {
     bulk,
   }
 })
-
-function asApiError(caught: unknown): ApiError {
-  return caught instanceof ApiError
-    ? caught
-    : new ApiError({
-        kind: 'network',
-        status: 0,
-        message: 'Something went wrong. Try again.',
-        cause: caught,
-      })
-}

@@ -95,10 +95,8 @@ defineSlots<{
 }>()
 
 /**
- * Virtual rows must be a fixed, known height — the scroller positions row *n* at
- * `n × itemSize`, so a row that renders taller than this makes the scrollbar lie about how
- * much data there is and drifts further with every screen. Enforced on the cells below rather
- * than left to the content.
+ * The scroller positions row *n* at `n × itemSize`, so a taller row makes the scrollbar lie
+ * and drifts further with every screen. Enforced on the cells rather than left to content.
  */
 const VIRTUAL_ROW_HEIGHT = 52
 
@@ -144,14 +142,9 @@ const showEmptyState = computed(
 )
 
 /**
- * Virtual mode is a *grid* mode.
- *
- * Below `md` this component renders cards, whose height depends on how much text each row
- * carries — and a virtual scroller needs every item to be exactly `itemSize` tall or the
- * scrollbar misreports the length of the list. Forcing cards to a fixed height to satisfy the
- * scroller would be letting the technique dictate the design. Narrow viewports therefore keep
- * the paginator, and the page hides the switch there rather than offering a control that
- * silently does nothing.
+ * Virtual mode is a *grid* mode. Below `md` this renders cards, whose height depends on their
+ * content — and forcing them to a fixed height to satisfy the scroller would let the technique
+ * dictate the design. Narrow viewports keep the paginator; the page hides the switch there.
  */
 const useVirtualGrid = computed(() => props.mode === 'virtual' && !isMobile.value)
 
@@ -170,15 +163,9 @@ const virtualScrollerOptions = computed(() => ({
 }))
 
 /**
- * Fixed layout, not automatic.
- *
- * Automatic layout measures the rows *currently in the DOM* — and virtual scrolling exists
- * precisely to keep swapping those. Every recycle re-measured, so the columns jittered back
- * and forth as the user scrolled. Fixed layout derives its widths from the header row alone,
- * so they are decided once and hold for the whole scroll.
- *
- * The cost is that widths must be declared rather than discovered. Columns that declare none
- * share whatever is left over, which is the right default for the text-heavy ones.
+ * Fixed, not automatic. Automatic layout measures the rows *currently in the DOM*, and virtual
+ * scrolling keeps swapping those — so the columns jittered as the user scrolled. The cost is
+ * that widths must be declared; columns that declare none share what is left.
  */
 const virtualTableStyle = { tableLayout: 'fixed', width: '100%' } as const
 
@@ -186,10 +173,8 @@ const virtualTableStyle = { tableLayout: 'fixed', width: '100%' } as const
 const VIRTUAL_ACTIONS_WIDTH = '6rem'
 
 /**
- * Vertical padding is removed and the height fixed, so a row is exactly `VIRTUAL_ROW_HEIGHT`
- * whatever it contains. The inner wrapper restores the visual centring and clips overflow —
- * without it a long venue name wraps to two lines, the row grows, and the scroller's
- * arithmetic (position = index × itemSize) silently stops matching the page.
+ * Padding zeroed and height fixed, so a row is exactly `VIRTUAL_ROW_HEIGHT` whatever it holds.
+ * Without this a long venue name wraps and the scroller's arithmetic stops matching the page.
  */
 const virtualCellStyle = {
   height: `${VIRTUAL_ROW_HEIGHT}px`,
@@ -198,11 +183,8 @@ const virtualCellStyle = {
 }
 
 /**
- * Narrows a buffer slot for the template.
- *
  * A template cannot apply a generic type guard inline, so the check and the narrowing are
- * split: `pending` gates the branch, `asRow` states the conclusion. The two are only correct
- * together, which is why they live side by side.
+ * split: `pending` gates the branch, `asRow` states the conclusion. Correct only together.
  */
 function pending(row: BufferRow<TRow>): boolean {
   return isPendingRow(row)
@@ -351,9 +333,8 @@ const someSelected = computed(
       @sort="onSort"
     >
       <!--
-        A plain checkbox, not PrimeVue's selection column. Ours emits ids; theirs emits row
-        objects and owns the selection state, which would put a second copy of it beside the
-        one `useRowSelection` already holds.
+        A plain checkbox, not PrimeVue's selection column: theirs owns the selection state,
+        which would put a second copy beside the one `useRowSelection` already holds.
       -->
       <Column v-if="selectable" :style="{ width: '3rem' }" :body-style="virtualCellStyle">
         <template #header>

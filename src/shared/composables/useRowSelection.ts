@@ -1,17 +1,12 @@
 import { computed, ref, type ComputedRef } from 'vue'
 
 /**
- * Which rows the user has ticked.
+ * Which rows the user has ticked — **ids, not records**. A selected row can be re-fetched or
+ * paged away between the tick and the action, so holding the object means acting on a stale
+ * copy of it.
  *
- * Holds **ids, not records**. A selected row can be re-fetched, re-sorted or paged away
- * between the tick and the action; keeping the whole object would mean acting on a stale copy
- * of it, and would quietly hold a page of data alive after the table moved on. Ids stay
- * correct because they are what the bulk endpoint takes anyway.
- *
- * Selection survives paging on purpose — ticking three rows, moving to page two and ticking
- * two more is a normal thing to want. It does *not* survive a change to the query, because
- * "everything matching this filter" is a different set of rows and silently carrying a
- * selection across is how the wrong records get deleted.
+ * Selection survives paging (ticking across two pages is a normal thing to want) but not a
+ * change to the query, because carrying it across is how the wrong records get deleted.
  */
 
 export interface UseRowSelection {

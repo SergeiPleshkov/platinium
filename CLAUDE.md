@@ -11,11 +11,12 @@ strategy and craftsmanship count as much as features.
 
 - **Requirements are tracked in [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md).** Tick boxes
   as they land. Never mark something done that isn't verified.
-- **Plan of record is [docs/PLAN.md](docs/PLAN.md).** Work phase by phase; don't skip ahead.
 - Mandatory stack — Vue 3, Pinia, Vue Router, TypeScript, Docker. These are hard
   requirements from the brief; do not substitute.
 - No `any`, no `@ts-expect-error`, no `eslint-disable` without a comment explaining why.
-- Every phase ends green: typecheck, lint, unit + integration tests, production build.
+- Every change lands green: typecheck, lint, format, tests, production build — `/verify`.
+- Non-obvious decisions go in [docs/DECISIONS.md](docs/DECISIONS.md) **when made**, with what
+  they cost. `TECHNICAL_REVIEW.md` is assembled from it, not reconstructed from memory.
 
 ## Stack
 
@@ -43,7 +44,7 @@ src/
   shared/         # cross-feature, feature-agnostic
     api/          # http client, error normalisation, query serialisation
     ui/           # presentational primitives (Base*), zero domain knowledge
-    composables/  # useTable, useAsyncAction, useNotifications, useBreakpoint, ...
+    composables/  # useListView, useTable, useCollectionState, useBulkAction, ...
     utils/        # pure functions, fully unit-tested
     types/        # shared/domain-agnostic types
   features/
@@ -82,7 +83,7 @@ internals) should stay green through it.
 
 ## Commands
 
-Set up in phase 1; keep this table accurate.
+Keep this table accurate.
 
 ```bash
 pnpm dev            # vite dev server + MSW worker
@@ -98,9 +99,13 @@ pnpm test:coverage  # coverage report
 
 ## Working agreement
 
-- Run `/verify` before declaring any phase complete. It is the quality gate.
+- Run `/verify` before declaring anything complete. It is the quality gate.
+- `/feature <what>` drives a change end to end; `/audit-brief` checks the whole thing against
+  the assessment brief.
 - Commit per meaningful unit of work with a conventional-commit subject. The commit history
   is part of what the reviewer reads — keep it clean and legible.
+- **Search `src/shared/` before adding a composable or primitive.** Most of what a new screen
+  needs already exists; the inventory is in the `vue-feature` skill.
 - When you make a decision worth defending (or a trade-off worth admitting), append a note
   to `docs/DECISIONS.md` right then. `TECHNICAL_REVIEW.md` is assembled from those notes at
   the end, not reconstructed from memory.

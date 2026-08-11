@@ -3,7 +3,7 @@ import { ref } from 'vue'
 
 import { categoriesApi } from '@/features/categories/api'
 import type { Category, CategoryPayload } from '@/features/categories/types'
-import { ApiError, isAbortError } from '@/shared/api'
+import { asApiError, isAbortError } from '@/shared/api'
 import { useCollectionState } from '@/shared/composables/useCollectionState'
 import { createListQuery, type ListQuery } from '@/shared/types/api'
 import type { BulkRequest, BulkResult } from '@/shared/types/bulk'
@@ -141,14 +141,3 @@ export const useCategoriesStore = defineStore('categories', () => {
     bulk,
   }
 })
-
-function asApiError(caught: unknown): ApiError {
-  return caught instanceof ApiError
-    ? caught
-    : new ApiError({
-        kind: 'network',
-        status: 0,
-        message: 'Something went wrong. Try again.',
-        cause: caught,
-      })
-}

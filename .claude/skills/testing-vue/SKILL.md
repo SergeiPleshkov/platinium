@@ -17,9 +17,17 @@ of test has a job, and no test duplicates another's job.
 | Stores | Vitest + MSW | State transitions across real request/response |
 | Components | Testing Library | What the user sees and can do |
 | Flows | Testing Library + router + MSW | Whole business journeys |
+| Mock API | Vitest + plain `fetch` | The backend's own contract, without our client in the way |
+| Architecture | Vitest + ESLint API | That the boundary rules still fire |
 
 Unit tests are colocated (`Thing.spec.ts` next to `Thing.vue`). Integration tests live in
-`tests/integration/`.
+`tests/integration/`, endpoint contracts in `tests/mock-api/`, boundary probes in
+`tests/architecture/`.
+
+The architecture layer is worth understanding before touching `eslint.config.js`: it writes
+deliberate violations to disk, lints them, and asserts each is rejected — **and** asserts that
+sanctioned dependencies still pass, so a rule tightened until everything is forbidden cannot
+masquerade as a win.
 
 ## Ground rules
 
@@ -46,6 +54,29 @@ Unit tests are colocated (`Thing.spec.ts` next to `Thing.vue`). Integration test
   and the global providers, returns Testing Library's queries plus the router. Every
   integration test starts here.
 - Reset MSW's in-memory database between tests so state never leaks across specs.
+
+## Traps this suite has already hit
+
+Each of these cost real debugging time and is now guarded. Do not reintroduce them.
+
+- **Mounting a layout component directly renders it twice.** The router still matches it at
+  depth 0, so its own `<RouterView>` resolves to itself. Mount `App` instead — a fixture that
+  manufactures the bug it is testing for is worse than no fixture.
+- **The `matchMedia` stub models a real width** (`tests/utils/viewport.ts`, desktop by
+  default). A stub returning `matches: false` for everything means every test silently runs in
+  the mobile layout, and the desktop branch has no coverage while the suite is green.
+- **`unstubGlobals` clears `beforeAll` stubs.** Global stubs go in `beforeEach` or they survive
+  exactly one test.
+- **`ResizeObserver` must be stubbed as a class**, not an arrow function — PrimeVue calls it
+  with `new`, and the failure surfaces as an unrelated null `$el` several tests later.
+- **Native `<option>` and PrimeVue's overlay share the `option` role.** Scope option queries to
+  the open `listbox`, or a dropdown query matches a dozen table rows.
+- **Resolve table columns through their headers**, never by `row.children[3]`. Adding a
+  checkbox column shifted every index and broke two tests that were not about columns at all.
+- **`role="status"` takes its accessible name from `aria-label`, not its content.** Query the
+  text, or label the element.
+- **The timezone is pinned to UTC** in `vitest.config.ts`, because a date test that passes only
+  on the author's machine is worse than none.
 
 ## Patterns
 

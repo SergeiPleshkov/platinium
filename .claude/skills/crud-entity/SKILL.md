@@ -1,53 +1,50 @@
 ---
 name: crud-entity
-description: Scaffold or extend a full CRUD entity slice (types, zod schema, fixtures, MSW handlers, Pinia store with its endpoint calls, table page, form dialog, tests) in this Vue 3 admin portal. Use when adding or reworking Events, Categories, Tickets, or any new domain entity, or when a CRUD slice is missing a layer.
+description: Scaffold or extend a full CRUD entity slice (types, zod schema, fixtures, MSW handlers, per-feature api module, Pinia store, table page, form dialog, tests) in this Vue 3 admin portal. Use when adding or reworking Events, Categories, Tickets, or any new domain entity, or when a CRUD slice is missing a layer.
 ---
 
 # CRUD entity slice
 
-Every domain entity in this app is one vertical slice with the same eight layers, in the same
-order. Build them in order — each layer only depends on the ones above it. Skipping a layer
-or inlining it somewhere else is the thing this skill exists to prevent.
+Every domain entity is one vertical slice with the same layers, in the same order. Each layer
+depends only on the ones above it. Skipping a layer, or inlining it somewhere else, is the
+thing this skill exists to prevent.
 
-## The eight layers
+Three slices already exist — `categories` (simplest), `events` (dates, filters, status) and
+`tickets` (relations, money, import/export). **Read the closest one before writing a new one.**
+Categories is the reference for the minimum; tickets for everything optional.
+
+## The layers
 
 Given entity `Foo` (plural `foos`):
 
 ### 1. Types — `src/features/foos/types.ts`
 
 ```ts
-export interface Foo { id: string; name: string; createdAt: string; updatedAt: string }
-export type FooStatus = 'draft' | 'published' | 'archived'
+export interface Foo extends BaseEntity { name: string; status: FooStatus }
 export type FooPayload = Omit<Foo, 'id' | 'createdAt' | 'updatedAt'>
 ```
 
 IDs are `string`. Timestamps are ISO-8601 `string` at the boundary; parse to `Date` only in
-formatting helpers. Never leak `Date` objects through the store.
+formatting helpers, never leak one through the store. Money is **integer minor units** — see
+`shared/utils/money.ts` and do not reinvent it.
+
+Export `FOO_STATUSES`, `FOO_STATUS_LABELS` and `FOO_STATUS_TONES` alongside, as the other
+entities do; the label always carries the meaning, colour only reinforces it.
 
 ### 2. Schema — `src/features/foos/schema.ts`
 
-One zod schema is the single source of truth for validation. Derive the payload type from
-it (`z.infer`) so form, API and store can never drift.
+One zod schema, the single source of truth for validation, used by the form **and** by the
+mock handler. Messages are user-facing copy: sentence case, say what to do, never "Invalid
+input".
 
-```ts
-export const fooSchema = z.object({
-  name: z.string().trim().min(1, 'Name is required').max(120, 'Name is too long'),
-})
-export type FooFormValues = z.infer<typeof fooSchema>
-```
+### 3. Fixtures — `src/mocks/fixtures/`
 
-Messages are user-facing copy: sentence case, say what to do, never "Invalid input".
+Deterministic: fixed ids, seeded RNG, frozen clock. No `Math.random()` at module scope — tests
+assert on specific rows and page boundaries, which only works if the data cannot move.
 
-### 3. Fixtures — `src/mocks/fixtures/foos.ts`
-
-Deterministic seed data (fixed ids, no `Math.random()` at module scope — tests must be
-reproducible). Enough rows to make pagination, sorting and filtering visibly real: 40+ for
-list entities, 200+ for tickets.
+Enough rows that pagination, sorting and filtering are visibly real.
 
 ### 4. Handlers — `src/mocks/handlers/foos.ts`
-
-REST-shaped, server-side semantics. The client must not receive the whole collection and
-filter locally — that defeats the point of the exercise.
 
 ```
 GET    /api/foos?search=&status=&sort=name&order=asc&page=1&perPage=10
@@ -55,90 +52,119 @@ GET    /api/foos/:id
 POST   /api/foos
 PATCH  /api/foos/:id
 DELETE /api/foos/:id
+POST   /api/foos/bulk        ← if bulk actions apply
 ```
 
-List responses use the shared envelope `{ data: Foo[], meta: { total, page, perPage } }`.
-Apply search → filter → sort → paginate, in that order, inside the handler. Add a small
-artificial latency so loading states are real. Validate the body and return `422` with
-`{ message, errors: Record<string, string> }` on bad input — the error path must be
-exercisable, not theoretical.
-
-### 5. Store — `src/features/foos/store.ts`
-
-Endpoint calls live at the top of the store, using `http` from `@/shared/api` — never bare
-`fetch`, and never axios directly (both are lint-blocked).
+Every handler starts with the same preamble, in this order:
 
 ```ts
-const listFoos = (query: ListQuery, signal?: AbortSignal) =>
-  http.get<ListResponse<Foo>>('/foos', { query: serialiseListQuery(query), signal })
-const createFoo = (payload: FooPayload) => http.post<Foo>('/foos', payload)
+const failure = await preflight(request)      // latency + forced-failure injection
+if (failure) return failure
+const auth = requireAuth(request)
+if (!auth.ok) return auth.response
+const forbidden = requirePermission(auth.user, 'create')   // mutations only
+if (forbidden) return forbidden
 ```
 
-There is deliberately **no** generic resource factory and no separate `api.ts`: measured
-against three entities, both cost more code than they saved, and a store reads more plainly
-when the endpoint it hits is visible at the call site. An entity only graduates to its own
-`api.ts` once it accumulates three or more endpoints beyond the standard five.
+Use `runQuery` for lists (search → filter → sort → paginate, in that order) and `handleBulk`
+for bulk. Both are written once in `src/mocks/`; do not re-implement either.
 
-Pinia setup store. Owns: collection, item cache, query state, loading and error flags.
-Owns no DOM, no toasts, no router.
+Routes with a literal segment (`/bulk`, `/export`, `/import`) must be declared **before**
+`/:id`, or the literal is captured as an id.
+
+### 5. API module — `src/features/foos/api.ts`
+
+Implements `Resource<Foo, FooPayload>`, widened by intersection for anything entity-specific:
+
+```ts
+export const foosApi: Resource<Foo, FooPayload> & {
+  bulk(payload: BulkRequest, signal?: AbortSignal): Promise<BulkResult>
+} = { list, get, create, update, remove, bulk }
+```
+
+Use `http` from `@/shared/api` — never bare `fetch`, never axios directly. Both are
+lint-blocked outside `shared/api`.
+
+> An earlier version of this skill said there was no per-feature `api.ts`. That was true when
+> measured against three entities with five endpoints each, and stopped being true as soon as
+> they grew `exportCsv`, `import`, `bulk` and `listCountries`. See `docs/DECISIONS.md` §4.
+
+### 6. Store — `src/features/foos/store.ts`
+
+A Pinia setup store composing `useCollectionState<Foo>()`, which supplies `items`, `buffer`,
+`meta`, `status`, `error` and every derived flag. **Do not redeclare those.**
+
+The store adds only what is genuinely this entity's:
 
 ```ts
 export const useFoosStore = defineStore('foos', () => {
-  const items = ref<Foo[]>([])
-  const total = ref(0)
-  const query = ref<ListQuery>(defaultListQuery())
-  const status = ref<AsyncStatus>('idle')
-  const error = ref<ApiError | null>(null)
-  async function fetchList() { /* ... */ }
-  async function create(payload: FooPayload) { /* ... */ }
-  async function update(id: string, payload: FooPayload) { /* ... */ }
-  async function remove(id: string) { /* ... */ }
-  return { items, total, query, status, error, fetchList, create, update, remove }
+  const collection = useCollectionState<Foo>()
+
+  async function fetchList(query, signal) { /* setResult, swallow aborts */ }
+  function fetchWindow(query, signal) { return collection.loadWindow(/* … */) }
+  async function create(payload) { /* rethrow via asApiError */ }
+  // …
+  return { ...collection, fetchList, fetchWindow, create, update, remove, bulk }
 })
 ```
 
-Mutations re-fetch the current page (or patch optimistically, if optimistic UI is in scope)
-and rethrow a normalised `ApiError` so the caller can decide how to surface it.
+Two rules that differ deliberately:
 
-### 6. List page — `src/features/foos/pages/FoosPage.vue`
+- **`fetchList` never throws.** A list failure is a state the page renders (error panel,
+  retry), not an exception the caller must catch.
+- **Mutations always rethrow**, via `asApiError` from `@/shared/api`. The caller is a form
+  that must know whether to close, and a 422 carries field errors only it can place.
 
-Composes `BaseDataTable` + `useTable` (the composable that owns search debounce, filter,
-sort and page state, and syncs them to the URL query so a filtered view is shareable and
-survives reload). The page wires store ↔ table; it does not reimplement either.
+Owns no DOM, no toasts, no router.
 
-Required states, all of them: loading skeleton, empty ("no foos yet" + create CTA), no
-results for the current filters (with a clear-filters action), and error with retry.
+### 7. List page — `src/features/foos/pages/FoosPage.vue`
 
-### 7. Form — `src/features/foos/components/FooFormDialog.vue`
+Compose, do not reimplement:
 
-One dialog for create and edit, driven by an optional `foo` prop. vee-validate +
-`toTypedSchema(fooSchema)`. Submit disabled while pending; server-side `422` field errors
-mapped back onto the matching form fields; success closes the dialog and fires a
-notification.
+| Need | Use |
+|---|---|
+| query state + view mode + virtual buffer | `useListView` |
+| row selection | `useRowSelection` |
+| bulk execution and its reporting rules | `useBulkAction` |
+| what this role may do | `usePermissions` |
+| rendering | `BaseDataTable`, `BaseBulkBar`, `BaseBulkFailures` |
 
-### 8. Tests — colocated `*.spec.ts`
+Required states, all of them: loading skeleton, empty (+ create CTA), no-results-for-filters
+(+ clear filters), and error with retry. Gate every action on `permissions.*` and show the
+"Read only" badge when the session can change nothing.
 
-Minimum bar per entity, no exceptions:
+### 8. Form — `src/features/foos/components/FooFormDialog.vue`
 
-- schema — valid payload passes; each rule produces its message
-- store — list/create/update/delete happy paths against MSW; error path sets `error`
-- form — renders, validates, emits/persists, maps a server 422 onto a field
-- integration (`tests/integration/foos.spec.ts`) — a real flow through the router:
-  create → see the row → edit → see the change → delete → see it gone
+One dialog for create and edit, driven by an optional `foo` prop. vee-validate with our own
+`zodSchema()` adapter (**not** `@vee-validate/zod` — it peer-depends on zod 3). Submit disabled
+while pending; server 422 field errors mapped back onto the matching inputs.
+
+### 9. Tests
+
+| File | Job |
+|---|---|
+| `features/foos/schema.spec.ts` | valid payload passes; each rule produces its message |
+| `features/foos/store.spec.ts` | state transitions against the real mock backend |
+| `tests/mock-api/*.spec.ts` | the endpoint's own contract, including 401/403/409/422 |
+| `tests/integration/foos-crud.spec.ts` | create → see it → edit → see the change → delete |
+
+MSW is the only mock. No stubbed stores, no stubbed API modules, no stubbed children.
 
 ## Wiring a new entity in
 
 1. Route in `src/app/router/routes.ts`, lazy-loaded, under the authenticated layout.
-2. Nav entry in the portal shell.
-3. Register the handlers in `src/mocks/handlers/index.ts`.
-4. Tick the matching boxes in `docs/REQUIREMENTS.md`.
+2. **`NAVIGATION` in the same file** — the sidebar reads it; never hardcode a path in a feature.
+3. Register handlers in `src/mocks/handlers/index.ts`.
+4. Public barrel `src/features/foos/index.ts` — other features import only from here.
+5. Tick the boxes in `docs/REQUIREMENTS.md`.
 
-## Checklist before calling a slice done
+## Before calling a slice done
 
-- [ ] All eight layers exist; no layer inlined into another
+- [ ] Every layer exists; none inlined into another
 - [ ] Server-side search / filter / sort / pagination, verified in the network tab
-- [ ] Loading, empty, no-results and error states all reachable in the UI
-- [ ] Relations resolve (a ticket shows its event and category names, not raw ids)
-- [ ] Delete is confirmed before it fires
-- [ ] Usable at 375px wide — the table collapses to cards, no horizontal scroll
+- [ ] Loading, empty, no-results and error states all reachable
+- [ ] Relations resolve to names, not ids — embedded by the API, not fetched per row
+- [ ] Permissions gate the UI **and** are re-checked in the handler
+- [ ] Delete is confirmed; referential integrity returns a 409 that explains itself
+- [ ] Usable at 375px — the table becomes cards, no horizontal scroll
 - [ ] `/verify` green

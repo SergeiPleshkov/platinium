@@ -1,15 +1,11 @@
 import { computed, onScopeDispose, ref, type ComputedRef } from 'vue'
 
 /**
- * Turns a visible row range into page requests.
+ * Turns a visible row range into page requests, and remembers which pages it has asked for so
+ * dragging the scrollbar over a region does not re-request it every frame.
  *
- * The unglamorous half of virtual scrolling. The scroller says "rows 340 to 372 are on
- * screen"; the API speaks in pages. This maps one onto the other, and — the part that
- * actually matters — remembers which pages it has already asked for, so dragging the
- * scrollbar back and forth over a region does not re-request it on every frame.
- *
- * Holds **no rows**. They live in the store's buffer, for the same reason `useTable` holds no
- * rows: one copy of server state, in one place. This composable owns only the bookkeeping.
+ * Holds **no rows** — those live in the store's buffer, for the same reason `useTable` holds
+ * none. One copy of server state, in one place; this owns only the bookkeeping.
  */
 
 export interface UseVirtualRowsOptions {

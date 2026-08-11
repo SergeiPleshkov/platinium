@@ -13,15 +13,13 @@ import {
 /**
  * The bulk endpoint, written once for every entity that has one.
  *
- * Unlike the CRUD handlers — which are deliberately spelled out per entity, because their
- * differences are the interesting part — a bulk operation is the *same* algorithm every time:
- * validate the request, check the permission for the action being asked for, then attempt
- * each id independently and collect the outcomes. The per-entity part is only "what does
- * deleting one of these mean", which arrives as a callback.
+ * Unlike the CRUD handlers — spelled out per entity because their differences are the point —
+ * this is the same algorithm every time; only "what does deleting one of these mean" varies,
+ * and that arrives as a callback.
  *
- * Attempting each id independently is the whole design. A transaction would be defensible for
- * a real database, but it turns "three of these have tickets" into "nothing happened", and
- * the admin then has to find the three by hand.
+ * Each id is attempted independently. A transaction would be defensible for a real database,
+ * but it turns "three of these have tickets" into "nothing happened", leaving the admin to
+ * find the three by hand.
  */
 
 export interface BulkHandlers {

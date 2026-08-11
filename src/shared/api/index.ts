@@ -6,7 +6,7 @@
  * stores read more plainly when the endpoint they hit is visible at the call site. See
  * docs/DECISIONS.md — "No generic resource factory".
  */
-export { ApiError, isAbortError, type ApiErrorKind } from '@/shared/api/errors'
+export { ApiError, asApiError, isAbortError, type ApiErrorKind } from '@/shared/api/errors'
 export { withSignal, type Resource } from '@/shared/api/types'
 export {
   buildQueryString,

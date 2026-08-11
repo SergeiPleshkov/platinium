@@ -9,23 +9,16 @@ import {
 } from '@/shared/types/api'
 
 /**
- * The state and derived flags every paginated collection store needs.
- *
- * This is the "state + getters" layer, written **once and shared** rather than copy-pasted
- * into each entity. Three entities would otherwise mean three identical `items`/`meta`/
- * `status`/`error` declarations and three identical `isEmpty`/`isLoading` computeds — the
- * kind of duplication that drifts the moment one of them gains a fix the others don't.
- *
- * Stores compose this and add only the actions that are genuinely theirs.
+ * State and derived flags shared by every paginated collection store, so the three entities
+ * cannot drift apart on `isEmpty`, `isInitialising` and friends.
  */
 
 /**
- * A slot in the virtual buffer whose page has not been fetched yet.
+ * A buffer slot whose page has not been fetched yet.
  *
  * The buffer is length-`total` from the first response, so the scrollbar is honest before the
- * rows behind it exist. Those slots need *something* renderable with a stable key — a sparse
- * array of `undefined` breaks row keying — so they get a placeholder that is distinguishable
- * by a discriminant rather than by sniffing the id string.
+ * rows exist. A sparse array of `undefined` breaks row keying, hence a placeholder with a
+ * discriminant rather than an id string to sniff.
  */
 export interface PendingRow {
   id: string
@@ -64,21 +57,15 @@ export interface CollectionState<TEntity> {
   /* ---- transitions ---- */
   beginLoad: () => void
   setResult: (response: ListResponse<TEntity>) => void
-  /**
-   * Splices one fetched page into the virtual buffer, sizing it on the way if the total
-   * changed. Unlike `setResult` it never discards what is already there — that is the whole
-   * point of a buffer.
-   */
+  /** Splices one page into the buffer. Unlike `setResult`, never discards what is there. */
   setWindow: (response: ListResponse<TEntity>) => void
   /**
-   * Loads one page into the buffer, with the status rules virtual scrolling needs.
+   * Loads one page into the buffer.
    *
-   * Shared rather than written into each store because the rule is subtle and must not drift:
-   * **only the first window drives the collection's status.** Calling `beginLoad` on every
-   * page put the whole collection into `loading` on each scroll, which flashed the skeleton
-   * and re-rendered the grid — the exact thing virtual scrolling exists to avoid. Later pages
-   * are background fills; a failure among them is rethrown so the scroller can forget the page
-   * and retry it, leaving the rows already on screen untouched.
+   * **Only the first window drives the collection's status.** Calling `beginLoad` per page put
+   * the whole collection into `loading` on every scroll, flashing the skeleton and re-rendering
+   * the grid — the exact thing virtual scrolling exists to avoid. Later pages are background
+   * fills whose failures are rethrown, so the scroller can retry without disturbing the rows.
    */
   loadWindow: (
     fetchPage: () => Promise<ListResponse<TEntity>>,
@@ -90,23 +77,14 @@ export interface CollectionState<TEntity> {
   /** Applies a server-returned record to the cached list without a full refetch. */
   upsert: (entity: TEntity & { id: string }) => void
   removeById: (id: string) => void
-  /**
-   * Applies part of a record immediately and returns the version it replaced.
-   *
-   * The return value is the point: it is the snapshot a rollback needs. Reconstructing "what
-   * it was before" from the change alone is not possible once several fields are involved.
-   */
+  /** Applies part of a record and returns the version it replaced — the rollback snapshot. */
   patch: (id: string, changes: Partial<TEntity>) => TEntity | null
   /**
-   * Shows a change before the server has agreed to it, and undoes it if the server does not.
+   * Shows a change before the server agrees, and undoes it if the server refuses.
    *
-   * Lives here rather than in each store because getting it wrong is silent: an optimistic
-   * update that forgets to roll back leaves the screen confidently displaying something that
-   * was refused, and nothing about the page looks broken. Written once, every entity inherits
-   * a correct version.
-   *
-   * `commit` is expected to rethrow — the caller still needs the error for its toast — so this
-   * restores the snapshot and rethrows rather than swallowing.
+   * Here rather than in each store because getting it wrong is silent: forget the rollback and
+   * the screen confidently displays a value that was rejected, with nothing looking broken.
+   * Rethrows after restoring, because the caller still needs the error.
    */
   optimistic: <TResult>(
     id: string,
@@ -138,11 +116,8 @@ export function useCollectionState<TEntity extends { id: string }>(
   }
 
   /**
-   * Replaces one row wherever it is held.
-   *
-   * The paginated list and the virtual buffer are two views of the same records, so a write
-   * that reaches only one of them makes the change appear to undo itself the moment the user
-   * switches rendering mode.
+   * Replaces one row wherever it is held. The list and the buffer are two views of the same
+   * records; writing to only one makes a change appear to undo itself on a mode switch.
    */
   function writeRow(id: string, entity: TEntity): void {
     items.value = items.value.map((candidate) => (candidate.id === id ? entity : candidate))
@@ -181,13 +156,9 @@ export function useCollectionState<TEntity extends { id: string }>(
     }
 
     /*
-     * Written **in place**, deliberately.
-     *
-     * Replacing the array — `buffer.value = next` — changes its identity, and a virtual
-     * scroller watches its `items` reference to decide when to re-measure. Every page that
-     * arrived therefore tore the whole grid down and rebuilt it mid-scroll. Index writes are
-     * reactive on a `ref` array, so the rendered rows still update; the reference the scroller
-     * is watching does not.
+     * In place, deliberately. Replacing the array changes its identity, and a virtual scroller
+     * watches that reference to decide when to re-measure — so every arriving page tore the
+     * grid down mid-scroll. Index writes stay reactive without moving the reference.
      */
     const offset = (response.meta.page - 1) * response.meta.perPage
     response.data.forEach((row, index) => {

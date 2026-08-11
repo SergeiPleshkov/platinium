@@ -18,6 +18,23 @@ export interface ApiErrorOptions {
   cause?: unknown
 }
 
+/**
+ * Guarantees an `ApiError`, whatever was thrown.
+ *
+ * The HTTP client already normalises everything it produces, so in practice this only catches
+ * the genuinely unexpected — a bug in a store, a rejected promise from somewhere else. It
+ * exists so a `catch` block can rethrow without every caller re-deciding what to do with an
+ * `unknown`, which is how "[object Object]" reaches a toast.
+ */
+export function asApiError(
+  caught: unknown,
+  fallback = 'Something went wrong. Try again.',
+): ApiError {
+  return caught instanceof ApiError
+    ? caught
+    : new ApiError({ kind: 'network', status: 0, message: fallback, cause: caught })
+}
+
 export class ApiError extends Error {
   readonly kind: ApiErrorKind
   /** HTTP status, or 0 when the request never got a response. */

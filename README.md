@@ -74,7 +74,7 @@ docker run --rm -p 8080:8080 ticket-admin-portal
 | `pnpm typecheck` | `vue-tsc` across app, test and config projects |
 | `pnpm lint` | ESLint, including the architectural boundary rules |
 | `pnpm format` / `pnpm format:check` | Prettier |
-| `pnpm test` | Full suite — 669 tests |
+| `pnpm test` | Full suite — 690 tests |
 | `pnpm test:unit` | Unit and component tests only (`src/`) |
 | `pnpm test:integration` | Integration flows only (`tests/integration/`) |
 | `pnpm test:watch` | Vitest in watch mode |
@@ -110,7 +110,7 @@ src/
     composables/        useTable, useListView, useCollectionState, useVirtualRows,
                         useRowSelection, useBulkAction, useAsyncAction, useNotifications,
                         useRouteLoading, useBreakpoint, useTheme, useSidebar
-    ui/                 18 Base* primitives — the only place PrimeVue is imported
+    ui/                 20 components — the only place PrimeVue is imported
     utils/              money, dates — pure and fully unit-tested
     types/              API envelope and entity contracts
     validation/         our zod ↔ vee-validate adapter
@@ -125,7 +125,7 @@ tests/
   utils/                render helpers, viewport and contrast helpers
 ```
 
-Roughly 10,500 lines of source and 7,400 of tests.
+Roughly 11,000 lines of source and 7,700 of tests.
 
 ---
 
@@ -181,7 +181,7 @@ This is the difference between a UI that looks right at 250 rows and one that st
 
 ### PrimeVue is a replaceable dependency
 
-Feature code consumes 18 `Base*` adapters with our own prop APIs. Tests query by role, label
+Feature code consumes 20 shared components with our own prop APIs. Tests query by role, label
 and visible text — never PrimeVue classnames — so the suite would survive replacing the kit.
 The boundary has already earned itself twice: it caught a direct PrimeVue import in a new
 dashboard component, and it forced `BaseButton` to stop leaking PrimeVue's icon-only
@@ -200,7 +200,7 @@ assert on specific rows and page boundaries.
 
 ### Testing strategy
 
-669 tests across six kinds, each with a distinct job:
+690 tests across six kinds, each with a distinct job:
 
 | Kind | Job |
 |---|---|
@@ -218,8 +218,8 @@ MSW is the only mock. No stubbed stores, no stubbed API modules, no stubbed chil
 
 ## Technical decisions
 
-Thirty entries with full reasoning are in [docs/DECISIONS.md](docs/DECISIONS.md). The ones
-that shaped the most code:
+Every architectural decision, grouped by the question it answers, is in
+[docs/DECISIONS.md](docs/DECISIONS.md). The ones that shaped the most code:
 
 **PrimeVue 4.5.5, pinned — not 5.x.** PrimeVue 5 is no longer open source: it carries the
 PrimeTek dual licence, requires a licence key, ships an offline verifier as a runtime
@@ -286,6 +286,5 @@ beat downgrading every schema to satisfy a dependency that cannot follow us forw
 | [TECHNICAL_REVIEW.md](TECHNICAL_REVIEW.md) | Architecture, debt, scaling, standards, AI workflow |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Decision log, written as decisions were made |
 | [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) | Every brief requirement, with evidence |
-| [docs/PLAN.md](docs/PLAN.md) | The phased plan the work followed |
 | [src/mocks/README.md](src/mocks/README.md) | Mock API endpoints and behaviour |
 | [src/features/README.md](src/features/README.md) | Feature slice anatomy and boundaries |

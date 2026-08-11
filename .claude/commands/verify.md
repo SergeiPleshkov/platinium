@@ -3,7 +3,7 @@ description: Quality gate — typecheck, lint, format, tests and production buil
 allowed-tools: Bash, Read, Edit, Glob, Grep
 ---
 
-Run the full quality gate. This is the definition of "done" for any phase or commit.
+Run the full quality gate. This is the definition of "done" for any change.
 
 Run these in order and report each result honestly:
 
@@ -17,7 +17,7 @@ pnpm build
 
 Rules:
 
-- **Fix what fails.** Do not report a phase complete with a red gate, and do not weaken a
+- **Fix what fails.** Do not report work complete with a red gate, and do not weaken a
   check to make it pass — no loosening `tsconfig`, no disabling a lint rule, no `.skip` on
   a failing test, no deleting an assertion. If a check is genuinely wrong, say so and
   explain why before changing it.

@@ -48,7 +48,7 @@ decision-making, overall software craftsmanship — not only "does it work".
 - [x] Success / error notifications — `useNotifications` queue rendered by `BaseToaster`
 
 ### Responsive
-- [x] Desktop (1280) — sidebar, full grid; verified in a browser
+- [x] Desktop (1280) — collapsible content-width rail, full grid; verified in a browser
 - [x] Tablet (768) — grid retained, nav becomes a drawer, no horizontal scroll; verified
 - [x] Mobile (375) — table becomes a card list, off-canvas drawer; verified, and the card
       branch is covered by `BaseDataTable.spec.ts`
@@ -71,10 +71,11 @@ decision-making, overall software craftsmanship — not only "does it work".
 ### Architecture — must demonstrate
 - [x] Scalable folder organization — `src/features/README.md`; layering enforced by
       `eslint.config.js` and proven by `tests/architecture/boundaries.spec.ts`
-- [x] Reusable components — 12 `shared/ui` adapters, all PrimeVue-free at the call site
+- [x] Reusable components — 20 `shared/ui` components, all PrimeVue-free at the call site
 - [x] Separation of concerns — components render, composables hold behaviour, stores hold
       state, `shared/api` owns transport; all four enforced by lint
-- [x] Reusable composables — `useAsyncAction`, `useNotifications`, `useBreakpoint`
+- [x] Reusable composables — 14 in `shared/composables`, each extracted after a third caller
+      needed it, not before
 - [x] Clean state management — Pinia stores own server state; `useCollectionState` shares
       state+getters across entities; `useTable` owns query state only, so no data lives twice
 - [x] Reusable API layer — `shared/api`: axios behind our `ApiError` contract, with token
@@ -92,9 +93,9 @@ decision-making, overall software craftsmanship — not only "does it work".
 - [x] Fully functional Vue 3 application — all three entities, verified in a browser and
       in the Docker image
 - [x] Docker — multi-stage build, non-root nginx runtime, verified running configuration
-- [x] Mock API implementation — MSW, `src/mocks/`, 51 endpoint tests
+- [x] Mock API implementation — MSW, `src/mocks/`, 149 endpoint tests
 - [x] Unit tests — utilities, schemas, composables, stores, components, architecture
-- [x] Integration tests — 4 journeys through the real router and mock backend
+- [x] Integration tests — 11 journeys through the real router and mock backend
 - [x] `README.md` — all ten bullets covered
 - [x] `TECHNICAL_REVIEW.md` — all seven questions answered
 - [ ] Pushed to a public Git repository, URL shared
@@ -105,14 +106,14 @@ Brief's list: Dark mode · Bulk actions · CSV import/export · Dashboard statis
 Role-based permissions · Optimistic UI updates · Drag & drop ordering · Infinite scrolling ·
 anything else that demonstrates engineering skill.
 
-Selected for this submission (phase 8, in build order — all after mandatory work is green):
+Selected for this submission, all built after the mandatory work was green:
 
 - [x] Dark mode — light/dark/system, persisted, pre-paint so a reload never flashes
 - [x] Dashboard statistics — aggregated server-side via `/api/stats`; the browser never
       loads a collection to count it
 - [x] Bulk actions — multi-select delete and status change across all three entities,
       per-record reporting (207 + reasons), enforced against the same permission matrix
-- [x] CSV export — of the current filtered query, server-rendered; 27 tests
+- [x] CSV export — of the current filtered query, server-rendered
 - [x] CSV import — dry-run preview from the same endpoint that commits, per-row errors by
       file line number, hand-written RFC 4180 parser round-tripped against the exporter
 - [x] Optimistic UI updates — inline ticket status, snapshot-and-rollback in the state

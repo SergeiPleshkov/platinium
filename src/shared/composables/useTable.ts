@@ -10,19 +10,12 @@ import {
 } from '@/shared/types/api'
 
 /**
- * The query-state engine behind every list view.
- *
- * Owns search, filters, sort and pagination — and *only* those. The rows themselves live in
- * the feature's Pinia store, which is the single source of truth for server state. An earlier
- * version of this composable held `rows` and `meta` too, which meant the same page of data
- * existed in two places and could disagree; splitting the responsibilities removes that whole
- * class of bug, and gives the mandated store real work to do rather than a parallel cache.
+ * The query-state engine behind every list view: search, filters, sort, pagination — and
+ * *only* those. Rows live in the feature's store, so the same page of data never exists twice.
  *
  * What it does own is the fiddly part: debouncing typing into one request, cancelling
- * superseded loads, resetting to page 1 when the result set changes shape, and keeping the
- * whole thing in the URL so a filtered view is shareable and survives a reload.
- *
- * Knows nothing about PrimeVue or any component.
+ * superseded loads, resetting to page 1 when the result set changes shape, and mirroring all
+ * of it in the URL so a filtered view is shareable and survives a reload.
  */
 
 const SEARCH_DEBOUNCE_MS = 300
@@ -168,10 +161,9 @@ export function useTable(options: UseTableOptions): UseTable {
   /**
    * Applies several pieces of query state together, then issues exactly one request.
    *
-   * Requests are fired explicitly rather than by watching the state. A watcher looks tidier
-   * but flushes asynchronously, so "change the filter *and* reset to page 1" would queue two
-   * runs — the first for a query that was never valid — and no synchronous guard can suppress
-   * it, because the guard has already been cleared by the time the watcher runs.
+   * Explicit rather than watched. A watcher flushes asynchronously, so "change the filter
+   * *and* reset to page 1" queues two runs — the first for a query that was never valid — and
+   * no synchronous guard suppresses it, because the guard is cleared before the watcher runs.
    */
   function commit(mutate: () => void): void {
     mutate()

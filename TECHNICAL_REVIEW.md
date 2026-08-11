@@ -68,33 +68,39 @@ the same request path the application does — there is no second set of stubs t
 
 ## 2. What I would do with two more days
 
-**Day one — close the honest gaps.**
+Every bonus on the brief's list shipped, so this is no longer a list of features. It is the
+work that would make me comfortable putting this in front of real administrators.
 
-1. **Server-backed relation pickers.** The one piece of debt that becomes a correctness bug
-   rather than a slowness (see §3). Half a day including tests.
-2. **The three scoped-but-unbuilt bonuses**, in value order: bulk actions with
-   partial-failure reporting, CSV import with per-row validation and a preview of accepted vs
-   rejected rows, then RBAC enforced in the UI *and* re-checked at the API boundary. (CSV
-   export shipped, and `applyQuery` — split out of `runQuery` for it — is the seam the
-   import would write back through.)
-3. **A `useEntityPage` composable.** The three list pages are ~200 lines each and about 60% of
-   that is identical (dialog state, delete confirmation, refresh-and-adopt-page). Now that
-   there are three real consumers, the abstraction is justified — which it was not when I had
-   one.
+**Day one — close the one correctness gap, and the duplication I can name.**
+
+1. **Server-backed relation pickers.** The single piece of debt that becomes a *wrong answer*
+   rather than a slow one (see §3). Half a day including tests.
+2. **A `useEntityPage` composable.** The three list pages are 320–490 lines and a good third
+   of that is now identical: dialog open/close state, the delete confirmation with its
+   in-dialog 409 message, and the refresh-and-adopt-page dance after a mutation. Three real
+   consumers exist, which is the standard the rest of the codebase was held to — `useListView`,
+   `useBulkAction` and `BaseBulkFailures` were all extracted on exactly that trigger during the
+   final audit, and this is the next one in line.
+3. **Widen bulk and import beyond where they were demonstrated.** Import is tickets-only, and
+   the `handleBulk`/`useBulkAction` pair is already generic enough that the remaining work is
+   wiring rather than design.
 
 **Day two — the things a real deployment needs.**
 
 4. **Playwright smoke tests** against the Docker image: login, one CRUD round trip per entity,
    one deep link. jsdom cannot catch a CSS regression, a focus trap that does not trap, or a
-   Service Worker that fails to register.
-5. **Optimistic updates with rollback**, written once against the store interface rather than
-   three times.
-6. **Bundle work with measurements.** `useTable`'s chunk is 417 kB raw / 91 kB gzipped, larger
-   than it should be, and I have not profiled why. I removed manual chunk splitting in phase 1
-   precisely because guessing at it without numbers is not engineering.
-7. **Real accessibility auditing** — axe in CI plus a keyboard-only pass over every dialog.
-   Two a11y defects reached the browser during this build (see §4); both were caught by tests
-   that query the way a screen reader does, but I would not claim that is sufficient coverage.
+   Service Worker that fails to register. Several defects in this build were found by looking
+   at a browser, not by the suite.
+5. **Bundle work with measurements.** The largest chunk is 627 kB raw / 148 kB gzipped and I
+   have not profiled why. I removed manual chunk splitting early precisely because guessing at
+   it without numbers is not engineering, and I am not going to start guessing now.
+6. **Real accessibility auditing** — axe in CI plus a keyboard-only pass over every dialog.
+   Accessibility was treated as a correctness property throughout (§1), and three defects still
+   reached the browser during this build; all three were caught by tests that query the way a
+   screen reader does, but I would not claim that is sufficient coverage.
+7. **Decide what the view-mode switch is.** It ships labelled "DEMO" because shipping both
+   rendering strategies is a demonstration, not a product decision. A real portal picks one per
+   screen, and that choice needs data I do not have.
 
 ---
 
@@ -258,7 +264,7 @@ This codebase was built with heavy AI assistance, so I can be specific rather th
 - **Volume with a fixed shape.** Once the first entity slice existed, the second and third
   were mostly mechanical. The third slice cost a fraction of the first — that is the pattern
   AI accelerates best.
-- **Tests.** Writing 386 tests by hand is where fatigue produces shallow assertions. AI is
+- **Tests.** Writing 690 tests by hand is where fatigue produces shallow assertions. AI is
   good at enumerating boundary cases, which is exactly what a schema or a money utility needs.
 - **Investigative grunt work.** Auditing the assessment PDF for hidden content, checking
   PrimeVue 5's licence and reading the actual `LICENSE.md`, diffing `@vee-validate/zod`'s

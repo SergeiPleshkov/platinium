@@ -1,17 +1,12 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
 
 /**
- * A user-arranged order over a fixed set of items, with drag *and* keyboard reordering.
+ * A user-arranged order, reorderable by drag *and* by keyboard.
  *
- * The split matters. `reconcile` and `moveTo` are pure functions over arrays of ids — they are
- * where the logic lives and where the tests point. The drag handlers on top are a thin
- * translation of pointer events into `moveTo` calls, and the keyboard handlers are a different
- * translation of the *same* call. Neither input method is privileged, which is the only way a
- * keyboard path stays working: it is not a fallback bolted beside the real feature, it is the
- * same feature reached differently.
- *
- * The order is persisted per key, and reconciled against the canonical list on every read, so
- * an item added or removed in a later release cannot strand a stored order.
+ * `reconcile` and `moveTo` are pure functions over arrays of ids — where the logic lives and
+ * where the tests point. Drag handlers and arrow keys are two thin translations into the
+ * *same* call, which is the only way a keyboard path stays working: it is not a fallback
+ * beside the real feature, it is the same feature reached differently.
  */
 
 export interface UseSortableListOptions {
@@ -53,11 +48,8 @@ export interface UseSortableList {
 }
 
 /**
- * Merges a stored order with the ids that actually exist.
- *
- * Stored ids that no longer exist are dropped; ids the stored order has never seen are
- * appended in their canonical order. A release that adds a fifth tile therefore shows it,
- * rather than hiding it because someone dragged the other four last month.
+ * Drops stored ids that no longer exist, appends ids never seen. A release that adds a widget
+ * therefore shows it, rather than hiding it behind an arrangement made last month.
  */
 export function reconcile(stored: readonly string[], canonical: readonly string[]): string[] {
   const known = new Set(canonical)
@@ -68,11 +60,8 @@ export function reconcile(stored: readonly string[], canonical: readonly string[
 }
 
 /**
- * Moves one id to an index, closing the gap it left.
- *
- * Removal happens before insertion, so the target index is interpreted against the list as it
- * will be — which is what makes dragging an item *down* land where the pointer is rather than
- * one place short of it.
+ * Removal happens before insertion, so the index is read against the list as it *will* be —
+ * which is what makes dragging an item down land on the pointer rather than one short of it.
  */
 export function moveTo(order: readonly string[], id: string, index: number): string[] {
   const from = order.indexOf(id)
