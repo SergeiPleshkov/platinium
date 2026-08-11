@@ -172,8 +172,11 @@ silently is a regression the tests are written to catch:
 
 - Anything a pointer can do, a keyboard must be able to do. HTML5 drag and drop has **no**
   keyboard equivalent, so a drag feature ships with arrow keys calling the same function.
-- **Exactly one live region per announcement.** `BaseSpinner` takes `decorative` for when it
-  sits inside a container that is already one; two nested regions announce the wait twice.
+- **One live region per announcement.** A live region (`role="status"`, `aria-live`) is read
+  aloud by a screen reader whenever its content changes, without focus moving there. Nest two
+  and the same change is announced twice — invisible in a screenshot, obvious to a screen
+  reader. `BaseSpinner` takes `decorative` (renders `aria-hidden`, no role) for when it sits
+  inside a container that is already announcing.
 - Composite widgets (`Select`, `DatePicker`) render a `<div>` root, so `<label for>` binds to
   nothing — use `BaseFormField`'s `labellable` distinction.
 - Colour never carries meaning alone.

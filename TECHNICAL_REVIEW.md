@@ -95,8 +95,9 @@ written so that undoing them goes red.
 HTML5 drag and drop has no keyboard equivalent whatsoever, so the drag handle is a focusable
 button carrying its own position and the arrow keys call the *same* reorder function the drop
 does — not a fallback beside the real feature, the same feature reached differently. Exactly one
-live region per announcement, because a spinner nested inside a container that is also a live
-region announces the same wait twice — invisible in a screenshot, obvious to a screen reader.
+live region per announcement: a live region is an element a screen reader reads aloud whenever
+its content changes, so a spinner that is one, nested inside a container that is also one,
+announces the same wait twice — invisible in a screenshot, obvious to a screen reader.
 Composite widgets are labelled by `aria-labelledby`, because PrimeVue's `Select` renders a
 `<div>` root and a `<label for>` would associate with nothing. Colour never carries meaning
 alone.
@@ -195,9 +196,12 @@ conventions. An admin portal used across the countries in the seed data should t
 from the user, not from a constant. The seam exists — `formatMoney` and `formatDate` are already
 the only formatting points.
 
-**4. Reconsider the `zodSchema` adapter.** A small adapter of ours, needed only because
-`@vee-validate/zod` targets zod 3. When vee-validate ships Standard Schema support, the adapter
-deletes itself. Worth a calendar reminder rather than a rewrite.
+**4. Delete the `zodSchema` adapter when vee-validate allows it.** It exists only because
+`@vee-validate/zod` targets zod 3 and reads internals that changed shape in zod 4. When
+vee-validate ships Standard Schema support the adapter deletes itself — a calendar reminder,
+not a rewrite. Zod itself stays either way: the schema is the validation contract for the form
+*and* the server handler *and* the inferred payload types, and vee-validate's own rule objects
+can only serve the first of those three.
 
 ---
 

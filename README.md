@@ -284,9 +284,9 @@ One client, one error type, one contract — documented in full in
 | Query state (search, filters, sort, page) | `useTable`, synced to the URL |
 | Rendering | `BaseDataTable` and the page |
 
-`useTable` deliberately owns **no data**. An earlier version held `rows` and `meta`, and so did
-the store — the same page of server state in two places, free to disagree. Splitting them
-removes that class of bug and gives the mandated Pinia layer real work.
+`useTable` owns **no data** — only the query. Rows and `meta` live in the store alone, so there
+is exactly one copy of any page of server state and nothing to keep in sync. It also gives the
+mandated Pinia layer real work rather than a parallel cache.
 
 `useCollectionState<T>()` supplies `items` / `buffer` / `meta` / `status` / `error` plus every
 derived flag and the optimistic-update helper, and all three entity stores compose it. That is
@@ -306,10 +306,14 @@ when the table is large.
 
 ### PrimeVue is a replaceable dependency
 
-Feature code consumes shared components with our own prop APIs. Tests query by role, label
-and visible text — never PrimeVue classnames — so the suite would survive replacing the kit.
-The boundary has already earned itself twice: it caught a direct PrimeVue import in a new
-dashboard component, and it forced `BaseButton` to stop leaking PrimeVue's icon-only semantics.
+Feature code consumes shared components with our own prop APIs. `primevue/*` is importable only
+from `src/shared/ui/**` and the app bootstrap, and lint rejects it anywhere else. Tests query by
+role, label and visible text — never PrimeVue classnames — so the suite is written against the
+same contract the features are, and would survive replacing the kit.
+
+The wrappers own their own semantics rather than forwarding PrimeVue's. `BaseButton` decides
+icon-only styling from our props, not from PrimeVue's `hasIcon && !label` heuristic, which
+cannot see slot content.
 
 ### The mock backend
 
@@ -352,27 +356,53 @@ dependency, and may display a licence notice without one. 4.5.5 is the last MIT 
 
 **axios for transport, our own `ApiError` for the contract.** axios handles the plumbing;
 `ApiError` with `fieldErrors` / `isValidation` / `isConflict` / `isRetryable` / `isAborted` is
-application vocabulary. Evidence the boundary sits in the right place: swapping a hand-rolled
-`fetch` wrapper for axios changed one file, and every test in the layer passed unmodified.
+application vocabulary. A store asks `if (error.isValidation)` and never inspects
+`error.response?.status`, so the transport is replaceable without touching a caller — the whole
+of it lives in `src/shared/api/http.ts`.
 
-**No generic CRUD-resource factory.** Written out across three entities, the factory version
-cost more than twice the code it replaced, and it had no consumers at all when it was written. What survives is the `Resource<T, P>` *interface*, so cross-cutting
-behaviour can still be written once.
+**A `Resource<T, P>` interface, not a resource factory.** Each feature's `api.ts` spells out its
+own URLs and implements the shared contract, widening it by intersection for what is genuinely
+its own (`bulk`, `import`, `exportCsv`, `listCountries`). The contract is what lets cross-cutting
+behaviour be written once; a factory generating the calls would cost more code than the calls
+and hide the endpoint from the file making the request.
 
-**Money is integer minor units.** Writing the tests caught a real bug in the first
-implementation: `Math.round(1.005 * 100)` is 100, not 101, because `1.005 * 100` evaluates to
-`100.49999999999999`. The conversion now shifts the decimal on the string form.
+**Money is integer minor units.** Prices are held as whole cents and converted by shifting the
+decimal on the string form, never by multiplying. `Math.round(1.005 * 100)` is 100 rather than
+101, because `1.005 * 100` evaluates to `100.49999999999999` — float arithmetic silently loses a
+penny, and `shared/utils/money.ts` is the only place allowed to do the conversion.
 
-**Our own zod ↔ vee-validate adapter.** `@vee-validate/zod` peer-depends on zod 3 and reads Zod 3
-internals; any schema using `.default()` throws at form setup. A small adapter of ours beat
-downgrading every schema to satisfy a dependency that cannot follow us forward.
+**zod owns validation; vee-validate only runs the form.** Each entity has one zod schema, and it
+is used in three places: the form, the mock API's request handler
+([`parseBody`](src/mocks/support.ts)), and the TypeScript types inferred from it. A rule like
+"quantity must be a positive integer" is therefore written once and enforced on both sides of
+the wire.
+
+vee-validate's own validation could replace zod for the *form* — but only for the form. Its rule
+objects are a form-layer concern: they cannot validate a request body in an MSW handler, and
+they infer no types, so dropping zod would mean writing every rule twice, keeping the two copies
+in agreement by hand, and declaring the payload types separately. That is the trade the adapter
+buys out of.
+
+The adapter exists because `@vee-validate/zod` peer-depends on zod 3 and reads Zod 3 internals —
+`_def.defaultValue()`, a function in Zod 3 and a value in Zod 4 — so any schema using
+`.default()` throws at form setup. Ours is one small file implementing vee-validate's public
+`TypedSchema` interface, with no private shapes reached into. It deletes itself when
+vee-validate ships Standard Schema support.
 
 **Maximal TypeScript strictness**, including `exactOptionalPropertyTypes` and
 `noUncheckedIndexedAccess`. Real friction, paid deliberately.
 
 **Accessibility treated as correctness.** Drag & drop ships with an arrow-key equivalent calling
-the same function, because HTML5 drag has none. Colour never carries meaning alone. Exactly one
-live region per announcement.
+the same reorder function the drop does, because HTML5 drag has no keyboard path at all. Colour
+never carries meaning alone — every badge states its status in words.
+
+**One live region per announcement.** A live region (`role="status"`) is an element a screen
+reader reads aloud whenever its content changes, without the user having to move focus there —
+it is how "Loading", "3 tickets deleted" or "Moved to position 2" reach someone who cannot see
+it happen. Nesting two means the same change is announced twice: sighted users see one spinner,
+screen-reader users hear it read out twice. So `BaseSpinner` takes a `decorative` prop, which
+renders it `aria-hidden` with no role, for when it sits inside a container that is already
+announcing.
 
 ---
 
