@@ -8,7 +8,7 @@ import { cell, parseCsv, parseCsvTable } from '@/shared/utils/csv'
  *
  * The round-trip tests at the bottom are the ones worth having: a file this application
  * produced must be a file it can read back. Testing the parser only against hand-written
- * fixtures would leave the two free to drift — a BOM here, a CRLF there — and the symptom
+ * fixtures would leave the two free to drift, a BOM here, a CRLF there, and the symptom
  * would be an import that reports every row as broken.
  */
 

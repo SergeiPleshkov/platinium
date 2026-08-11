@@ -11,7 +11,7 @@ import { BaseButton, BaseInput } from '@/shared/ui'
 /**
  * Sign-in.
  *
- * Authentication is mocked, so the seeded credentials are shown on the page — a reviewer
+ * Authentication is mocked, so the seeded credentials are shown on the page, so a reviewer
  * cloning this repository should not have to read the source to get in.
  */
 
@@ -38,7 +38,7 @@ const onSubmit = handleSubmit(async (values) => {
      * parent to listen for it. The guard stored where the user was heading before it
      * redirected them; send them there, and only fall back to the dashboard otherwise.
      *
-     * The redirect is required to be a path on this site — echoing an arbitrary `?redirect=`
+     * The redirect is required to be a path on this site, echoing an arbitrary `?redirect=`
      * back into `router.push` is how open-redirect bugs happen.
      *
      * The fallback is `/`, not a named route: this feature must not import the app layer's

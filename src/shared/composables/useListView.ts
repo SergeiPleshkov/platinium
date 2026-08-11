@@ -40,7 +40,7 @@ export function useListView(options: UseListViewOptions): UseListView {
    * The query `useTable` last handed us.
    *
    * Kept here rather than read back off the returned `table`, because `useTable` issues its
-   * first query *during its own construction* — before this function has a `table` to read
+   * first query *during its own construction*, before this function has a `table` to read
    * from. Closing over the table would work in every case except the first one, which is the
    * worst kind of bug to ship.
    */

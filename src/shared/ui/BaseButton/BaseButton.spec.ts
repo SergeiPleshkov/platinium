@@ -6,7 +6,7 @@ import BaseButton from '@/shared/ui/BaseButton/BaseButton.vue'
 import { renderWithApp } from '@tests/utils/renderWithApp'
 
 /**
- * These assertions target the accessible surface — role, name, disabled state — not
+ * These assertions target the accessible surface, role, name, disabled state, not
  * PrimeVue's markup. That is deliberate: the suite must survive replacing the UI kit.
  */
 describe('BaseButton', () => {

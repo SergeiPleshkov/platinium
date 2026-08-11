@@ -40,7 +40,7 @@ export const SURFACE = {
  * clear. These are the assertions in `contrast.spec.ts`.
  *
  * `surface.500` was the stock Aura muted colour. It passes AA on our light background, but
- * only at 4.55:1 — close enough to the 4.5 line that any future surface tweak would push it
+ * only at 4.55:1, close enough to the 4.5 line that any future surface tweak would push it
  * under without anyone noticing. `surface.600` buys AAA-level headroom for one shade of
  * lightness, so the margin is deliberate rather than lucky.
  */

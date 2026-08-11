@@ -12,7 +12,7 @@ import { MOBILE_WIDTH, setViewportWidth } from '@tests/utils/viewport'
 /**
  * Switching between paginated and virtual rendering, end to end.
  *
- * jsdom has no layout, so PrimeVue's scroller never virtualises and never emits a range —
+ * jsdom has no layout, so PrimeVue's scroller never virtualises and never emits a range
  * the geometry (row height, DOM row count, honest scrollbar) was verified in a real browser
  * instead, and the per-page bookkeeping is covered by `useVirtualRows.spec.ts`.
  *

@@ -7,7 +7,7 @@ import { buildQueryString, configureHttp, http, resetHttpConfig } from '@/shared
 
 /**
  * The client is tested against MSW rather than a stubbed `fetch`, so these assertions cover
- * the real request/response path — headers actually sent, statuses actually parsed.
+ * the real request/response path, headers actually sent, statuses actually parsed.
  */
 
 const ORIGIN = 'http://localhost'

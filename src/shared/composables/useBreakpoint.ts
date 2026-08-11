@@ -3,8 +3,8 @@ import { computed, onScopeDispose, ref, type ComputedRef, type Ref } from 'vue'
 /**
  * The single place `matchMedia` is read.
  *
- * Layout decisions that cannot be expressed in CSS — rendering a card list instead of a
- * table, or a drawer instead of a sidebar — need the breakpoint in JavaScript. Scattering
+ * Layout decisions that cannot be expressed in CSS, rendering a card list instead of a
+ * table, or a drawer instead of a sidebar, need the breakpoint in JavaScript. Scattering
  * `window.innerWidth` checks would mean N listeners, N cleanup bugs, and N chances to
  * disagree with Tailwind about where `md` starts.
  *

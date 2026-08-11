@@ -11,7 +11,7 @@ import {
  * The lazy-route loading indicator.
  *
  * Two claims worth pinning, and they pull against each other: a *slow* navigation must show
- * the overlay, and a *fast* one must not — a spinner that flashes on every click is noise, not
+ * the overlay, and a *fast* one must not, a spinner that flashes on every click is noise, not
  * feedback. Fake timers are the only way to test a threshold without a sleep in the suite.
  *
  * The third claim is that it can never get stuck. An overlay left up over a page that will
@@ -131,7 +131,7 @@ describe('useRouteLoading', () => {
   it('clears when a route component fails to load', async () => {
     /*
      * The real case is a stale chunk hash after a deploy. Without `onError` the overlay would
-     * sit over a page that is never going to change — the one outcome worse than no overlay.
+     * sit over a page that is never going to change, the one outcome worse than no overlay.
      */
     const router = createRouter({
       history: createMemoryHistory(),

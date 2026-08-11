@@ -8,7 +8,7 @@ export const loginSchema = z.object({
     .pipe(z.email('Enter a valid email address')),
   /*
    * Length only. Authentication is mocked, and inventing complexity rules here would imply a
-   * password policy this app does not own — the real one belongs to the identity provider.
+   * password policy this app does not own; the real one belongs to the identity provider.
    */
   password: z.string().min(1, 'Enter your password'),
 })

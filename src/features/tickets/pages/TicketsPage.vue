@@ -33,7 +33,7 @@ import {
 /**
  * Tickets: pricing, inventory and availability.
  *
- * The relational slice. Rows show event and category *names*, which the API embeds — the
+ * The relational slice. Rows show event and category *names*, which the API embeds, so the
  * client never resolves an id, and never loads every event to do it.
  */
 
@@ -67,7 +67,7 @@ const selection = useRowSelection()
 
 /*
  * A selection is meaningful only against the query that produced it. Ticking three rows and
- * then filtering to a different set would leave those ids selected but invisible — and the
+ * then filtering to a different set would leave those ids selected but invisible, and the
  * next "delete selected" would hit records the user can no longer see.
  */
 watch(
@@ -100,7 +100,7 @@ async function applyBulkStatus(status: string): Promise<void> {
   await bulk.execute({ action: 'status', ids: selection.selectedIds.value, status }, 'updated')
 }
 
-/* Widths are for virtual mode's fixed layout — see the note in CategoriesPage. */
+/* Widths are for virtual mode's fixed layout, see the note in CategoriesPage. */
 const columns: TableColumn[] = [
   { field: 'name', header: 'Name', sortable: true, priority: 'primary' },
   { field: 'event', header: 'Event', sortable: true },
@@ -144,7 +144,7 @@ const categoryOptions = computed(() =>
 
 /**
  * The row shows the new status immediately; the store restores the old one if the server
- * refuses. Only the toast is deferred to the outcome — showing "saved" before it is saved
+ * refuses. Only the toast is deferred to the outcome, showing "saved" before it is saved
  * would be the one lie an optimistic UI must not tell.
  */
 async function onStatusChange(row: TicketWithRelations, event: Event): Promise<void> {

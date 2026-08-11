@@ -16,7 +16,7 @@ import BaseEmptyState from '@/shared/ui/BaseEmptyState/BaseEmptyState.vue'
 /**
  * The application's data table.
  *
- * Presentational only — it holds no query state and talks to no store. `useTable` owns all
+ * Presentational only: it holds no query state and talks to no store. `useTable` owns all
  * of that and passes results down, which is what lets the same engine drive this component
  * today and a hand-written table later.
  *
@@ -29,7 +29,7 @@ interface Props {
   columns: readonly TableColumn[]
   meta: ListMeta
   loading?: boolean | undefined
-  /** True until the first load resolves — shows skeleton rows rather than an empty grid. */
+  /** True until the first load resolves, shows skeleton rows rather than an empty grid. */
   initialising?: boolean | undefined
   /** Message from a failed load. Renders the error state with a retry action. */
   errorMessage?: string | undefined
@@ -44,7 +44,7 @@ interface Props {
   rowsPerPageOptions?: readonly number[] | undefined
   /**
    * `paginated` renders one server page with a paginator. `virtual` renders the whole result
-   * set as a scrollable window, fetching pages as they come into view. Grid only — see the
+   * set as a scrollable window, fetching pages as they come into view. Grid only, see the
    * note on `useVirtualGrid` below.
    */
   mode?: TableViewMode | undefined
@@ -143,7 +143,7 @@ const showEmptyState = computed(
 
 /**
  * Virtual mode is a *grid* mode. Below `md` this renders cards, whose height depends on their
- * content — and forcing them to a fixed height to satisfy the scroller would let the technique
+ * content, and forcing them to a fixed height to satisfy the scroller would let the technique
  * dictate the design. Narrow viewports keep the paginator; the page hides the switch there.
  */
 const useVirtualGrid = computed(() => props.mode === 'virtual' && !isMobile.value)
@@ -164,7 +164,7 @@ const virtualScrollerOptions = computed(() => ({
 
 /**
  * Fixed, not automatic. Automatic layout measures the rows *currently in the DOM*, and virtual
- * scrolling keeps swapping those — so the columns jittered as the user scrolled. The cost is
+ * scrolling keeps swapping those, so the columns jittered as the user scrolled. The cost is
  * that widths must be declared; columns that declare none share what is left.
  */
 const virtualTableStyle = { tableLayout: 'fixed', width: '100%' } as const
@@ -205,7 +205,7 @@ function isRowSelected(id: string): boolean {
 /**
  * Ids the header checkbox acts on: the rows on screen, not the whole result set.
  *
- * "Select all" meaning *all 250* would be a different feature and a more dangerous one — the
+ * "Select all" meaning *all 250* would be a different feature and a more dangerous one, because the
  * user cannot see what they are agreeing to. This selects what is visible, and the count in
  * the action bar tells them exactly how many that is.
  */
@@ -309,8 +309,8 @@ const someSelected = computed(
     </template>
 
     <!--
-      Tablet and up, virtual mode: one scroll surface over the whole result set. No paginator —
-      the scrollbar *is* the position indicator — and pages arrive as their rows come into view.
+      Tablet and up, virtual mode: one scroll surface over the whole result set. No paginator
+      the scrollbar *is* the position indicator, and pages arrive as their rows come into view.
     -->
     <!--
       No loading overlay here. The placeholder rows already say "this is arriving" exactly

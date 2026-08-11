@@ -14,7 +14,7 @@ import { renderWithApp } from '@tests/utils/renderWithApp'
  *
  * Two claims, and the second is the one that matters. Showing the change immediately is easy;
  * *undoing* it when the server refuses is the part that gets forgotten, and its failure mode
- * is silent — the screen goes on confidently displaying a value that was rejected, and
+ * is silent, the screen goes on confidently displaying a value that was rejected, and
  * nothing about the page looks broken.
  */
 
@@ -140,7 +140,7 @@ describe('optimistic status changes', () => {
     expect(store.items.find((ticket) => ticket.id === target.id)?.status).toBe('paused')
   })
 
-  it('raises no toast on success — the row already said it', async () => {
+  it('raises no toast on success, the row already said it', async () => {
     const { pinia } = await openTickets()
     const store = useTicketsStore(pinia)
     const target = store.items.find((ticket) => ticket.status !== 'paused')!

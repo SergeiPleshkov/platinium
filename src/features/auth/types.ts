@@ -10,8 +10,8 @@ export type UserRole = (typeof USER_ROLES)[number]
  * Settings that belong to the person rather than to the browser.
  *
  * The distinction is what decides where a preference lives. Theme and sidebar collapse are
- * properties of *this screen* — a laptop at night and a desktop in an office reasonably
- * differ — so they stay in `localStorage`. A dashboard arrangement is a property of the
+ * properties of *this screen*, since a laptop at night and a desktop in an office reasonably
+ * differ, so they stay in `localStorage`. A dashboard arrangement is a property of the
  * person's judgement about their own work, and should follow them to another machine, so it
  * is stored against the account.
  */

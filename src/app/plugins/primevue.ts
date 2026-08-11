@@ -7,7 +7,7 @@ import { AppThemePreset } from '@/app/theme/preset'
 
 /**
  * PrimeVue registration. This and `src/shared/ui/**` are the only places allowed to import
- * from `primevue/*` — enforced by the `boundaries/ui-kit-isolation` ESLint rule.
+ * from `primevue/*`, enforced by the `boundaries/ui-kit-isolation` ESLint rule.
  */
 export function installPrimeVue(app: App): void {
   app.use(PrimeVue, {

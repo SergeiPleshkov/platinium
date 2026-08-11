@@ -6,7 +6,7 @@ import { ref, watch } from 'vue'
 /**
  * The bar that appears once rows are ticked.
  *
- * Occupies layout rather than floating over the table. A floating bar covers the last row —
+ * Occupies layout rather than floating over the table. A floating bar covers the last row
  * which, when the action is "delete these", is exactly the row the user is trying to check
  * before committing.
  *
@@ -17,7 +17,7 @@ import { ref, watch } from 'vue'
 const props = defineProps<{
   count: number
   /**
-   * Omit to hide the status control entirely — for entities that have no status.
+   * Omit to hide the status control entirely, for entities that have no status.
    *
    * Typed as `SelectOption<string>` rather than a generic: the bulk contract transports the
    * status as a string, so a generic here would only add inference friction on the way to
@@ -60,7 +60,7 @@ function applyStatus(): void {
     aria-label="Bulk actions"
   >
     <!--
-      `aria-live` because this region appears in response to a checkbox several rows away —
+      `aria-live` because this region appears in response to a checkbox several rows away
       a sighted user sees it arrive, and without this nobody else would know it had.
     -->
     <p class="text-sm font-medium text-content" aria-live="polite">

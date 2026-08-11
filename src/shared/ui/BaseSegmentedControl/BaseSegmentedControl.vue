@@ -7,7 +7,7 @@ import { computed } from 'vue'
  * Written by hand rather than wrapped around PrimeVue's `SelectButton`, and the reason is the
  * accessibility contract: this is a radio group, and it needs real roving-tabindex arrow-key
  * behaviour. `SelectButton` renders buttons with `aria-pressed`, which announces as "toggle
- * button, pressed" — three independent toggles rather than one choice of three. Forty lines
+ * button, pressed", three independent toggles rather than one choice of three. Forty lines
  * of correct semantics beat a wrapper that has to fight its wrapped component.
  *
  * That the UI kit is *allowed* to contain hand-written primitives is the point of the kit
@@ -23,7 +23,7 @@ export interface SegmentedOption<TValue extends string> {
 const props = defineProps<{
   modelValue: TValue
   options: ReadonlyArray<SegmentedOption<TValue>>
-  /** Names the group for assistive technology. Required — an unlabelled radio group is a puzzle. */
+  /** Names the group for assistive technology. Required, an unlabelled radio group is a puzzle. */
   label: string
 }>()
 
@@ -38,7 +38,7 @@ function select(value: TValue): void {
 }
 
 /**
- * Arrow keys move the selection, which is what a radio group does — Tab enters and leaves the
+ * Arrow keys move the selection, which is what a radio group does, Tab enters and leaves the
  * group as a single stop rather than visiting every option.
  */
 function onKeydown(event: KeyboardEvent): void {
@@ -66,7 +66,7 @@ function onKeydown(event: KeyboardEvent): void {
     <!--
       The arrow-key handler sits on the radios, not on the group. Bubbling to the group would
       work identically, but a keyboard handler on a container with an interactive role implies
-      the container itself is focusable — which it must not be, because in a roving-tabindex
+      the container itself is focusable, which it must not be, because in a roving-tabindex
       radio group focus belongs to the checked option.
     -->
     <button

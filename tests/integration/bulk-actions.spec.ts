@@ -87,7 +87,7 @@ describe('bulk actions', () => {
 
     await userEvent.click(screen.getByRole('checkbox', { name: /Select all tickets/ }))
 
-    // The page, not the whole 250-row result set — the user can only see ten.
+    // The page, not the whole 250-row result set, the user can only see ten.
     expect(screen.getByText('10 tickets selected')).toBeInTheDocument()
   })
 
@@ -109,7 +109,7 @@ describe('bulk actions', () => {
 
     /*
      * Ticking rows and then filtering to a different set would leave those ids selected but
-     * invisible — and the next "delete selected" would hit records nobody can see.
+     * invisible, and the next "delete selected" would hit records nobody can see.
      */
     await waitFor(() => {
       expect(screen.queryByRole('region', { name: 'Bulk actions' })).not.toBeInTheDocument()
@@ -223,7 +223,7 @@ describe('bulk actions', () => {
       await userEvent.click(within(dialog).getByRole('button', { name: 'Delete categories' }))
     }
 
-    /** The report, named so it is not confused with the error toast — both are alerts. */
+    /** The report, named so it is not confused with the error toast, both are alerts. */
     function report(): HTMLElement {
       return screen.getByRole('alert', { name: 'Bulk action failures' })
     }

@@ -4,14 +4,14 @@
  * Amounts are stored and transported as integers in the currency's *minor* unit (cents,
  * pence). Floating-point majors are never persisted: `0.1 + 0.2` is the canonical reason, and
  * a ticketing system that sums thousands of prices will surface it. Conversion to a
- * human-readable major amount happens at the edges only — display and form input.
+ * human-readable major amount happens at the edges only, display and form input.
  */
 
 export const CURRENCIES = ['EUR', 'USD', 'GBP'] as const
 
 export type CurrencyCode = (typeof CURRENCIES)[number]
 
-/** Decimal places in each currency's minor unit. Not universally 2 — JPY would be 0. */
+/** Decimal places in each currency's minor unit. Not universally 2, JPY would be 0. */
 const MINOR_UNIT_DIGITS: Record<CurrencyCode, number> = {
   EUR: 2,
   USD: 2,
@@ -27,8 +27,8 @@ const MINOR_UNIT_DIGITS: Record<CurrencyCode, number> = {
  * `£97.99` in one column. Separators should be a property of the interface, not of the
  * amount; the symbol is what distinguishes the currency.
  *
- * This is the app's display locale. Making it follow the signed-in user is the next step —
- * see TECHNICAL_REVIEW.md — and this constant is the single place it would come from.
+ * This is the app's display locale. Making it follow the signed-in user is the next step
+ * see TECHNICAL_REVIEW.md, and this constant is the single place it would come from.
  */
 const APP_LOCALE = 'en-GB'
 
@@ -70,7 +70,7 @@ export function toMinorUnits(major: number, currency: CurrencyCode): number {
 /**
  * Formats minor units for display: `2550, 'EUR'` → `€25.50`, `2550, 'USD'` → `$25.50`.
  *
- * One number format across every currency — see `APP_LOCALE`.
+ * One number format across every currency, see `APP_LOCALE`.
  */
 export function formatMoney(minor: number, currency: CurrencyCode): string {
   const digits = MINOR_UNIT_DIGITS[currency]
@@ -89,7 +89,7 @@ export function formatMoney(minor: number, currency: CurrencyCode): string {
  * Parses user input into minor units. Accepts `1234.56`, `1,234.56` and `1 234,56`, since
  * admins paste amounts from spreadsheets in whatever locale they happen to use.
  *
- * Returns `null` for anything that is not a single unambiguous non-negative amount — the
+ * Returns `null` for anything that is not a single unambiguous non-negative amount, the
  * caller decides what message to show, because only it knows the field name.
  */
 export function parseMoney(input: string, currency: CurrencyCode): number | null {
@@ -97,8 +97,8 @@ export function parseMoney(input: string, currency: CurrencyCode): number | null
   if (trimmed === '') return null
 
   /*
-   * Strip whitespace — including the no-break (U+00A0) and narrow no-break (U+202F)
-   * spaces Intl emits as thousands separators — then drop currency symbols.
+   * Strip whitespace, including the no-break (U+00A0) and narrow no-break (U+202F)
+   * spaces Intl emits as thousands separators, then drop currency symbols.
    */
   const cleaned = trimmed.replace(/[\s\u00A0\u202F]/g, '').replace(/[^\d.,-]/g, '')
   if (cleaned === '') return null

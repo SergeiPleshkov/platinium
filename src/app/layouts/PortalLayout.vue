@@ -10,13 +10,13 @@ import { BaseButton } from '@/shared/ui'
 /**
  * The authenticated shell: navigation, identity, and the router outlet.
  *
- * Below `lg` the sidebar becomes an off-canvas drawer rather than shrinking — a 200px-wide
+ * Below `lg` the sidebar becomes an off-canvas drawer rather than shrinking, because a 200px-wide
  * nav column on a phone leaves no room for the tables this portal exists to show.
  *
  * At `lg` and up it is collapsible to an icon rail. The expanded width is `max-content`
  * rather than a fixed column: the nav is exactly as wide as its longest label needs, so
  * renaming an item or adding a fifth cannot leave dead space or a clipped label. That is
- * only safe because the labels are ours and short — a nav fed from user data would need a
+ * only safe because the labels are ours and short. A nav fed from user data would need a
  * `max-w` and truncation, since `max-content` has no upper bound.
  */
 
@@ -32,7 +32,7 @@ const drawerOpen = ref(false)
 /**
  * Only the desktop rail collapses. Deriving this instead of reading `sidebar.collapsed`
  * directly means a user who collapses the rail, narrows to a phone and opens the drawer gets
- * a labelled drawer rather than a mystery strip of icons — the stored preference is about the
+ * a labelled drawer rather than a mystery strip of icons. The stored preference is about the
  * desktop rail, and it stays scoped to it.
  */
 const isRailCollapsed = computed(() => isDesktop.value && sidebar.collapsed.value)

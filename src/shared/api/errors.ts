@@ -4,7 +4,7 @@ import type { ApiErrorBody } from '@/shared/types/api'
  * The one error type the rest of the application sees.
  *
  * Network failure, timeout, 4xx and 5xx all arrive at callers in this shape, so a store never
- * has to ask "is this a `TypeError` from fetch, a non-ok `Response`, or a thrown string?" —
+ * has to ask "is this a `TypeError` from fetch, a non-ok `Response`, or a thrown string?"
  * a question that, unanswered, is how apps end up rendering "[object Object]".
  */
 
@@ -22,7 +22,7 @@ export interface ApiErrorOptions {
  * Guarantees an `ApiError`, whatever was thrown.
  *
  * The HTTP client already normalises everything it produces, so in practice this only catches
- * the genuinely unexpected — a bug in a store, a rejected promise from somewhere else. It
+ * the genuinely unexpected, a bug in a store, a rejected promise from somewhere else. It
  * exists so a `catch` block can rethrow without every caller re-deciding what to do with an
  * `unknown`, which is how "[object Object]" reaches a toast.
  */
@@ -55,7 +55,7 @@ export class ApiError extends Error {
     return this.status === 422 && Object.keys(this.fieldErrors).length > 0
   }
 
-  /** The session is gone — the caller should sign out rather than retry. */
+  /** The session is gone, the caller should sign out rather than retry. */
   get isUnauthorized(): boolean {
     return this.status === 401
   }
@@ -96,7 +96,7 @@ const GENERIC_MESSAGES: Record<number, string> = {
  * Turns a failed response into an `ApiError`.
  *
  * The server's own message wins when it sent one, because it knows things the client does not
- * — which event blocked a delete, which field collided. The generic table is the fallback,
+ *, which event blocked a delete, which field collided. The generic table is the fallback,
  * and it never leaks a status code or a stack trace to a user.
  */
 export function apiErrorFromResponse(status: number, body: unknown): ApiError {

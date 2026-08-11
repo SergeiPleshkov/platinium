@@ -10,11 +10,11 @@ strategy and craftsmanship count as much as features.
 ## Non-negotiables
 
 - **Never claim something is done that isn't verified.** Evidence is a file path, a passing
-  test, or something observed in a browser — not an intention.
-- Mandatory stack — Vue 3, Pinia, Vue Router, TypeScript, Docker. These are hard
+  test, or something observed in a browser. An intention is not evidence.
+- Mandatory stack: Vue 3, Pinia, Vue Router, TypeScript, Docker. These are hard
   requirements from the brief; do not substitute.
 - No `any`, no `@ts-expect-error`, no `eslint-disable` without a comment explaining why.
-- Every change lands green: typecheck, lint, format, tests, production build — `/verify`.
+- Every change lands green: typecheck, lint, format, tests, production build. Run `/verify`.
 - Reasoning lives next to the code it explains: a comment above the surprising line, or the
   README of the layer it describes. Say what the decision cost, not just what it was.
 
@@ -28,8 +28,8 @@ strategy and craftsmanship count as much as features.
 | State | Pinia (setup stores) |
 | Routing | Vue Router 4, lazy-loaded route components |
 | HTTP | axios, **only** inside `shared/api`; callers see our `ApiError` |
-| Mock API | MSW — shared handlers for browser **and** tests |
-| UI kit | PrimeVue 4 (Aura preset, custom tokens) — **always behind our own `shared/ui` wrappers** |
+| Mock API | MSW, with one handler set shared by the browser and the tests |
+| UI kit | PrimeVue 4 (Aura preset, custom tokens), always behind our own `shared/ui` wrappers |
 | Styling | Tailwind CSS for layout; PrimeVue design tokens for components |
 | Forms | vee-validate + zod (schemas shared with the API layer) |
 | Testing | Vitest, @vue/test-utils, @testing-library/vue, MSW |
@@ -42,7 +42,7 @@ strategy and craftsmanship count as much as features.
 src/
   app/            # bootstrap: app entry, router, pinia, global providers, styles
   shared/         # cross-feature, feature-agnostic
-    api/          # http client, error normalisation, query serialisation — see its README.md
+    api/          # http client, error normalisation, query serialisation (see its README.md)
     ui/           # presentational primitives (Base*), zero domain knowledge
     composables/  # useListView, useTable, useCollectionState, useBulkAction, ...
     utils/        # pure functions, fully unit-tested
@@ -58,15 +58,15 @@ tests/            # integration tests + shared test utilities
 ```
 
 Dependency rule, enforced by review and lint: `app → features → shared`. A feature never
-imports from another feature's internals — cross-feature needs go through `shared/` or an
-explicit public `index.ts` barrel.
+imports from another feature's internals. Cross-feature needs go through `shared/` or through
+the other feature's public `index.ts` barrel.
 
 **PrimeVue is a replaceable dependency, not the architecture.** It may only be imported
 inside `src/shared/ui/**` and the app bootstrap. Everything else consumes our own `Base*`
-components. This is enforced by an ESLint `no-restricted-imports` rule, not by good
-intentions — the intent is that swapping PrimeVue for in-house components later is a change
-to one directory, and the test suite (which asserts on roles and labels, never on PrimeVue
-internals) should stay green through it.
+components. An ESLint `no-restricted-imports` rule enforces this rather than good intentions.
+The intent is that swapping PrimeVue for in-house components later is a change to one directory,
+and the test suite, which asserts on roles and labels and never on PrimeVue internals, should
+stay green through it.
 
 ## Conventions
 
@@ -124,5 +124,5 @@ bug report ─▶ bug-fix (repro ▸ root cause ▸ red-then-green) ────
   needs already exists; the inventory is in the `vue-feature` skill. Extract on the third real
   consumer, not the second.
 - Commit per meaningful unit of work with a conventional-commit subject. The commit history
-  is part of what the reviewer reads — keep it clean and legible.
+  is part of what the reviewer reads, so keep it clean and legible.
 - When a review finding repeats, it belongs in a skill rather than in another review.

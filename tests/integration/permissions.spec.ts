@@ -12,7 +12,7 @@ import { renderWithApp } from '@tests/utils/renderWithApp'
  *
  * The API side is covered by `tests/mock-api/permissions.spec.ts`, which proves a forbidden
  * request is refused. This covers the other half: that the interface does not offer actions
- * the session cannot perform, and — the part that is easy to get wrong — that it *says so*
+ * the session cannot perform, and, the part that is easy to get wrong, that it *says so*
  * rather than silently rendering fewer buttons.
  */
 
@@ -64,7 +64,7 @@ describe('permissions in the UI', () => {
       expect(screen.getByRole('button', { name: 'Edit VIP' })).toBeInTheDocument()
     })
 
-    it('is not offered delete — the one action separating it from admin', async () => {
+    it('is not offered delete, the one action separating it from admin', async () => {
       await openCategoriesAs('editor')
 
       expect(screen.queryByRole('button', { name: 'Delete VIP' })).not.toBeInTheDocument()
@@ -123,7 +123,7 @@ describe('permissions in the UI', () => {
   describe('the server has the final say', () => {
     it('refuses a write the UI would have hidden, leaving the data untouched', async () => {
       /*
-       * Signed in as a viewer, the store is driven directly — standing in for a request that
+       * Signed in as a viewer, the store is driven directly, standing in for a request that
        * did not come from a button. The UI gate is a convenience; this is the guarantee.
        */
       const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
@@ -144,7 +144,7 @@ describe('permissions in the UI', () => {
     })
 
     it('does not sign the user out over a 403', async () => {
-      // The 401 hook ends the session. A 403 means "not allowed", not "not signed in" —
+      // The 401 hook ends the session. A 403 means "not allowed", not "not signed in"
       // conflating them would eject a viewer from the app for clicking the wrong thing.
       const rendered = await renderWithApp(App, { initialRoute: '/login', withGuards: true })
       await userEvent.type(await screen.findByLabelText(/Email address/), EMAILS.viewer)

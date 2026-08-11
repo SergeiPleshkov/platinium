@@ -9,7 +9,7 @@ import { useId } from 'vue'
  *
  * Kept separate from `BaseInput` because it is a toolbar control, not a form field: it has no
  * visible label, carries `type="search"`, and gets a clear button. The label still exists for
- * screen readers — an unlabelled search box is a common and avoidable failure.
+ * screen readers, an unlabelled search box is a common and avoidable failure.
  */
 
 interface Props {

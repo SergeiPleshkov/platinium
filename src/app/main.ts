@@ -13,7 +13,7 @@ import '@/app/assets/main.css'
 async function bootstrap(): Promise<void> {
   /*
    * The mock backend must be intercepting before the first request goes out, so it is awaited
-   * ahead of mount. It ships in the production image too — this application has no real
+   * ahead of mount. It ships in the production image too, because this application has no real
    * backend, and the brief asks for a demonstrable one.
    */
   if (import.meta.env.VITE_ENABLE_MOCK_API !== 'false') {
@@ -32,7 +32,7 @@ async function bootstrap(): Promise<void> {
 
   /*
    * The HTTP layer is told how to find the token and what to do on a 401, rather than
-   * importing the auth store itself — `shared/` may not depend on a feature. Wiring the two
+   * importing the auth store itself, `shared/` may not depend on a feature. Wiring the two
    * together is the app layer's job, and this is the seam where it happens.
    */
   const auth = useAuthStore(pinia)

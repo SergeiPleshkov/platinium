@@ -4,7 +4,7 @@ import { DEFAULT_PER_PAGE, type ListResponse, type SortOrder } from '@/shared/ty
  * The server-side query engine.
  *
  * Every list endpoint runs its collection through this, in a fixed order:
- * **search → filter → sort → paginate**. The order matters — paginating before filtering
+ * **search → filter → sort → paginate**. The order matters, paginating before filtering
  * would return the wrong page, and `meta.total` has to describe the filtered set, not the
  * whole table, or the pager will show pages that don't exist.
  *
@@ -44,7 +44,7 @@ function parsePositiveInt(raw: string | null, fallback: number, max?: number): n
 }
 
 function compare(a: SortValue, b: SortValue): number {
-  // Nulls sort last regardless of direction — an empty cell is never "the smallest value".
+  // Nulls sort last regardless of direction; an empty cell is never "the smallest value".
   if (a === b) return 0
   if (a === null || a === undefined) return 1
   if (b === null || b === undefined) return -1
@@ -85,7 +85,7 @@ export function applyQuery<T>(items: readonly T[], url: URL, config: QueryConfig
     const values = params.getAll(key).filter((value) => value !== '')
     if (values.length === 0) continue
 
-    // Repeated params are OR'd within a field, AND'd across fields — the behaviour a
+    // Repeated params are OR'd within a field, AND'd across fields, the behaviour a
     // multi-select filter bar implies.
     result = result.filter((item) => values.some((value) => predicate(item, value)))
   }
@@ -121,10 +121,10 @@ export function runQuery<T>(
   const order: SortOrder = params.get('order') === 'asc' ? 'asc' : 'desc'
   const perPage = parsePositiveInt(params.get('perPage'), DEFAULT_PER_PAGE, MAX_PER_PAGE)
 
-  // Steps 1–3: search, filter, sort — shared with the export endpoints.
+  // Steps 1-3: search, filter, sort, shared with the export endpoints.
   const result = applyQuery(items, url, config)
 
-  // 4. Paginate — after filtering, so `total` describes what the user is actually looking at.
+  // 4. Paginate, after filtering, so `total` describes what the user is actually looking at.
   const total = result.length
   const totalPages = Math.max(1, Math.ceil(total / perPage))
   // Clamp rather than return an empty page: deleting the last row on page 4 should show

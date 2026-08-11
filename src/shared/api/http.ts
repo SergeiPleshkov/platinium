@@ -12,8 +12,8 @@ import type { ListQuery } from '@/shared/types/api'
 /**
  * The single place this application talks to the network.
  *
- * Nothing outside `shared/api` calls `fetch` or axios directly — enforced by the
- * `boundaries/no-raw-fetch` and `boundaries/no-direct-http-client` ESLint rules — so
+ * Nothing outside `shared/api` calls `fetch` or axios directly, enforced by the
+ * `boundaries/no-raw-fetch` and `boundaries/no-direct-http-client` ESLint rules, so
  * authentication, timeouts, cancellation and error normalisation are applied uniformly
  * instead of being remembered at each call site.
  *
@@ -26,7 +26,7 @@ export interface HttpClientConfig {
   baseUrl: string
   /**
    * Supplies the bearer token. Injected rather than imported, because `shared/` may not
-   * depend on a feature — the auth store registers itself at bootstrap. That constraint is
+   * depend on a feature, so the auth store registers itself at bootstrap. That constraint is
    * what keeps this module reusable and testable in isolation.
    */
   getAuthToken: () => string | null
@@ -49,8 +49,8 @@ export type QueryValue = string | number | boolean | null | undefined | Array<st
 /**
  * Serialises query parameters.
  *
- * Axios would render an array as `status[]=draft&status[]=paused`; our handlers — and every
- * conventional REST backend — expect the repeated form `status=draft&status=paused`. Empty
+ * Axios would render an array as `status[]=draft&status[]=paused`; our handlers, and every
+ * conventional REST backend, expect the repeated form `status=draft&status=paused`. Empty
  * values are dropped so a cleared filter leaves no trace in the URL.
  */
 export function buildQueryString(query: Record<string, QueryValue>): string {
@@ -80,7 +80,7 @@ function createInstance(): AxiosInstance {
     headers: { accept: 'application/json' },
     /*
      * Force the fetch adapter. Axios would otherwise use XHR in the browser and Node's http
-     * module under Vitest — two different transports, two sets of interception quirks. One
+     * module under Vitest, two different transports, two sets of interception quirks. One
      * adapter means the tests exercise the same path the app does.
      */
     adapter: 'fetch',
@@ -136,7 +136,7 @@ function toApiError(error: unknown): ApiError {
     return networkError(error)
   }
 
-  // The caller superseded this request — discard it, never surface it.
+  // The caller superseded this request, discard it, never surface it.
   if (error.code === AxiosError.ERR_CANCELED) return abortError()
 
   if (error.code === AxiosError.ECONNABORTED || error.code === AxiosError.ETIMEDOUT) {

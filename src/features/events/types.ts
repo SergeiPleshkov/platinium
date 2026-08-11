@@ -8,7 +8,7 @@ export interface Event extends BaseEntity {
   name: string
   country: string
   venue: string
-  /** ISO-8601 date-time. Kept as a string in state — see `BaseEntity`. */
+  /** ISO-8601 date-time. Kept as a string in state, see `BaseEntity`. */
   startDate: string
   endDate: string
   status: EventStatus

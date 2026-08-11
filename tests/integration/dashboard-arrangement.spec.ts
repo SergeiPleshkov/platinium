@@ -15,7 +15,7 @@ import { renderWithApp } from '@tests/utils/renderWithApp'
  *
  * Driven entirely through the **keyboard** path, and that is deliberate rather than a
  * concession to jsdom. HTML5 drag and drop has no keyboard equivalent, so if the arrow keys
- * do not work the feature simply does not exist for a portion of users — which makes it the
+ * do not work the feature simply does not exist for a portion of users, which makes it the
  * path most worth pinning. The pointer path shares `moveTo` with it and is covered in
  * `useSortableList.spec.ts`; the geometry was checked in a real browser.
  */
@@ -26,7 +26,7 @@ const STORAGE_KEY = 'app.dashboard.tileOrder'
  * Every widget, figures *and* panels, in one arrangement.
  *
  * The panels were originally a separate grid with no handles, which meant a user could
- * rearrange the numbers but not push "Upcoming events" above them — the one rearrangement
+ * rearrange the numbers but not push "Upcoming events" above them, the one rearrangement
  * somebody who cares more about their calendar than their totals would actually want.
  */
 const DEFAULT_ORDER = [
@@ -54,11 +54,11 @@ async function openDashboard(): Promise<Awaited<ReturnType<typeof renderWithApp>
  * Widget labels in the order they appear, read from the DOM rather than from state.
  *
  * Taken from each handle's accessible name, which is the one thing every widget has in common
- * — the figures render a `<dt>` and the panels an `<h2>`.
+ *, the figures render a `<dt>` and the panels an `<h2>`.
  */
 function renderedOrder(): string[] {
   return [...document.querySelectorAll('[aria-label^="Reorder "]')].map(
-    (handle) => /^Reorder (.+?) —/.exec(handle.getAttribute('aria-label') ?? '')?.[1] ?? '',
+    (handle) => /^Reorder (.+?),/.exec(handle.getAttribute('aria-label') ?? '')?.[1] ?? '',
   )
 }
 
@@ -66,10 +66,10 @@ function renderedOrder(): string[] {
  * The handle for one tile.
  *
  * Anchored on the em dash that follows the label, because "Reorder Inventory" is also a
- * prefix of "Reorder Inventory value" — a plain `startsWith` matches two tiles.
+ * prefix of "Reorder Inventory value", a plain `startsWith` matches two tiles.
  */
 function handleFor(label: string): HTMLElement {
-  return screen.getByRole('button', { name: new RegExp(`^Reorder ${label} —`) })
+  return screen.getByRole('button', { name: new RegExp(`^Reorder ${label},`) })
 }
 
 beforeEach(() => {
@@ -87,7 +87,7 @@ describe('dashboard tile arrangement', () => {
     await openDashboard()
 
     expect(handleFor('Events')).toHaveAccessibleName(
-      'Reorder Events — currently 1 of 6. Use the arrow keys to move it.',
+      'Reorder Events, currently 1 of 6. Use the arrow keys to move it.',
     )
   })
 
@@ -111,7 +111,7 @@ describe('dashboard tile arrangement', () => {
     })
 
     it('accepts the vertical arrows too, because the grid reflows', async () => {
-      // One row at `xl`, two columns at `sm`, one below that — "next" is right *or* down.
+      // One row at `xl`, two columns at `sm`, one below that, "next" is right *or* down.
       await openDashboard()
 
       handleFor('Events').focus()
@@ -178,7 +178,7 @@ describe('dashboard tile arrangement', () => {
       await userEvent.keyboard('{ArrowRight}')
 
       expect(handleFor('Events')).toHaveAccessibleName(
-        'Reorder Events — currently 2 of 6. Use the arrow keys to move it.',
+        'Reorder Events, currently 2 of 6. Use the arrow keys to move it.',
       )
     })
   })

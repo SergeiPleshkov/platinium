@@ -5,7 +5,7 @@ import { computed } from 'vue'
  * A status pill.
  *
  * Hand-rolled rather than wrapping PrimeVue's `Tag`, because status colour needs to be a
- * lookup this application owns, and because colour alone must never be the only signal —
+ * lookup this application owns, and because colour alone must never be the only signal
  * the label always carries the meaning for anyone who cannot distinguish the hues.
  */
 

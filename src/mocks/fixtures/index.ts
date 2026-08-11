@@ -10,7 +10,7 @@ import { createRandom, sequentialId } from '@/mocks/fixtures/random'
  *
  * Everything here is deterministic: a fixed seed, fixed ids, and a fixed clock. Two runs
  * produce byte-identical fixtures, which is what allows tests to assert on specific rows and
- * page boundaries. `SEED_NOW` is frozen rather than `Date.now()` for the same reason —
+ * page boundaries. `SEED_NOW` is frozen rather than `Date.now()` for the same reason
  * otherwise "upcoming events" would drift out of the dataset over time.
  */
 

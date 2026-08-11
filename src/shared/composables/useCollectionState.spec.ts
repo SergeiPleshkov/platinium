@@ -6,7 +6,7 @@ import type { ListResponse } from '@/shared/types/api'
 /**
  * The shared collection state, with attention to the virtual buffer.
  *
- * The buffer's whole job is to be *sparse but correctly sized* — a scrollbar that reports 250
+ * The buffer's whole job is to be *sparse but correctly sized*, a scrollbar that reports 250
  * rows before 240 of them have been fetched. The tests below pin the two ways that goes
  * wrong: rows landing at the wrong offset, and a stale buffer surviving a change that shifted
  * every row after it.
@@ -30,7 +30,7 @@ function page(pageNumber: number, total = 25, perPage = 10): ListResponse<Row> {
   }
 }
 
-describe('useCollectionState — virtual buffer', () => {
+describe('useCollectionState, virtual buffer', () => {
   it('sizes itself to the total on the first window, not to the rows received', () => {
     const state = useCollectionState<Row>()
 

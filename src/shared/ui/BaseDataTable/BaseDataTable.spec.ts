@@ -164,7 +164,7 @@ describe('BaseDataTable', () => {
   })
 })
 
-describe('BaseDataTable — generic row typing', () => {
+describe('BaseDataTable, generic row typing', () => {
   it('accepts a typed row and passes it to the cell slot', async () => {
     // Compile-time assurance as much as runtime: `row` is TRow, not `any`.
     await renderWithApp(BaseDataTable<Row>, {
@@ -191,7 +191,7 @@ describe('BaseDataTable — generic row typing', () => {
   })
 })
 
-describe('BaseDataTable — below md', () => {
+describe('BaseDataTable, below md', () => {
   beforeEach(() => {
     setViewportWidth(MOBILE_WIDTH)
   })
@@ -248,5 +248,5 @@ describe('BaseDataTable — below md', () => {
   })
 })
 
-/** Keeps the unused import honest — `h` documents that slots may be render functions. */
+/** Keeps the unused import honest, `h` documents that slots may be render functions. */
 export const _renderFunctionSlotsAreSupported = h

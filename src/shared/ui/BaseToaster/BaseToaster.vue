@@ -29,7 +29,7 @@ watch(
         // `life: null` means "stays until dismissed", which PrimeVue expresses as no life.
         ...(notification.life === null ? {} : { life: notification.life }),
       })
-      // Handed off — drop it from our queue so it cannot be shown twice.
+      // Handed off, drop it from our queue so it cannot be shown twice.
       dismiss(notification.id)
     }
   },

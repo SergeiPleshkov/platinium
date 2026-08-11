@@ -4,8 +4,8 @@ import DragHandle from '@/features/dashboard/components/DragHandle.vue'
 /**
  * A wider dashboard widget: a heading and a list, rather than a single figure.
  *
- * Shares the drag contract with `StatTile` — same handle, same `move` event, same position
- * announcement — because the two sit in one arrangement and a widget that dragged differently
+ * Shares the drag contract with `StatTile`, same handle, same `move` event, same position
+ * announcement, because the two sit in one arrangement and a widget that dragged differently
  * depending on its shape would be a bug the user has to learn.
  */
 

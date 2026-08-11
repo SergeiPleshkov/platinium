@@ -10,7 +10,7 @@ const BASE = '/events'
  * Event endpoints.
  *
  * Implements the shared `Resource` contract, plus the one endpoint that is specific to this
- * entity — the distinct countries in use, which populates the filter without the client
+ * entity: the distinct countries in use, which populates the filter without the client
  * having to fetch every event and derive the list itself.
  */
 export const eventsApi: Resource<Event, EventPayload> & {
@@ -21,7 +21,7 @@ export const eventsApi: Resource<Event, EventPayload> & {
    * Applies one action to many records.
    *
    * A single request, not N: the server reports per record, so the client learns which
-   * succeeded and why the rest did not — information a loop of individual calls would have to
+   * succeeded and why the rest did not, information a loop of individual calls would have to
    * reassemble, and would lose the moment one of them threw.
    */
   bulk: (payload: BulkRequest, signal?: AbortSignal) =>

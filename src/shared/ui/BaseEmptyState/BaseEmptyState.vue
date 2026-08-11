@@ -3,8 +3,8 @@
  * The "nothing here" panel.
  *
  * Deliberately takes an action slot: an empty list with no way forward is a dead end. The
- * two cases it serves read very differently — "no events yet, create one" versus "no events
- * match these filters, clear them" — so the caller supplies both the copy and the action.
+ * two cases it serves read very differently, "no events yet, create one" versus "no events
+ * match these filters, clear them", so the caller supplies both the copy and the action.
  */
 
 interface Props {

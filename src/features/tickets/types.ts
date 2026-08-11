@@ -8,7 +8,7 @@ export type TicketStatus = (typeof TICKET_STATUSES)[number]
 export interface Ticket extends BaseEntity {
   name: string
   /**
-   * Integer, in the currency's minor unit (cents/pence). Never a float major amount —
+   * Integer, in the currency's minor unit (cents/pence). Never a float major amount
    * see `@/shared/utils/money`.
    */
   priceMinor: number

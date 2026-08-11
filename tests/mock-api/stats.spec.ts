@@ -18,7 +18,7 @@ beforeEach(async () => {
   token = await signIn()
 })
 
-describe('mock API — dashboard stats', () => {
+describe('mock API, dashboard stats', () => {
   it('requires authentication', async () => {
     expect((await get<ApiErrorBody>('/api/stats')).status).toBe(401)
   })

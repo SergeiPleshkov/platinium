@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { TICKET_STATUSES } from '@/features/tickets/types'
 import { CURRENCIES } from '@/shared/utils/money'
 
-/** Ten million minor units — a sanity ceiling that catches a misplaced decimal point. */
+/** Ten million minor units, a sanity ceiling that catches a misplaced decimal point. */
 const MAX_PRICE_MINOR = 10_000_000
 
 export const ticketSchema = z.object({
@@ -20,7 +20,7 @@ export const ticketSchema = z.object({
     .number({ message: 'Enter a price' })
     .int('Enter a price with at most two decimal places')
     .min(0, 'Price cannot be negative')
-    .max(MAX_PRICE_MINOR, 'Price looks too high — check the decimal point'),
+    .max(MAX_PRICE_MINOR, 'Price looks too high. Check the decimal point.'),
   currency: z.enum(CURRENCIES, { message: 'Select a currency' }),
   quantity: z
     .number({ message: 'Enter a quantity' })

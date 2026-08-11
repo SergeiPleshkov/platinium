@@ -11,7 +11,7 @@ import { ticketHandlers } from '@/mocks/handlers/tickets'
  *
  * One handler set, two runtimes: `browser.ts` runs it in a Service Worker for the dev server,
  * `server.ts` runs it in Node for Vitest. Tests therefore exercise exactly the request
- * handling the application does — there is no second, divergent set of stubs to keep in sync.
+ * handling the application does. There is no second, divergent set of stubs to keep in sync.
  */
 export const handlers: RequestHandler[] = [
   ...authHandlers,

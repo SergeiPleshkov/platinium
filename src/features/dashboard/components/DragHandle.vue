@@ -46,7 +46,7 @@ function onKeydown(event: KeyboardEvent): void {
   <button
     type="button"
     class="shrink-0 cursor-grab rounded p-1 text-content-muted hover:bg-surface-100 hover:text-content focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none active:cursor-grabbing dark:hover:bg-surface-800"
-    :aria-label="`Reorder ${label} — currently ${position} of ${total}. Use the arrow keys to move it.`"
+    :aria-label="`Reorder ${label}, currently ${position} of ${total}. Use the arrow keys to move it.`"
     @keydown="onKeydown"
   >
     <i class="pi pi-bars text-xs" aria-hidden="true" />

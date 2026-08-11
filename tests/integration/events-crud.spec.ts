@@ -83,7 +83,7 @@ describe('events', () => {
 
     /*
      * The default sort is start date ascending and the new event is dated 2027, so it is on
-     * the last page rather than the first. Search for it instead of assuming it is visible —
+     * the last page rather than the first. Search for it instead of assuming it is visible
      * which also proves the create actually reached the server.
      */
     await userEvent.type(screen.getByLabelText('Search events'), 'Integration Test Gala')
@@ -94,7 +94,7 @@ describe('events', () => {
     /*
      * The date-range rule itself is covered where it is enforced: the schema unit tests, the
      * mock-API tests and the store tests. It cannot be reproduced through this dialog because
-     * the end picker carries `min` = the start date, so the invalid value is unreachable —
+     * the end picker carries `min` = the start date, so the invalid value is unreachable
      * which is the point of the guard rail.
      *
      * What this covers instead is the path that only exists here: a 422 the client could not

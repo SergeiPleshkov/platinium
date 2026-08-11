@@ -6,7 +6,7 @@ import { ApiError } from '@/shared/api'
  * The only way to raise a toast.
  *
  * Deliberately knows nothing about the UI kit: it owns a queue, and `BaseToaster` renders it.
- * That keeps notification *policy* — what gets announced, and in what words — testable
+ * That keeps notification *policy*, what gets announced, and in what words, testable
  * without mounting anything, and keeps features from reaching into PrimeVue's toast service.
  */
 

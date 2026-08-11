@@ -8,7 +8,7 @@ import { computed, ref, type ComputedRef } from 'vue'
  * the button and the thing it controls disagree.
  *
  * Only meaningful at `lg` and up. Below that the sidebar is an off-canvas drawer whose
- * open/closed state is a different question with a different answer, owned by the layout —
+ * open/closed state is a different question with a different answer, owned by the layout
  * collapsing a drawer to icons would leave a 56px column of glyphs over the content.
  */
 
@@ -28,7 +28,7 @@ const collapsed = ref(readStored())
 export interface UseSidebar {
   /** Read-only: writes go through `setCollapsed`, which is what persists them. */
   collapsed: ComputedRef<boolean>
-  /** Inverse of `collapsed`, for `aria-expanded` — which reads the other way round. */
+  /** Inverse of `collapsed`, for `aria-expanded`, which reads the other way round. */
   expanded: ComputedRef<boolean>
   setCollapsed: (next: boolean) => void
   toggle: () => void
@@ -40,7 +40,7 @@ export function useSidebar(): UseSidebar {
     try {
       localStorage.setItem(STORAGE_KEY, next ? 'collapsed' : 'expanded')
     } catch {
-      /* Storage unavailable — the choice still applies for this page. */
+      /* Storage unavailable, the choice still applies for this page. */
     }
   }
 

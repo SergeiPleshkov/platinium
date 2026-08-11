@@ -31,7 +31,7 @@ describe('useAsyncAction', () => {
     expect(action.error.value).toBeNull()
   })
 
-  it('clears pending on failure too — the spinner must always stop', async () => {
+  it('clears pending on failure too, the spinner must always stop', async () => {
     const action = useAsyncAction(() =>
       Promise.reject(new ApiError({ kind: 'http', status: 500, message: 'Server error' })),
     )

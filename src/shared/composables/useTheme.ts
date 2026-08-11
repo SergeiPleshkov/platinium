@@ -56,7 +56,7 @@ export function useTheme(): UseTheme {
       if (next === 'system') localStorage.removeItem(STORAGE_KEY)
       else localStorage.setItem(STORAGE_KEY, next)
     } catch {
-      /* Storage unavailable — the choice still applies for this page. */
+      /* Storage unavailable, the choice still applies for this page. */
     }
     apply()
   }

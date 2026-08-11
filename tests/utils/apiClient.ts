@@ -6,12 +6,12 @@ import type { ListResponse } from '@/shared/types/api'
  *
  * It does not use `@/shared/api` on purpose: these tests are about what the *backend* does,
  * so putting the application's client in the middle would blur which side a failure came
- * from. Store-level tests in phases 5–7 exercise the real client.
+ * from. Store-level tests in phases 5-7 exercise the real client.
  */
 
 /*
  * Handlers are registered with relative paths (`/api/...`), which MSW resolves against the
- * document origin. Requests must therefore target that same origin — undici's `fetch` will
+ * document origin. Requests must therefore target that same origin, undici's `fetch` will
  * not accept a relative URL, so it has to be spelled out.
  */
 const ORIGIN = typeof window === 'undefined' ? 'http://localhost' : window.location.origin

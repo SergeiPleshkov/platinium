@@ -7,7 +7,7 @@ import BaseModal from '@/shared/ui/BaseModal/BaseModal.vue'
  *
  * Every delete in this application goes through one of these. The message names the record
  * being destroyed rather than saying "are you sure?", because a generic prompt trains people
- * to click through it — and the confirm button says what will happen, not "OK".
+ * to click through it, and the confirm button says what will happen, not "OK".
  */
 
 interface Props {

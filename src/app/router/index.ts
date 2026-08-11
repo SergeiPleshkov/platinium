@@ -15,7 +15,7 @@ export function createAppRouter(): Router {
 
   /*
    * Before the auth guard, not after. `beforeEach` hooks run in registration order, and a
-   * guard that redirects ends the navigation there — a tracker registered behind it would
+   * guard that redirects ends the navigation there, so a tracker registered behind it would
    * never see the navigations that take longest, which are exactly the ones worth showing.
    */
   trackRouteLoading(router)

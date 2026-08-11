@@ -7,7 +7,7 @@ import { db } from '@/mocks/db'
 import { renderWithApp } from '@tests/utils/renderWithApp'
 
 /**
- * The tickets journey — the relational slice, and the one the 250-row dataset exists for.
+ * The tickets journey, the relational slice, and the one the 250-row dataset exists for.
  */
 
 async function openTickets(path = '/tickets'): Promise<Awaited<ReturnType<typeof renderWithApp>>> {
@@ -28,7 +28,7 @@ async function openTickets(path = '/tickets'): Promise<Awaited<ReturnType<typeof
  * Waits for *loaded* rows, not merely rendered ones.
  *
  * The table renders skeleton rows while initialising, so counting `tbody tr` is satisfied
- * before any data arrives — an assertion against those reads every cell as an empty string
+ * before any data arrives, an assertion against those reads every cell as an empty string
  * and quietly measures nothing.
  */
 async function waitForLoadedRows(): Promise<void> {
@@ -42,7 +42,7 @@ async function waitForLoadedRows(): Promise<void> {
  * Reads one column's cells by its *header*, not by position.
  *
  * Indexing `row.children[3]` broke the moment a selection checkbox column was added in front
- * of it — and it would have broken silently if the neighbouring column happened to contain
+ * of it, and it would have broken silently if the neighbouring column happened to contain
  * something that also matched. Resolving through the header keeps these tests about the data.
  */
 function columnCells(header: string): string[] {

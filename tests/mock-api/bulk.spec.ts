@@ -28,7 +28,7 @@ function ticketIds(count: number): string[] {
   return db.tickets.slice(0, count).map((ticket) => ticket.id)
 }
 
-describe('mock API — bulk operations', () => {
+describe('mock API, bulk operations', () => {
   describe('delete', () => {
     it('removes every id when none is blocked', async () => {
       const ids = ticketIds(5)

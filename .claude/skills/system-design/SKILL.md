@@ -7,9 +7,9 @@ description: Turn a requirement into a layered technical plan and then an unambi
 
 Two outputs, in order:
 
-1. **Implementation plan** — a layer-by-layer design, reviewed by an audit gate, then approved
+1. **Implementation plan**: a layer-by-layer design, reviewed by an audit gate, then approved
    by the user.
-2. **Task list** — produced only *after* the user approves the plan.
+2. **Task list**: produced only *after* the user approves the plan.
 
 Nothing is built until the plan is approved. The failure mode this exists to prevent is not bad
 code; it is efficiently building the wrong thing. A written plan is cheap to reject, a branch is
@@ -17,30 +17,30 @@ not.
 
 ## When to skip this
 
-A one-file change, a copy fix, a test that needs an extra case — go straight to the work. This
+A one-file change, a copy fix, a test that needs an extra case: go straight to the work. This
 skill is for changes that add a layer, cross a boundary, introduce a dependency, or touch more
 than one feature slice. If you are unsure, the tell is whether you can name every file you will
 touch before you start; if you cannot, run this.
 
 ## Read first
 
-- [CLAUDE.md](../../../CLAUDE.md) — non-negotiables and the command table.
-- The [`vue-feature`](../vue-feature/SKILL.md) skill — module boundaries, where code goes, the
+- [CLAUDE.md](../../../CLAUDE.md): non-negotiables and the command table.
+- The [`vue-feature`](../vue-feature/SKILL.md) skill: module boundaries, where code goes, the
   composable inventory. **The plan is held to these rules**, so read them before writing it.
 - [`crud-entity`](../crud-entity/SKILL.md) if the work adds or extends a domain entity.
-- [`testing-vue`](../testing-vue/SKILL.md) — the plan must say what gets tested and at which
+- [`testing-vue`](../testing-vue/SKILL.md): the plan must say what gets tested and at which
   layer.
 - The layer READMEs for anything the plan touches: [`src/shared/api/README.md`](../../../src/shared/api/README.md),
   [`src/features/README.md`](../../../src/features/README.md),
   [`src/mocks/README.md`](../../../src/mocks/README.md).
 
-## Phase 1 — codebase analysis
+## Phase 1: codebase analysis
 
 Mandatory, and dispatched to a subagent (`Agent` with `subagent_type: general-purpose`) so its
 file reads stay out of this skill's context. The subagent writes `plans/codebase-analysis.md`
 and returns only the path and a one-line status.
 
-Facts only. **No recommendations** — this phase reports what is there; Phase 2 decides.
+Facts only. **No recommendations**: this phase reports what is there; Phase 2 decides.
 
 ~~~markdown
 # Codebase analysis: <title>
@@ -52,23 +52,23 @@ Facts only. **No recommendations** — this phase reports what is there; Phase 2
 - <path>: <one-line shape>
 
 ## Files to modify or integrate with
-- [path](path) lines N–M — <role in this work>
+- [path](path) lines N-M: <role in this work>
 
 ## Contracts that constrain this
-- `<TypeName>` from `<path>` — <one-clause constraint>
+- `<TypeName>` from `<path>`: <one-clause constraint>
 
 ## Shared code to reuse instead of writing
-- `<name>` from `<path>` — <one clause>
+- `<name>` from `<path>`: <one clause>
 (Search `src/shared/composables` and `src/shared/ui` before concluding nothing fits.)
 
 ## Test patterns that apply
-- <spec file> — <the pattern it demonstrates>
+- <spec file>: <the pattern it demonstrates>
 
 ## Forks needing a design call
-- **F-1**: <name> — (a) <option>; (b) <option>. Trade-off: <one clause>.
+- **F-1** <name>: (a) <option>; (b) <option>. Trade-off: <one clause>.
 ~~~
 
-## Phase 2 — the plan
+## Phase 2: the plan
 
 Write `plans/system-design.md`. Keep it under ~120 lines; do not restate facts that are already
 in `plans/codebase-analysis.md`, link to them.
@@ -86,7 +86,7 @@ in `plans/codebase-analysis.md`, link to them.
 
 ### shared/ (`src/shared/...`)
 - <intent, one bullet per file or folder>
-- <new public symbols by name — signatures go in the task list>
+- <new public symbols by name; signatures go in the task list>
 
 ### features/<name>/
 - <as above>
@@ -97,16 +97,16 @@ in `plans/codebase-analysis.md`, link to them.
 <one paragraph, or a mermaid diagram only when ≥3 nodes are involved>
 
 ## Boundary check
-- <each new cross-layer import>: allowed by `app → features → shared`? (yes/no — if no, the
+- <each new cross-layer import>: allowed by `app → features → shared`? (yes/no; if no, the
   plan is wrong, redesign it)
 - Does anything new import `primevue/*` outside `shared/ui`? (must be no)
 - Does anything new call `fetch` or import axios outside `shared/api`? (must be no)
 
 ## State ownership
-- <each new piece of state>: store | `useTable` | component-local — and why that owner
+- <each new piece of state>: store | `useTable` | component-local, and why that owner
 
 ## Test plan
-- <layer>: <what is asserted> — per `testing-vue SKILL §The split`
+- <layer>: <what is asserted>, per `testing-vue SKILL §The split`
 
 ## Decisions and trade-offs
 - **D-1**: <choice>. Rejected: <alternative>, because <one clause>.
@@ -119,7 +119,7 @@ in `plans/codebase-analysis.md`, link to them.
 
 - Every entry references a real path, or says explicitly that a file is new.
 - **No new abstraction without a third real consumer.** If the plan extracts a composable or a
-  primitive, name the three call sites. Two is not enough — see `vue-feature SKILL §Composables`.
+  primitive, name the three call sites. Two is not enough; see `vue-feature SKILL §Composables`.
 - No cross-feature imports. If the plan needs one, redesign it through `shared/` or the other
   feature's public `index.ts`.
 - Every user-facing addition names its keyboard path and its accessible name. A control that a
@@ -128,7 +128,7 @@ in `plans/codebase-analysis.md`, link to them.
 - Anything that can be measured instead of argued, measure. "This is more reusable" is not a
   decision, it is a hope.
 
-## Phase 2.5 — design review (mandatory gate)
+## Phase 2.5: design review (mandatory gate)
 
 Before the user is asked to spend attention on the plan, it is fact-checked. Dispatch a subagent
 (`Agent` with `subagent_type: general-purpose`) and tell it to:
@@ -147,12 +147,12 @@ cycle 2. Never a third cycle. If cycle 2 still has issues, take them to the user
 - Clean: *"Plan is at `plans/system-design.md` and passed design review. Review it and tell me
   when to proceed."*
 - Cap reached: *"Plan is at `plans/system-design.md`. Design review hit the 2-cycle cap with K
-  remaining issues — see `plans/system-design-review.md`. Approve as-is, or tell me which to
+  remaining issues; see `plans/system-design-review.md`. Approve as-is, or tell me which to
   fix."*
 
 **Wait for approval.** Do not start Phase 3.
 
-## Phase 3 — the task list (after approval)
+## Phase 3: the task list (after approval)
 
 Write `plans/tasks.md`.
 
@@ -175,7 +175,7 @@ Write `plans/tasks.md`.
 export interface Example { id: string }
 \`\`\`
 
-**Pattern reference**: follow `<Thing>` in `<path>` (lines N–M)
+**Pattern reference**: follow `<Thing>` in `<path>` (lines N-M)
 
 **Done when**:
 - Given <precondition>, when <action>, then <observable result>
@@ -203,4 +203,4 @@ tasks directly, in order, running `pnpm typecheck` and `pnpm lint` continuously)
 ## Cleanup
 
 `plans/` is ephemeral and git-ignored. Delete the plan files once the user has acknowledged the
-final summary — the implementation is the deliverable.
+final summary. The implementation is the deliverable.

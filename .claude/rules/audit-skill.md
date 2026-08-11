@@ -1,6 +1,6 @@
 # Audit skill rules
 
-Shared contract for the **audit skills** in this repo — [`code-review`](../skills/code-review/SKILL.md)
+Shared contract for the **audit skills** in this repo: [`code-review`](../skills/code-review/SKILL.md)
 and the design gate inside [`system-design`](../skills/system-design/SKILL.md). Each audit keeps
 its own checklist, output filename, issue prefix and return strings. The persona, output
 structure and loop protocol below are the same for all of them.
@@ -22,11 +22,11 @@ structure and loop protocol below are the same for all of them.
 - **Verdict is `clean` only when there are zero blocking issues.** For audits that also run
   commands, every command must pass too. Non-blocking observations never affect the verdict.
 - Each blocking issue carries all four fields:
-  - **Location** — a path inside the artefact under review (`plans/system-design.md §Section`,
+  - **Location**: a path inside the artefact under review (`plans/system-design.md §Section`,
     or `src/features/tickets/store.ts:42`).
-  - **Citation** — the skill rule, enforced rule, or path the issue is grounded in.
-  - **Violation** — a fact: what the artefact does or omits that the rule forbids.
-  - **Required correction** — an imperative the caller can apply mechanically. Not "consider
+  - **Citation**: the skill rule, enforced rule, or path the issue is grounded in.
+  - **Violation**: a fact. What the artefact does or omits that the rule forbids.
+  - **Required correction**: an imperative the caller can apply mechanically. Not "consider
     extracting this", but "Move the `formatMoney` import at `src/features/events/EventRow.vue:8`
     from `@/features/tickets/utils` to `@/shared/utils/money`".
 - Number issues sequentially with the audit's prefix (`CR-1`, `CR-2`, …).
@@ -52,7 +52,7 @@ puts a person back in the loop.
 
 Callers dispatch audits as subagents (`Agent` with `subagent_type: general-purpose`) so the
 audit's file reads and command runs stay out of the caller's context. The subagent needs write
-access — its deliverable is the `plans/` file. Only the return string enters the caller's
+access, since its deliverable is the `plans/` file. Only the return string enters the caller's
 window.
 
 ## `plans/` is ephemeral

@@ -4,7 +4,7 @@ import { computed, onScopeDispose, ref, type ComputedRef } from 'vue'
  * Turns a visible row range into page requests, and remembers which pages it has asked for so
  * dragging the scrollbar over a region does not re-request it every frame.
  *
- * Holds **no rows** — those live in the store's buffer, for the same reason `useTable` holds
+ * Holds **no rows**, those live in the store's buffer, for the same reason `useTable` holds
  * none. One copy of server state, in one place; this owns only the bookkeeping.
  */
 

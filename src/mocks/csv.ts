@@ -2,7 +2,7 @@
  * CSV serialisation for the mock backend's export endpoints.
  *
  * Lives on the server side deliberately. Building the file in the browser would mean first
- * fetching every matching row into memory — the exact pattern the list views avoid — and it
+ * fetching every matching row into memory, the exact pattern the list views avoid, and it
  * caps the export at whatever the client can hold. A real backend streams this.
  */
 
@@ -33,7 +33,7 @@ export interface CsvColumn<TRow> {
  * Renders rows as CSV text with a header line and CRLF endings.
  *
  * A UTF-8 BOM is prepended because Excel on Windows otherwise reads the file as the local
- * codepage and mangles every non-ASCII character — event names here include `Palais des
+ * codepage and mangles every non-ASCII character, event names here include `Palais des
  * Congrès` and `Ziggo Dome`, so this is not hypothetical.
  */
 export function toCsv<TRow>(

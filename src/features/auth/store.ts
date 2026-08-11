@@ -12,7 +12,7 @@ import { ApiError, http } from '@/shared/api'
 
 /**
  * Endpoints live beside the state that uses them rather than in a separate `api.ts`. At three
- * calls, the indirection cost a file and an import hop and bought nothing — the URL being
+ * calls, the indirection cost a file and an import hop and bought nothing. The URL being
  * visible at the call site is worth more. See src/shared/api/README.md.
  */
 const authApi = {
@@ -44,7 +44,7 @@ function writeStoredToken(token: string | null): void {
     if (token === null) localStorage.removeItem(TOKEN_STORAGE_KEY)
     else localStorage.setItem(TOKEN_STORAGE_KEY, token)
   } catch {
-    /* Storage unavailable — the in-memory session still works for this tab. */
+    /* Storage unavailable, the in-memory session still works for this tab. */
   }
 }
 
@@ -89,7 +89,7 @@ export const useAuthStore = defineStore('auth', () => {
       return true
     } catch (error) {
       /*
-       * Rejected credentials are shown on the form, not as a toast — the user is looking at
+       * Rejected credentials are shown on the form, not as a toast, because the user is looking at
        * the form, and a toast would disappear before a slow reader finished it.
        */
       loginError.value =
@@ -140,7 +140,7 @@ export const useAuthStore = defineStore('auth', () => {
    * Persists preferences against the account, so they follow the user to another machine.
    *
    * Rethrows. The caller is a button the user pressed deliberately, and a save that silently
-   * did nothing is the worst outcome available — they would carry on believing it was kept.
+   * did nothing is the worst outcome available: they would carry on believing it was kept.
    */
   async function savePreferences(changes: UserPreferences): Promise<void> {
     const saved = await authApi.savePreferences(changes)

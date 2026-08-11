@@ -54,7 +54,7 @@ describe('BaseSegmentedControl', () => {
   it('keeps only the checked option in the tab order', () => {
     renderControl('paginated')
 
-    // One stop for the group, not one per option — the behaviour `aria-pressed` toggles lack.
+    // One stop for the group, not one per option, the behaviour `aria-pressed` toggles lack.
     expect(screen.getByRole('radio', { name: 'Pages' })).toHaveAttribute('tabindex', '0')
     expect(screen.getByRole('radio', { name: 'Virtual' })).toHaveAttribute('tabindex', '-1')
   })

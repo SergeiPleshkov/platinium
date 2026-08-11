@@ -1,7 +1,7 @@
 /**
  * Date formatting.
  *
- * Parsing happens here and in `BaseDatePicker`, nowhere else — domain state stays ISO-8601
+ * Parsing happens here and in `BaseDatePicker`, nowhere else, domain state stays ISO-8601
  * strings so it serialises predictably and compares by value. `Intl` does the work; a date
  * library would be several kilobytes for three functions.
  */

@@ -34,7 +34,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
 /**
  * Whether a role may perform an action.
  *
- * A `null` role — signed out, or a session still being restored — is denied everything. The
+ * A `null` role, signed out, or a session still being restored, is denied everything. The
  * safe answer while the truth is unknown is "no": a button that flickers into existence and
  * then fails is worse than one that appears a moment late.
  */
@@ -43,7 +43,7 @@ export function roleCan(role: UserRole | null | undefined, permission: Permissio
   return ROLE_PERMISSIONS[role].includes(permission)
 }
 
-/** True when a role may change nothing — used to label the UI honestly rather than just hide it. */
+/** True when a role may change nothing, used to label the UI honestly rather than just hide it. */
 export function isReadOnly(role: UserRole | null | undefined): boolean {
   return !roleCan(role, 'create') && !roleCan(role, 'update') && !roleCan(role, 'delete')
 }

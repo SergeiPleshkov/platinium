@@ -13,7 +13,7 @@ import {
 /**
  * The bulk endpoint, written once for every entity that has one.
  *
- * Unlike the CRUD handlers — spelled out per entity because their differences are the point —
+ * Unlike the CRUD handlers, spelled out per entity because their differences are the point
  * this is the same algorithm every time; only "what does deleting one of these mean" varies,
  * and that arrives as a callback.
  *
@@ -92,7 +92,7 @@ export async function handleBulk(
 
   /*
    * Duplicates are collapsed rather than attempted twice. The second attempt on an id that
-   * was just deleted would report "no longer exists", which is true and useless — the client
+   * was just deleted would report "no longer exists", which is true and useless. The client
    * asked once, conceptually.
    */
   for (const id of new Set(parsed.ids)) {
@@ -108,7 +108,7 @@ export async function handleBulk(
   /*
    * 207 when some records were refused, 200 when none were.
    *
-   * Both are 2xx, because the operation *ran* — the client must read the body either way, and
+   * Both are 2xx, because the operation *ran*. The client must read the body either way, and
    * a 4xx would push the whole thing down an error path that cannot report seven successes.
    * The distinct code is for anything watching the wire: logs, a proxy, a future retry policy.
    */

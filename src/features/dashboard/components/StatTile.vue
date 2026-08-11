@@ -5,11 +5,11 @@ import { BaseSkeleton } from '@/shared/ui'
 /**
  * A single headline figure.
  *
- * Rendered as a definition list so the label and value are programmatically associated —
+ * Rendered as a definition list so the label and value are programmatically associated
  * a big number with a small word above it is only a statistic to someone who can see the
  * layout.
  *
- * When `sortable`, it grows a `DragHandle` — shared with the wider dashboard panels, so the
+ * When `sortable`, it grows a `DragHandle`, shared with the wider dashboard panels, so the
  * two cannot drift apart in how they reorder.
  */
 
@@ -18,7 +18,7 @@ interface Props {
   /** A single headline figure. Ignored when `values` is supplied. */
   value?: string | undefined
   /**
-   * Several figures that must not be combined — per-currency totals, most obviously.
+   * Several figures that must not be combined, per-currency totals, most obviously.
    * Stacked and set smaller, because three long amounts at headline size stop being scannable.
    */
   values?: readonly string[] | undefined

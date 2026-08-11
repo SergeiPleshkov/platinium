@@ -6,7 +6,7 @@ import { moveTo, reconcile, useSortableList } from '@/shared/composables/useSort
  * User-arranged ordering.
  *
  * `moveTo` and `reconcile` get the bulk of the attention because they are where the mistakes
- * live — off-by-one when dragging downwards, and a stored order outliving the items it refers
+ * live, off-by-one when dragging downwards, and a stored order outliving the items it refers
  * to. The drag handlers are a thin translation on top and are tested for the two things that
  * are easy to omit and silently break the feature: `preventDefault` on `dragover`, and putting
  * something in `dataTransfer`.

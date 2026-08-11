@@ -5,7 +5,7 @@ import type { z } from 'zod'
  * Adapts a Zod 4 schema to vee-validate's `TypedSchema`.
  *
  * Written in-house rather than using `@vee-validate/zod`, which peer-depends on `zod@^3` and
- * still reads Zod 3 internals — `_def.defaultValue()`, which in Zod 4 is a value rather than
+ * still reads Zod 3 internals, `_def.defaultValue()`, which in Zod 4 is a value rather than
  * a function. Any schema using `.default()` throws at form setup. That is not a version we
  * can paper over: the adapter is reaching into another library's private shape.
  *
@@ -27,7 +27,7 @@ export function zodSchema<TSchema extends z.ZodType>(
 
       /*
        * vee-validate expects one entry per path with all of that path's messages. Zod emits
-       * one issue per failed rule, so several can share a path — grouping them keeps the
+       * one issue per failed rule, so several can share a path, grouping them keeps the
        * order Zod produced, which is the order the rules were declared in.
        */
       const byPath = new Map<string, string[]>()
@@ -50,7 +50,7 @@ export function zodSchema<TSchema extends z.ZodType>(
      * Seeds initial values by letting the schema apply its own defaults.
      *
      * Partial input will not satisfy the schema, so a failed parse falls back to whatever the
-     * caller supplied — `useForm`'s own `initialValues` then win, which is the sane outcome.
+     * caller supplied, `useForm`'s own `initialValues` then win, which is the sane outcome.
      */
     cast(values) {
       const result = schema.safeParse(values)

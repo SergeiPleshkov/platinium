@@ -198,7 +198,7 @@ describe('architectural boundaries are enforced by lint', () => {
 
     expect(
       boundaryViolations.map((message) => message.message),
-      'a sanctioned dependency was rejected — the rules are too broad',
+      'a sanctioned dependency was rejected, the rules are too broad',
     ).toEqual([])
   })
 })

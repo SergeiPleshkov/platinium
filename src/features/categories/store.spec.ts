@@ -76,7 +76,7 @@ describe('categories store', () => {
       expect(store.errorMessage).toBe('Server exploded.')
     })
 
-    it('does not throw on failure — a list error is a state, not an exception', async () => {
+    it('does not throw on failure, a list error is a state, not an exception', async () => {
       server.use(
         mswHttp.get(`${ORIGIN}/api/categories`, () => new HttpResponse(null, { status: 500 })),
       )

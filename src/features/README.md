@@ -7,7 +7,7 @@ deliberately small public surface.
 features/<name>/
   index.ts        # the ONLY thing other layers may import from
   types.ts        # domain types
-  schema.ts       # zod schemas — the single source of truth for validation
+  schema.ts       # zod schemas, the single source of truth for validation
   store.ts        # Pinia setup store: endpoint calls, server state, loading/error flags
   composables/    # feature-specific reactive behaviour
   components/     # feature-specific components (forms, dialogs, cells)
@@ -17,7 +17,7 @@ features/<name>/
 ## Boundaries, enforced by lint
 
 - A feature may import from `@/shared` freely.
-- A feature may **not** import `@/app/**` — the app layer wires features together, not the
+- A feature may **not** import `@/app/**`. The app layer wires features together, not the
   reverse.
 - A feature may **not** reach into another feature's internals. Cross-feature needs go
   through the other feature's `index.ts`, or the shared piece moves to `@/shared`.
@@ -34,5 +34,5 @@ this directory at lint time, so a new slice is covered the moment it exists.
 Follow the nine layers in `.claude/skills/crud-entity/SKILL.md`, in order. Register the route
 in `src/app/router/routes.ts` and the MSW handlers in `src/mocks/handlers/index.ts`.
 
-The `api.ts` layer implements the shared `Resource<T, P>` contract —
+The `api.ts` layer implements the shared `Resource<T, P>` contract.
 [`src/shared/api/README.md`](../shared/api/README.md) has the template and the reasoning.

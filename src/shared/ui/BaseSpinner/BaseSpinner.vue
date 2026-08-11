@@ -3,7 +3,7 @@
  * An indeterminate progress indicator.
  *
  * An SVG with a CSS rotation rather than PrimeVue's `ProgressSpinner`, because this one has to
- * work inside an overlay at three sizes and inherit `currentColor` — and because a spinner is
+ * work inside an overlay at three sizes and inherit `currentColor`, and because a spinner is
  * about twenty lines, which is less than a wrapper reconciling someone else's sizing API.
  *
  * Standalone, it is a live region with a visually hidden label: a spinning shape means nothing
@@ -20,7 +20,7 @@ withDefaults(
      *
      * For the common case of a spinner sitting inside a container that is *already* a live
      * region with its own text. Two nested live regions announce the same wait twice, which is
-     * worse than announcing it once — so the outer one wins and this becomes decoration.
+     * worse than announcing it once, so the outer one wins and this becomes decoration.
      */
     decorative?: boolean
   }>(),

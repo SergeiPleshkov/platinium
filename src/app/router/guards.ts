@@ -24,7 +24,7 @@ export function registerGuards(router: Router): void {
     if (to.meta.requiresAuth && !auth.isAuthenticated) {
       /*
        * The intended destination is preserved so signing in returns the user where they were
-       * going — not to a generic landing page that makes them navigate again.
+       * going, not to a generic landing page that makes them navigate again.
        */
       return {
         name: RouteName.Login,

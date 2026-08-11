@@ -45,7 +45,7 @@ function runImport(
   return post<ImportResult>('/api/tickets/import', { rows, dryRun }, token)
 }
 
-describe('mock API — ticket import', () => {
+describe('mock API, ticket import', () => {
   describe('a dry run', () => {
     it('accepts a well-formed row', async () => {
       const { body } = await runImport([validRow()], true)
@@ -109,7 +109,7 @@ describe('mock API — ticket import', () => {
     it('numbers rows by their line in the file, header included', async () => {
       const { body } = await runImport([validRow(), validRow({ currency: 'XYZ' })], true)
 
-      // The second data row is line 3 in a spreadsheet — which is where the user will look.
+      // The second data row is line 3 in a spreadsheet, which is where the user will look.
       expect(body.errors[0]?.line).toBe(3)
     })
 

@@ -7,7 +7,7 @@ import { call, signIn } from '@tests/utils/apiClient'
  * The export contract.
  *
  * The claim being tested is specific: the file contains every row matching the *current
- * query*, not the current page — which is the difference between an export that is useful and
+ * query*, not the current page, which is the difference between an export that is useful and
  * one that quietly hands over ten rows out of two hundred and fifty.
  */
 
@@ -20,7 +20,7 @@ async function fetchCsv(query = ''): Promise<{ status: number; text: string; hea
   return { status: response.status, text: await response.text(), headers: response.headers }
 }
 
-/** Data rows only — drops the BOM+header line and the trailing blank. */
+/** Data rows only, drops the BOM+header line and the trailing blank. */
 function dataRows(csv: string): string[] {
   return csv.split('\r\n').slice(1).filter(Boolean)
 }
@@ -29,7 +29,7 @@ beforeEach(async () => {
   token = await signIn()
 })
 
-describe('mock API — ticket CSV export', () => {
+describe('mock API, ticket CSV export', () => {
   it('requires authentication', async () => {
     const response = await fetch(`${window.location.origin}/api/tickets/export`)
     expect(response.status).toBe(401)
@@ -99,7 +99,7 @@ describe('mock API — ticket CSV export', () => {
   it('starts with a UTF-8 BOM so Excel reads accented venue names correctly', async () => {
     /*
      * Read as bytes, not text: `Response.text()` performs a UTF-8 decode, which strips a
-     * leading BOM by specification — asserting on the decoded string would test nothing and
+     * leading BOM by specification, asserting on the decoded string would test nothing and
      * pass whether or not the BOM was ever sent.
      */
     const response = await fetch(`${window.location.origin}/api/tickets/export?perPage=1`, {

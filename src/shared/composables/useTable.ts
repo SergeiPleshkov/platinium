@@ -10,7 +10,7 @@ import {
 } from '@/shared/types/api'
 
 /**
- * The query-state engine behind every list view: search, filters, sort, pagination — and
+ * The query-state engine behind every list view: search, filters, sort, pagination, and
  * *only* those. Rows live in the feature's store, so the same page of data never exists twice.
  *
  * What it does own is the fiddly part: debouncing typing into one request, cancelling
@@ -54,7 +54,7 @@ export interface UseTable {
   setPerPage: (perPage: number) => void
   setFilter: (key: string, value: FilterValue | undefined) => void
   clearFilters: () => void
-  /** Re-runs the current query — for a retry button, or after a mutation. */
+  /** Re-runs the current query, for a retry button, or after a mutation. */
   refresh: () => Promise<void>
   /**
    * Adopts a page number the server corrected, without triggering another request.
@@ -162,7 +162,7 @@ export function useTable(options: UseTableOptions): UseTable {
    * Applies several pieces of query state together, then issues exactly one request.
    *
    * Explicit rather than watched. A watcher flushes asynchronously, so "change the filter
-   * *and* reset to page 1" queues two runs — the first for a query that was never valid — and
+   * *and* reset to page 1" queues two runs, the first for a query that was never valid, and
    * no synchronous guard suppresses it, because the guard is cleared before the watcher runs.
    */
   function commit(mutate: () => void): void {
@@ -177,7 +177,7 @@ export function useTable(options: UseTableOptions): UseTable {
   let debounceTimer: ReturnType<typeof setTimeout> | undefined
 
   /*
-   * Set when *we* change `search` rather than the user — restoring it from the URL, or
+   * Set when *we* change `search` rather than the user, restoring it from the URL, or
    * clearing it alongside the filters. Both already issue their own request, so letting the
    * watcher re-arm the debounce would fire a second, redundant one 300ms later. The watcher
    * flushes asynchronously, so the flag is cleared inside it rather than by the caller.

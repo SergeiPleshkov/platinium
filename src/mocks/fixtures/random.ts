@@ -3,7 +3,7 @@
  *
  * Fixtures need to *look* varied without *being* random: a test that asserts "page 2 sorted
  * by price starts with X" must give the same answer on every machine and every run.
- * `Math.random()` would make the seed data — and therefore those assertions — non-reproducible.
+ * `Math.random()` would make the seed data, and therefore those assertions, non-reproducible.
  *
  * mulberry32: small, fast, and good enough for generating plausible demo data.
  */

@@ -11,7 +11,7 @@ import { renderWithApp } from '@tests/utils/renderWithApp'
 /**
  * The complete category journey, through the router, against the real mock backend.
  *
- * No stubbed store, no stubbed API, no stubbed child components — if the wiring between the
+ * No stubbed store, no stubbed API, no stubbed child components, if the wiring between the
  * page, the table engine, the store and the HTTP layer is wrong, these fail.
  */
 
@@ -76,7 +76,7 @@ describe('categories CRUD', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'New category' }))
     const dialog = await screen.findByRole('dialog')
-    // "VIP" already exists — a rule only the server can enforce.
+    // "VIP" already exists, a rule only the server can enforce.
     await userEvent.type(within(dialog).getByLabelText(/Name/), 'VIP')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Create category' }))
 

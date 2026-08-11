@@ -32,14 +32,14 @@ const store = useCategoriesStore()
 const notifications = useNotifications()
 
 const submitting = ref(false)
-/** A failure that belongs to no single field — a conflict, a 500, a dropped connection. */
+/** A failure that belongs to no single field, a conflict, a 500, a dropped connection. */
 const formError = ref<string | null>(null)
 
 const isEdit = computed(() => props.category !== null)
 
 /*
  * `@vee-validate/zod` is not used: it peer-depends on zod 3 and reads Zod 3 internals, so
- * any schema with `.default()` throws at setup — it took this dialog down on first render.
+ * any schema with `.default()` throws at setup. It took this dialog down on first render.
  * `zodSchema` is our own adapter. See src/shared/validation/zodSchema.ts.
  */
 const { defineField, handleSubmit, errors, setErrors, resetForm } = useForm({
@@ -86,7 +86,7 @@ const onSubmit = handleSubmit(async (values) => {
     emit('saved', saved)
   } catch (caught) {
     /*
-     * A 422 is projected back onto the fields that caused it — the server knows things the
+     * A 422 is projected back onto the fields that caused it, because the server knows things the
      * client cannot, such as a name already being taken. Anything else is a form-level
      * message, because no single field is at fault.
      */

@@ -32,7 +32,7 @@ const UNKNOWN_REF: EntityRef = { id: '', name: 'Unknown' }
  * Embeds the event and category so a table row can show names without a request per row.
  *
  * This is the mock standing in for a backend join. Doing it client-side would mean either
- * N+1 requests or loading every event and category up front — both of which stop working at
+ * N+1 requests or loading every event and category up front, both of which stop working at
  * the scale the brief asks about.
  */
 function expand(ticket: Ticket): TicketWithRelations {
@@ -121,8 +121,8 @@ export const ticketHandlers: RequestHandler[] = [
    *
    * The preview and the commit run the *same* validation, differing only in whether anything
    * is written. Validating separately in the browser would be a second implementation of one
-   * rule, and could not answer the interesting questions — whether an event of that name
-   * exists — without the client downloading every event.
+   * rule, and could not answer the interesting questions, whether an event of that name
+   * exists, without the client downloading every event.
    */
   http.post(`${RESOURCE}/import`, async ({ request }) => {
     const failure = await preflight(request)
@@ -168,7 +168,7 @@ export const ticketHandlers: RequestHandler[] = [
    * CSV export of the *current query*, not the current page.
    *
    * Declared before `/:id` so `export` is not captured as an id. The client sends the same
-   * filters it is displaying and gets every matching row back — the point being that the
+   * filters it is displaying and gets every matching row back, the point being that the
    * browser never has to hold them.
    */
   http.get(`${RESOURCE}/export`, async ({ request }) => {
@@ -217,7 +217,7 @@ export const ticketHandlers: RequestHandler[] = [
 
     /*
      * Relations are expanded *before* querying, so search and sort can reach through to the
-     * event and category names — an admin searching "Summer Gala" expects to find its tickets.
+     * event and category names, because an admin searching "Summer Gala" expects to find its tickets.
      */
     const expanded = db.tickets.map(expand)
     const result = runQuery(expanded, new URL(request.url), ticketQueryConfig)

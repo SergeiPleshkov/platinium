@@ -13,7 +13,7 @@ import {
  *
  * The columns are the *export's* columns, so a file this application produced can be edited
  * in a spreadsheet and fed straight back. `ID` and `Created` are accepted and ignored rather
- * than rejected — a round trip that fails because the file still has the column it was given
+ * than rejected, a round trip that fails because the file still has the column it was given
  * would be a poor joke.
  *
  * Relations arrive as **names**, because that is what a human editing a spreadsheet has in
@@ -118,7 +118,7 @@ function resolveRow(row: Record<string, string>, line: number): Resolved | Impor
 
   /*
    * The same schema the form and the single-record endpoint use. Anything it rejects is
-   * rejected here in the same words — an import cannot become a way in for a record the
+   * rejected here in the same words, so an import cannot become a way in for a record the
    * create form would refuse.
    */
   const candidate = {
@@ -160,7 +160,7 @@ export function importTickets(payload: ImportRequest): ImportResult {
   })
 
   /*
-   * Valid rows are written even when others failed — the same partial-success stance the bulk
+   * Valid rows are written even when others failed, the same partial-success stance the bulk
    * endpoint takes, and for the same reason: rejecting 900 good rows because 3 are wrong makes
    * the feature useless on exactly the files that need it.
    */

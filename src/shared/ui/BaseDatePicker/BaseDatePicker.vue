@@ -8,7 +8,7 @@ import BaseFormField from '@/shared/ui/BaseFormField/BaseFormField.vue'
  * A labelled date-and-time picker that speaks ISO-8601 strings.
  *
  * The conversion to and from `Date` happens here and nowhere else. Domain state stays
- * string-typed end to end — see `BaseEntity` — because a `Date` in a store breaks structural
+ * string-typed end to end, see `BaseEntity`, because a `Date` in a store breaks structural
  * equality, serialises inconsistently, and drags local-timezone assumptions into data that
  * came from the server in UTC.
  */
@@ -20,7 +20,7 @@ interface Props {
   required?: boolean | undefined
   disabled?: boolean | undefined
   showTime?: boolean | undefined
-  /** Earliest selectable value, as ISO-8601 — used to keep an end date after its start. */
+  /** Earliest selectable value, as ISO-8601, used to keep an end date after its start. */
   min?: string | undefined
 }
 

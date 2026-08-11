@@ -12,7 +12,7 @@ import BaseSegmentedControl, {
  * three call sites and no per-page variation, so threading it through each page as
  * `v-model` would add three bindings that could only ever hold the same value.
  *
- * Hidden below `md`, where the grid becomes a card list and virtual mode does not apply — see
+ * Hidden below `md`, where the grid becomes a card list and virtual mode does not apply, see
  * `BaseDataTable`. A visible control that silently does nothing is worse than no control.
  */
 

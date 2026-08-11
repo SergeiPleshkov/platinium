@@ -6,8 +6,8 @@ import BaseInput from '@/shared/ui/BaseInput/BaseInput.vue'
 import { renderWithApp } from '@tests/utils/renderWithApp'
 
 /**
- * Assertions target the accessible surface — the label associates the control, the error is
- * announced, `aria-invalid` is set — because those are the guarantees, and because they
+ * Assertions target the accessible surface: the label associates the control, the error is
+ * announced, `aria-invalid` is set, because those are the guarantees, and because they
  * survive replacing the UI kit.
  */
 describe('BaseInput', () => {

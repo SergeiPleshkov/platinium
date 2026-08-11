@@ -1,13 +1,13 @@
 ---
 name: vue-feature
-description: Architecture and authoring conventions for Vue 3 code in this repo — feature-module boundaries, component/composable/store split, shared UI primitives, API layer, error handling, accessibility and responsive rules. Use before writing or refactoring any .vue, composable, store or API file.
+description: Architecture and authoring conventions for Vue 3 code in this repo: feature-module boundaries, component/composable/store split, shared UI primitives, API layer, error handling, accessibility and responsive rules. Use before writing or refactoring any .vue, composable, store or API file.
 ---
 
 # Writing Vue in this repo
 
-The reviewer is reading this codebase to judge architecture. Cheap wins — a leaked import
-across features, business logic stuffed in a template, a bare `fetch` in a component —
-cost more than a missing bonus feature.
+The reviewer is reading this codebase to judge architecture. Cheap losses cost more than a
+missing bonus feature: a leaked import across features, business logic stuffed in a template,
+a bare `fetch` in a component.
 
 ## Module boundaries
 
@@ -32,7 +32,7 @@ app → features → shared
 | Pure transformation | `shared/utils` (fully unit-tested) |
 | HTTP, error normalisation | `shared/api` (endpoint calls sit in the feature's store) |
 
-If a component's `<script setup>` grows past ~120 lines, behaviour is escaping into it —
+If a component's `<script setup>` grows past ~120 lines, behaviour is escaping into it, so
 extract a composable. If a composable touches `document` or component internals, it's
 doing a component's job.
 
@@ -41,8 +41,8 @@ doing a component's job.
 - `<script setup lang="ts">`, always. No Options API, no `defineComponent`.
 - Typed props via `defineProps<Props>()` with an `interface Props`. Defaults via
   `withDefaults`. Typed emits via `defineEmits<{ ... }>()`.
-- Props in, events out. A child never mutates a prop or writes to a store its parent owns —
-  the exception is a feature's own page component, which is allowed to drive its store.
+- Props in, events out. A child never mutates a prop or writes to a store its parent owns.
+  The one exception is a feature's own page component, which is allowed to drive its store.
 - Prefer `v-model` with `defineModel()` for two-way leaf inputs.
 - `key` on every `v-for`, and it must be a stable id, never the index.
 - No logic in templates beyond a comparison. Anything else is a `computed`.
@@ -51,7 +51,7 @@ doing a component's job.
 
 ## Shared UI primitives (`shared/ui`)
 
-Check `src/shared/ui/index.ts` before adding anything — the barrel is the inventory, and it is
+Check `src/shared/ui/index.ts` before adding anything. The barrel is the inventory, and it is
 the only list that cannot go stale.
 
 Form and input · `BaseInput` `BaseSelect` `BaseTextarea` `BaseDatePicker` `BaseMoneyInput`
@@ -62,7 +62,7 @@ Bulk · `BaseBulkBar` `BaseBulkFailures`
 Composed · `TableViewModeSwitch`
 
 Not every one wraps PrimeVue. `BaseBadge`, `BaseSpinner` and `BaseSegmentedControl` are
-hand-written where the wrapper would have been fighting its wrapped component — PrimeVue's
+hand-written where the wrapper would have been fighting its wrapped component. PrimeVue's
 `SelectButton`, for instance, renders `aria-pressed` toggles, which announce as three
 independent buttons rather than one choice of three. That the kit is *allowed* to contain
 hand-written primitives is the point of the kit being ours.
@@ -81,26 +81,26 @@ components later without touching a single feature.
 - Zero domain knowledge, zero store access, zero router access.
 - Forwards `$attrs` to the meaningful element (`inheritAttrs: false` where needed) so
   callers can pass `aria-*`, `data-testid`, `type`, etc.
-- Variants via a typed `variant` / `size` prop, resolved through a lookup map — never a
+- Variants via a typed `variant` / `size` prop, resolved through a lookup map, never a
   chain of ternaries in the template.
 - Accessible by construction: labels tied to inputs, `aria-invalid` + `aria-describedby`
   on error, focus trap and `Esc` in modals, focus restored on close, visible focus ring.
   PrimeVue gives most of this; verify it rather than assuming it.
 
-Tests target roles, labels and visible text — never PrimeVue's internal classnames or DOM
+Tests target roles, labels and visible text, never PrimeVue's internal classnames or DOM
 structure. A test that would break when the UI kit is swapped is testing the wrong thing.
 
 ## Composables
 
 Named `useX`, return a plain object. Accept refs or getters, not raw values, when the input
-can change. Clean up every listener, timer and observer in `onScopeDispose` — composables
+can change. Clean up every listener, timer and observer in `onScopeDispose`: composables
 must be safe to call outside a component.
 
 The core ones this app leans on:
 
 | Composable | Owns |
 |---|---|
-| `useTable` | search (debounced), filters, sort, page — synced to the URL. **No rows.** |
+| `useTable` | search (debounced), filters, sort, page, synced to the URL. **No rows.** |
 | `useListView` | `useTable` + view mode + the virtual buffer, wired in the right order |
 | `useCollectionState` | `items` / `buffer` / `meta` / `status` / `error` + every derived flag, and `optimistic()` |
 | `useVirtualRows` | which pages have been requested. **No rows.** |
@@ -118,20 +118,20 @@ third caller needed it; adding a fourth caller to an existing one is nearly alwa
 
 ## API layer
 
-`src/shared/api/README.md` documents this layer in full — read it before changing anything in
+`src/shared/api/README.md` documents this layer in full. Read it before changing anything in
 `shared/api` or adding an endpoint. The rules that matter most:
 
-- `shared/api/http.ts` — the single HTTP client (axios + interceptors). Base URL, timeout,
+- `shared/api/http.ts`: the single HTTP client (axios + interceptors). Base URL, timeout,
   `AbortSignal`, auth-header injection, and one central 401 hook.
-- `shared/api/errors.ts` — every failure becomes an `ApiError { status, message, fieldErrors? }`.
+- `shared/api/errors.ts`: every failure becomes an `ApiError { status, message, fieldErrors? }`.
   Network failure, timeout, 4xx and 5xx all arrive at callers in that one shape.
 - `shared/api/http.ts` also exports `serialiseListQuery`, so every list call flattens its
   query the same way.
 - `asApiError(caught, fallback)` guarantees an `ApiError` in a `catch`. Use it rather than
   re-deciding what to do with an `unknown` per store.
 - Endpoints live in each feature's `api.ts`, implementing `Resource<T, P>` widened by
-  intersection for anything entity-specific. There is no generic CRUD-resource *factory* —
-  see `src/shared/api/README.md` for the measurement, and for why the `api.ts` modules came back.
+  intersection for anything entity-specific. There is no generic CRUD-resource *factory*;
+  `src/shared/api/README.md` has the measurement, and why the `api.ts` modules came back.
 
 Nothing outside `shared/api` calls `fetch` or imports axios. Both are lint-blocked.
 
@@ -155,7 +155,7 @@ Mobile-first Tailwind. Three breakpoints matter: 375 (mobile), 768 (tablet), 128
 - Sidebar nav collapses to an off-canvas drawer below `lg`; above it, a content-width rail
   that collapses to icons.
 - Touch targets ≥ 44px. Dialogs go full-screen on mobile.
-- A control that cannot work at a given width is **hidden**, not shown and ignored — the
+- A control that cannot work at a given width is **hidden**, not shown and ignored. The
   view-mode switch below `md` is the precedent.
 
 ## Performance
@@ -163,7 +163,7 @@ Mobile-first Tailwind. Three breakpoints matter: 375 (mobile), 768 (tablet), 128
 - Lazy-load every route component.
 - `shallowRef` for large immutable collections; `v-memo` only with a measurement to justify it.
 - Debounce search input (300ms) and cancel the superseded request via `AbortSignal`.
-- Keep an eye on bundle size — no date/util megalibrary for three formatting calls.
+- Keep an eye on bundle size. No date or util megalibrary for three formatting calls.
 
 ## Accessibility is a correctness property here
 
@@ -174,11 +174,11 @@ silently is a regression the tests are written to catch:
   keyboard equivalent, so a drag feature ships with arrow keys calling the same function.
 - **One live region per announcement.** A live region (`role="status"`, `aria-live`) is read
   aloud by a screen reader whenever its content changes, without focus moving there. Nest two
-  and the same change is announced twice — invisible in a screenshot, obvious to a screen
+  and the same change is announced twice, which is invisible in a screenshot and obvious to a screen
   reader. `BaseSpinner` takes `decorative` (renders `aria-hidden`, no role) for when it sits
   inside a container that is already announcing.
 - Composite widgets (`Select`, `DatePicker`) render a `<div>` root, so `<label for>` binds to
-  nothing — use `BaseFormField`'s `labellable` distinction.
+  nothing. Use `BaseFormField`'s `labellable` distinction.
 - Colour never carries meaning alone.
 
 ## Before you commit

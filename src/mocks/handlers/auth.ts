@@ -88,7 +88,7 @@ export const authHandlers: RequestHandler[] = [
 
     /*
      * Only keys the request actually carried. A plain spread would let an omitted key arrive
-     * as `undefined` and erase a stored preference — which is a `PUT`'s behaviour, not a
+     * as `undefined` and erase a stored preference, which is a `PUT`'s behaviour, not a
      * `PATCH`'s, and would make one screen's save quietly reset another's setting.
      */
     const changes = Object.fromEntries(

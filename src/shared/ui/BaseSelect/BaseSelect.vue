@@ -7,12 +7,12 @@ import BaseFormField from '@/shared/ui/BaseFormField/BaseFormField.vue'
 /**
  * A labelled single- or multi-select.
  *
- * Both modes live here because they share every concern that matters — options shape, label
- * association, error handling — and differ only in cardinality. Two components would be two
+ * Both modes live here because they share every concern that matters, options shape, label
+ * association, error handling, and differ only in cardinality. Two components would be two
  * places to forget `aria-describedby`.
  *
  * Note `input-id`, not `id`: PrimeVue's Select renders a `<div>` root, and a `<label for>`
- * pointing at a non-labellable element associates with nothing — the control ends up
+ * pointing at a non-labellable element associates with nothing, the control ends up
  * unlabelled for assistive tech while looking correct on screen. `inputId` puts the id on the
  * inner focusable element, which is what the label needs.
  */
@@ -34,7 +34,7 @@ interface Props {
   /** Allows clearing back to no selection. Filters want this; required fields do not. */
   clearable?: boolean | undefined
   multiple?: boolean | undefined
-  /** Adds a type-ahead box inside the overlay — worth it past roughly ten options. */
+  /** Adds a type-ahead box inside the overlay, worth it past roughly ten options. */
   filterable?: boolean | undefined
 }
 

@@ -4,8 +4,8 @@ import type { CurrencyCode } from '@/shared/utils/money'
 /**
  * The dashboard's aggregate view.
  *
- * Computed by the server and delivered whole. The alternative — fetching every ticket and
- * reducing in the browser — is the exact pattern this application argues against everywhere
+ * Computed by the server and delivered whole. The alternative, fetching every ticket and
+ * reducing in the browser, is the exact pattern this application argues against everywhere
  * else, and it stops working long before the hundreds of thousands of tickets the brief asks
  * about.
  */

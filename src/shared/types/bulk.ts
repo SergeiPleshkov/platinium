@@ -3,7 +3,7 @@
  *
  * The shape exists because of one decision: a bulk operation **reports per record**. Ten
  * deletes where three are blocked by referential integrity is not a success and not a
- * failure — it is seven successes and three explained refusals, and collapsing that into a
+ * failure. It is seven successes and three explained refusals, and collapsing that into a
  * single status code throws away the only information the admin needs.
  *
  * Anything that returns a bare `{ ok: true }` here has silently decided the user does not

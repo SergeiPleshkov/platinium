@@ -3,7 +3,7 @@ import { computed, ref, type ComputedRef, type Ref } from 'vue'
 /**
  * A user-arranged order, reorderable by drag *and* by keyboard.
  *
- * `reconcile` and `moveTo` are pure functions over arrays of ids — where the logic lives and
+ * `reconcile` and `moveTo` are pure functions over arrays of ids, where the logic lives and
  * where the tests point. Drag handlers and arrow keys are two thin translations into the
  * *same* call, which is the only way a keyboard path stays working: it is not a fallback
  * beside the real feature, it is the same feature reached differently.
@@ -25,13 +25,13 @@ export interface UseSortableList {
   draggingId: Ref<string | null>
   /** Id currently under the pointer, for showing where it would land. */
   overId: Ref<string | null>
-  /** True once the order differs from the default — gates the "reset" affordance. */
+  /** True once the order differs from the default, gates the "reset" affordance. */
   isCustomised: ComputedRef<boolean>
   moveTo: (id: string, index: number) => void
   /** Nudge one place. `-1` and `+1` are what the arrow keys send. */
   moveBy: (id: string, delta: number) => void
   /**
-   * Adopts an order wholesale — restoring one saved against the user's account, most
+   * Adopts an order wholesale, restoring one saved against the user's account, most
    * obviously. Reconciled like any other, so a stale saved order cannot hide a new widget.
    */
   setOrder: (ids: readonly string[]) => void
@@ -60,7 +60,7 @@ export function reconcile(stored: readonly string[], canonical: readonly string[
 }
 
 /**
- * Removal happens before insertion, so the index is read against the list as it *will* be —
+ * Removal happens before insertion, so the index is read against the list as it *will* be
  * which is what makes dragging an item down land on the pointer rather than one short of it.
  */
 export function moveTo(order: readonly string[], id: string, index: number): string[] {
@@ -105,7 +105,7 @@ export function useSortableList(options: UseSortableListOptions): UseSortableLis
     try {
       localStorage.setItem(options.storageKey, JSON.stringify(next))
     } catch {
-      /* Storage unavailable — the arrangement still applies for this page. */
+      /* Storage unavailable, the arrangement still applies for this page. */
     }
   }
 
@@ -145,7 +145,7 @@ export function useSortableList(options: UseSortableListOptions): UseSortableLis
         draggingId.value = id
         /*
          * Firefox refuses to start a drag unless `dataTransfer` carries something. The value
-         * is never read back — the id is already in `draggingId` — but the call is required.
+         * is never read back (the id is already in `draggingId`), but the call is required.
          */
         event.dataTransfer?.setData('text/plain', id)
         if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'

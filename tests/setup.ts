@@ -39,7 +39,7 @@ beforeAll(() => {
 /*
  * Re-stubbed per test, not once in `beforeAll`: `unstubGlobals` in vitest.config.ts clears
  * stubbed globals after every test, so a single up-front stub survives exactly one case and
- * then silently disappears — which surfaced as "matchMedia is not a function" the moment a
+ * then silently disappears, which surfaced as "matchMedia is not a function" the moment a
  * component used the breakpoint composable.
  */
 beforeEach(() => {
@@ -51,7 +51,7 @@ beforeEach(() => {
   /*
    * A class, not an arrow function returning an object: PrimeVue's auto-resizing Textarea
    * calls `new ResizeObserver(...)`, and an arrow function is not a constructor. The stub
-   * threw inside a `mounted` hook, which Vue rethrows when no error handler is installed —
+   * threw inside a `mounted` hook, which Vue rethrows when no error handler is installed
    * so the *whole app* failed to mount and the failure surfaced as an unrelated null `$el`
    * several tests later.
    */

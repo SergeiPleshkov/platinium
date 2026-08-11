@@ -10,7 +10,7 @@ import { call, del, get, patch, post, signIn } from '@tests/utils/apiClient'
  *
  * The claim being tested is the one that makes the feature real rather than cosmetic: a
  * forbidden request is refused **even though the UI would never have sent it**. Every call
- * below is one the client hides the button for, made anyway — which is what a console, a
+ * below is one the client hides the button for, made anyway, which is what a console, a
  * stale tab, or a client bug would do.
  */
 
@@ -24,7 +24,7 @@ beforeEach(async () => {
 
 const CATEGORY = { name: 'Permission Probe', description: 'Created by a test.' }
 
-describe('mock API — role permissions', () => {
+describe('mock API, role permissions', () => {
   describe('reading is open to every role', () => {
     it.each(['admin', 'editor', 'viewer'] as const)('%s can list categories', async (role) => {
       const response = await get('/api/categories', TOKENS[role])
@@ -95,7 +95,7 @@ describe('mock API — role permissions', () => {
       expect(response.status).toBe(204)
     })
 
-    it('an editor may not — the one thing separating the two roles', async () => {
+    it('an editor may not, the one thing separating the two roles', async () => {
       const fresh = await post<{ id: string }>('/api/categories', CATEGORY, TOKENS.admin)
       const response = await del<{ message: string }>(
         `/api/categories/${fresh.body.id}`,

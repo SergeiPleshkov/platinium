@@ -25,7 +25,7 @@ function validEventPayload(overrides: Record<string, unknown> = {}) {
   }
 }
 
-describe('mock API — categories', () => {
+describe('mock API, categories', () => {
   it('lists with an accurate envelope', async () => {
     const result = await get<ListResponse<Category>>('/api/categories?perPage=4', token)
 
@@ -115,7 +115,7 @@ describe('mock API — categories', () => {
   })
 })
 
-describe('mock API — events', () => {
+describe('mock API, events', () => {
   it('creates, updates and deletes an event with no tickets', async () => {
     const created = await post<Event>('/api/events', validEventPayload(), token)
     expect(created.status).toBe(201)
@@ -170,7 +170,7 @@ describe('mock API — events', () => {
   })
 })
 
-describe('mock API — tickets', () => {
+describe('mock API, tickets', () => {
   it('embeds the event and category so a row can render names', async () => {
     const result = await get<ListResponse<TicketWithRelations>>('/api/tickets?perPage=5', token)
 

@@ -1,7 +1,7 @@
 import { computed, ref, type ComputedRef } from 'vue'
 
 /**
- * Which rows the user has ticked — **ids, not records**. A selected row can be re-fetched or
+ * Which rows the user has ticked, **ids, not records**. A selected row can be re-fetched or
  * paged away between the tick and the action, so holding the object means acting on a stale
  * copy of it.
  *
@@ -15,7 +15,7 @@ export interface UseRowSelection {
   hasSelection: ComputedRef<boolean>
   isSelected: (id: string) => boolean
   toggle: (id: string) => void
-  /** Selects or clears every id passed — the "select all on this page" control. */
+  /** Selects or clears every id passed, the "select all on this page" control. */
   setMany: (ids: readonly string[], selected: boolean) => void
   clear: () => void
   /** True when every id passed is selected, for the header checkbox. */

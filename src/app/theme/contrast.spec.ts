@@ -6,7 +6,7 @@ import { contrastRatio } from '@tests/utils/contrast'
 /**
  * Accessibility as an assertion rather than an intention.
  *
- * Colour-contrast regressions are invisible in review — a designer nudges a grey one step
+ * Colour-contrast regressions are invisible in review. A designer nudges a grey one step
  * lighter and nobody notices until an audit. These ratios are computed from the exact hex
  * values that ship, so a token change that breaks a pairing fails the build.
  */
@@ -23,7 +23,7 @@ describe('theme contrast', () => {
   it('keeps muted text meaningfully clear of the AA threshold, not just over it', () => {
     /*
      * Aura's stock muted colour (surface.500) is 4.55:1 on our light background: passing, but
-     * with 0.05 to spare. surface.600 is the deliberate replacement — see palette.ts.
+     * with 0.05 to spare. surface.600 is the deliberate replacement, see palette.ts.
      */
     expect(contrastRatio(SURFACE[500], SURFACE[50])).toBeLessThan(5)
     expect(contrastRatio(SURFACE[600], SURFACE[50])).toBeGreaterThan(7)

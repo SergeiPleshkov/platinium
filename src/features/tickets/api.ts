@@ -11,8 +11,8 @@ const BASE = '/tickets'
  * Ticket endpoints.
  *
  * The entity type is `TicketWithRelations`: every read returns the event and category
- * embedded, because a table row must show names rather than ids and the alternative — a
- * request per row, or loading every event up front — stops working at the scale this
+ * embedded, because a table row must show names rather than ids and the alternative, a
+ * request per row, or loading every event up front, stops working at the scale this
  * application is meant to represent.
  */
 export const ticketsApi: Resource<TicketWithRelations, TicketPayload> & {
@@ -24,7 +24,7 @@ export const ticketsApi: Resource<TicketWithRelations, TicketPayload> & {
    * Applies one action to many records.
    *
    * A single request, not N: the server reports per record, so the client learns which
-   * succeeded and why the rest did not — information a loop of individual calls would have to
+   * succeeded and why the rest did not, information a loop of individual calls would have to
    * reassemble, and would lose the moment one of them threw.
    */
   bulk: (payload: BulkRequest, signal?: AbortSignal) =>
@@ -33,7 +33,7 @@ export const ticketsApi: Resource<TicketWithRelations, TicketPayload> & {
   /**
    * Validates and optionally writes rows parsed from a file.
    *
-   * `dryRun` drives the preview. Same endpoint, same validation, same report — the preview is
+   * `dryRun` drives the preview. Same endpoint, same validation, same report. The preview is
    * a rehearsal of the commit rather than a second opinion about it.
    */
   import: (payload: ImportRequest, signal?: AbortSignal) =>
@@ -42,7 +42,7 @@ export const ticketsApi: Resource<TicketWithRelations, TicketPayload> & {
    * Downloads every row matching the *current query*, not the current page.
    *
    * Requested as a Blob: the file is saved, never inspected, so parsing it in the browser
-   * would be pure waste — and at export scale, expensive waste.
+   * would be pure waste, and at export scale, expensive waste.
    */
   exportCsv: (query, signal) =>
     http.get<Blob>('/tickets/export', {

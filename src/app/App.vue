@@ -7,7 +7,7 @@ import { BaseSpinner, BaseToaster } from '@/shared/ui'
 /**
  * Mounted above the router outlet so the navigation indicator survives the view swap it is
  * reporting on. Inside a routed view it would unmount at the exact moment the new chunk
- * arrived — which is the only moment it exists to cover.
+ * arrived, which is the only moment it exists to cover.
  */
 const { isNavigating } = useRouteLoading()
 </script>

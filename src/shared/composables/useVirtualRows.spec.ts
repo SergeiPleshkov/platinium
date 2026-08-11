@@ -6,8 +6,8 @@ import { useVirtualRows } from '@/shared/composables/useVirtualRows'
 /**
  * The page-request bookkeeping behind virtual scrolling.
  *
- * Tested without a scroller on purpose. The interesting behaviour — never asking twice,
- * mapping indices onto pages, abandoning in-flight pages when the query changes — is pure
+ * Tested without a scroller on purpose. The interesting behaviour, never asking twice,
+ * mapping indices onto pages, abandoning in-flight pages when the query changes, is pure
  * logic, and a jsdom scroller (no layout, so no virtualisation) could not exercise any of it.
  */
 
@@ -33,7 +33,7 @@ describe('useVirtualRows', () => {
   it('maps a visible range onto the pages covering it', async () => {
     const { virtual, loadPage } = harness(10)
 
-    // Rows 0–24 span pages 1, 2 and 3 at ten per page.
+    // Rows 0-24 span pages 1, 2 and 3 at ten per page.
     await virtual.requestRange(0, 24)
 
     expect(pagesRequested(loadPage)).toEqual([1, 2, 3])

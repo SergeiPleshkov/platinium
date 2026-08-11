@@ -8,7 +8,7 @@ import { ApiError } from '@/shared/api'
  *
  * The guarantee that matters: `pending` always unwinds, on both the success and the failure
  * path. Hand-written `try/finally` around every submit is where "the spinner never stops"
- * bugs come from — one early return, or one `await` outside the block, and the button is
+ * bugs come from, one early return, or one `await` outside the block, and the button is
  * disabled forever.
  */
 

@@ -6,7 +6,7 @@ import { computed, ref, type ComputedRef } from 'vue'
  * This is a **demonstration control**, and it is worth saying so plainly: a production portal
  * would pick one strategy per screen rather than hand the choice to the user. It exists here
  * so both paths can be exercised side by side against the same server-side query, on the same
- * data, without a rebuild — the interesting claim being that switching does not change *what*
+ * data, without a rebuild, the interesting claim being that switching does not change *what*
  * is fetched, only how much of it is on screen at once.
  *
  * Module-level and persisted, matching `useTheme` and `useSidebar`: the mode is a property of
@@ -31,7 +31,7 @@ const mode = ref<TableViewMode>(readStored())
 export interface UseTableViewMode {
   /**
    * Read-only on purpose. Exposing the writable ref let a `v-model` bind straight to it and
-   * skip `setMode` entirely — the mode changed, the UI updated, and nothing was ever
+   * skip `setMode` entirely: the mode changed, the UI updated, and nothing was ever
    * persisted. Making the ref unwritable turns that from a bug into a type error.
    */
   mode: ComputedRef<TableViewMode>
@@ -45,7 +45,7 @@ export function useTableViewMode(): UseTableViewMode {
     try {
       localStorage.setItem(STORAGE_KEY, next)
     } catch {
-      /* Storage unavailable — the choice still applies for this page. */
+      /* Storage unavailable, the choice still applies for this page. */
     }
   }
 

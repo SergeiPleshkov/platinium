@@ -10,7 +10,7 @@ import { renderWithApp } from '@tests/utils/renderWithApp'
 
 /**
  * The complete authentication journey, driven the way an administrator would drive it and
- * running against the real mock backend — no stubbed stores, no stubbed API.
+ * running against the real mock backend, no stubbed stores, no stubbed API.
  */
 
 const ORIGIN = window.location.origin
@@ -107,7 +107,7 @@ describe('authentication flow', () => {
 
     const { router } = await renderWithApp(App, { initialRoute: '/dashboard', withGuards: true })
 
-    // A persisted token is a claim, not proof — it is validated before the portal renders.
+    // A persisted token is a claim, not proof, it is validated before the portal renders.
     await waitFor(() => {
       expect(router.currentRoute.value.name).toBe('login')
     })

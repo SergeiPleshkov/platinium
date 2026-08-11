@@ -2,7 +2,7 @@
  * Triggers a browser download for data the app already holds.
  *
  * The object URL is revoked immediately after the click. Without that, every export leaks the
- * whole blob for the lifetime of the tab — invisible in testing and very visible to an admin
+ * whole blob for the lifetime of the tab, invisible in testing and very visible to an admin
  * who exports thirty times in an afternoon.
  */
 export function downloadBlob(blob: Blob, filename: string): void {

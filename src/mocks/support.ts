@@ -85,7 +85,7 @@ export function requireAuth(request: Request): AuthResult {
  * The duplication is the whole point. Hiding a delete button stops an honest mistake; it does
  * nothing about a request sent from the console, a stale tab whose role has since been
  * downgraded, or a client bug. A permission model enforced only in the client is a styling
- * decision, so the server refuses independently — against the *same* table the UI reads, so
+ * decision, so the server refuses independently, against the *same* table the UI reads, so
  * the two cannot disagree.
  */
 export function requirePermission(user: User, permission: Permission): Response | null {

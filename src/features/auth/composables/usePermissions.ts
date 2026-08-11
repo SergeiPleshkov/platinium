@@ -6,7 +6,7 @@ import { useAuthStore } from '@/features/auth/store'
 /**
  * The signed-in user's capabilities, as reactive predicates.
  *
- * Thin on purpose — the matrix lives in `permissions.ts`, which has no Vue in it and is what
+ * Thin on purpose. The matrix lives in `permissions.ts`, which has no Vue in it and is what
  * the mock backend imports. This is only the binding between that table and the current
  * session, so the same rules answer for the UI and for the API.
  */

@@ -4,7 +4,7 @@ import { vi } from 'vitest'
  * A `matchMedia` stub that actually models a viewport width.
  *
  * jsdom has no layout, so a naive stub returning `matches: false` for everything reports
- * "narrower than every breakpoint" — i.e. every component test silently runs in the mobile
+ * "narrower than every breakpoint", i.e. every component test silently runs in the mobile
  * layout. That is how a responsive branch ends up untested in one direction while the suite
  * stays green.
  *

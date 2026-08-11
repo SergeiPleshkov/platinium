@@ -8,7 +8,7 @@ import { parseMoney, toMajorUnits, type CurrencyCode } from '@/shared/utils/mone
 /**
  * A money field.
  *
- * The model is an integer count of minor units — the only representation the rest of the
+ * The model is an integer count of minor units, the only representation the rest of the
  * application uses. This component is the single place that converts to and from the major
  * amount a person types, which is what keeps floats out of the domain entirely.
  *
@@ -33,7 +33,7 @@ const model = defineModel<number | undefined>()
 const text = ref(model.value === undefined ? '' : String(toMajorUnits(model.value, props.currency)))
 
 /*
- * Re-sync only when the model changes to something the current text does not already mean —
+ * Re-sync only when the model changes to something the current text does not already mean
  * otherwise typing "1", "12", "12." would fight the formatter on every keystroke.
  */
 watch(
@@ -42,7 +42,7 @@ watch(
     /*
      * `?? undefined` matters: `parseMoney` returns `null` for unparseable input while the
      * model uses `undefined`, and `null !== undefined`. Without the normalisation, typing
-     * "42.50" wiped the field at the intermediate "42." — where parsing legitimately fails —
+     * "42.50" wiped the field at the intermediate "42.", where parsing legitimately fails
      * and silently re-collected the remaining keystrokes as "50", storing 5000.
      */
     const current = parseMoney(text.value, props.currency) ?? undefined

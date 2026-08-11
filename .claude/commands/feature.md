@@ -1,5 +1,5 @@
 ---
-description: Build one feature end to end — plan, implement behind the right skill, verify, review, commit
+description: Build one feature end to end. Plan, implement behind the right skill, verify, review, commit
 argument-hint: <what to build, e.g. "venue management" or "saved filters">
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Skill, Agent, TaskCreate, TaskUpdate, TaskList
 ---
@@ -16,14 +16,14 @@ one feature slice, run the `system-design` skill first and come back with an app
 `plans/tasks.md`. The tell: if you cannot name every file you will touch before starting, you
 need the plan.
 
-A one-file change, a copy fix, an extra test case — carry on.
+A one-file change, a copy fix, an extra test case: carry on.
 
 ## 2. Orient
 
 - Read [CLAUDE.md](../../CLAUDE.md) for the conventions and the command table.
 - Load the skill that matches: `crud-entity` for an entity slice, `vue-feature` for
   components / composables / stores / API, `testing-vue` for tests.
-- Read the layer README for anything you are about to touch — `src/shared/api/README.md`,
+- Read the layer README for anything you are about to touch: `src/shared/api/README.md`,
   `src/features/README.md`, `src/mocks/README.md`.
 - **Find the nearest existing example and read it.** This codebase is deliberately repetitive
   across its three entity slices; matching them is usually right.
@@ -54,7 +54,7 @@ New abstractions need a third real consumer. Name them, or do not extract.
 
 ## 5. Verify
 
-Run `/verify`. Report each result honestly — a failing step is information, not an obstacle.
+Run `/verify`. Report each result honestly. A failing step is information, not an obstacle.
 
 ## 6. Review
 
@@ -65,7 +65,7 @@ with a finding that cites a rule; either fix it or change the rule deliberately.
 ## 7. Commit
 
 - If a decision was non-obvious, or an obvious alternative was rejected, write it as a comment
-  above the code it explains — or, if it is architecture-level, in the README of the layer it
+  above the code it explains, or, if it is architecture-level, in the README of the layer it
   describes. Say what it cost.
 - Delete the `plans/` files once the user has acknowledged the summary.
 - Commit with a conventional-commit subject and a body explaining *why*, not what.

@@ -12,7 +12,7 @@ import type { EntityRef } from '@/shared/types/entity'
 /**
  * The single source of truth for category data.
  *
- * State and derived flags come from `useCollectionState`, which every entity store shares —
+ * State and derived flags come from `useCollectionState`, which every entity store shares
  * that is the "state + getters" layer, written once instead of copy-pasted three times. What
  * remains here is only what is genuinely specific to categories: its actions.
  *
@@ -32,7 +32,7 @@ export const useCategoriesStore = defineStore('categories', () => {
    * Loads a page.
    *
    * Never throws: a list failure is a state the page renders (error panel, retry button), not
-   * an exception the caller has to catch. Mutations below do the opposite — see there.
+   * an exception the caller has to catch. Mutations below do the opposite, see there.
    */
   async function fetchList(query: ListQuery, signal?: AbortSignal): Promise<void> {
     collection.beginLoad()
@@ -54,7 +54,7 @@ export const useCategoriesStore = defineStore('categories', () => {
    * that matters: `fetchList` *replaces* what is on screen, `fetchWindow` *adds* to it. A
    * boolean parameter would hide that difference behind a call site reading `fetchList(q, true)`.
    *
-   * The status rules — only the first window may put the collection into `loading` — live in
+   * The status rules, only the first window may put the collection into `loading`, live in
    * `loadWindow`, shared so they cannot drift between the three entities.
    */
   function fetchWindow(query: ListQuery, signal?: AbortSignal): Promise<void> {
@@ -106,7 +106,7 @@ export const useCategoriesStore = defineStore('categories', () => {
    *
    * Rethrows like the other mutations, but note what is *not* an error here: a response where
    * some records were refused resolves normally, carrying the per-record detail. Treating a
-   * partial success as a throw would discard the list of what did work — which is most of the
+   * partial success as a throw would discard the list of what did work, which is most of the
    * value of doing it in bulk.
    *
    * The caller re-queries afterwards rather than patching state: several rows changed, some

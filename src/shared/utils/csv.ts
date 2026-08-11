@@ -6,7 +6,7 @@
  * quotes, doubled quotes as an escape, CRLF or LF, and a leading BOM. A dependency would carry
  * dialect options, streaming and type coercion this application will never ask for.
  *
- * It pairs with `src/mocks/csv.ts`, which writes the export. The pairing is the point — a file
+ * It pairs with `src/mocks/csv.ts`, which writes the export. The pairing is the point, a file
  * this application produced must be a file it can read back, and `csv.spec.ts` asserts that
  * round trip rather than assuming it.
  */
@@ -19,7 +19,7 @@ export type CsvRow = string[]
  *
  * A character-by-character scan rather than a regular expression: a field may contain the
  * delimiter, the row separator, and the quote character itself, so there is no split that is
- * correct. The parser is a two-state machine — inside quotes, or not.
+ * correct. The parser is a two-state machine, inside quotes, or not.
  */
 export function parseCsv(text: string): CsvRow[] {
   // A BOM is invisible and would otherwise become part of the first header's name.
@@ -87,7 +87,7 @@ export function parseCsv(text: string): CsvRow[] {
 
   /*
    * A trailing newline ends the last row rather than starting an empty one. Without this the
-   * exporter's own output — which ends in CRLF — would parse with a spurious final row, and
+   * exporter's own output, which ends in CRLF, would parse with a spurious final row, and
    * every import of a file we wrote would report one bogus failure.
    */
   if (field !== '' || row.length > 0) endRow()
@@ -105,7 +105,7 @@ export interface CsvTable {
  * Reads the first row as headers.
  *
  * Headers are trimmed and lower-cased for matching, because a file that has been through a
- * spreadsheet often comes back with different capitalisation and stray spaces — and rejecting
+ * spreadsheet often comes back with different capitalisation and stray spaces, and rejecting
  * it for that would be pedantry, not validation.
  */
 export function parseCsvTable(text: string): CsvTable {

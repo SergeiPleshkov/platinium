@@ -52,7 +52,7 @@ describe('ticketSchema', () => {
       )
     })
 
-    it('rejects a fractional minor unit — prices arrive already converted', () => {
+    it('rejects a fractional minor unit, prices arrive already converted', () => {
       expect(messageFor(validTicket({ priceMinor: 45.5 }), 'priceMinor')).toBe(
         'Enter a price with at most two decimal places',
       )
@@ -60,7 +60,7 @@ describe('ticketSchema', () => {
 
     it('rejects an implausibly large price, which is usually a misplaced decimal point', () => {
       expect(messageFor(validTicket({ priceMinor: 10_000_001 }), 'priceMinor')).toBe(
-        'Price looks too high — check the decimal point',
+        'Price looks too high. Check the decimal point.',
       )
     })
 

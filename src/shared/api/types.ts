@@ -6,7 +6,7 @@ import type { ListQuery, ListResponse } from '@/shared/types/api'
  * Deliberately an interface, not a factory. A factory measured worse than the direct calls it
  * replaced (see ./README.md), but the *contract* is worth keeping: it guarantees all
  * three entities expose the same five operations with the same signatures, which is what lets
- * cross-cutting behaviour — optimistic updates, bulk operations, retry policies — be written
+ * cross-cutting behaviour, optimistic updates, bulk operations, retry policies, be written
  * once against `Resource<T, P>` instead of three times. Each feature still spells out its own
  * URLs, so the endpoint being called is visible where it is called.
  */

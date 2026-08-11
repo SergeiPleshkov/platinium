@@ -17,7 +17,7 @@ import { BaseButton, BaseInput, BaseModal, BaseMoneyInput, BaseSelect } from '@/
  * Create and edit a ticket.
  *
  * The relation pickers read from the events and categories stores through their public
- * barrels — the only sanctioned way one feature reaches another's data.
+ * barrels, the only sanctioned way one feature reaches another's data.
  */
 
 interface Props {
@@ -70,7 +70,7 @@ const categoryOptions = computed(() =>
 const currencyOptions = CURRENCIES.map((code) => ({ value: code, label: code }))
 
 /**
- * Quantity is bound as text so an empty field stays distinguishable from a deliberate 0 —
+ * Quantity is bound as text so an empty field stays distinguishable from a deliberate 0
  * zero is a real quantity here (sold out), so coercing blank input to it would be wrong.
  *
  * Unparseable input becomes `NaN`, which keeps the field's type honest and which zod rejects

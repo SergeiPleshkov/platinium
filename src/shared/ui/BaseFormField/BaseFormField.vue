@@ -4,8 +4,8 @@ import { computed, useId } from 'vue'
 /**
  * Label, hint and error scaffolding for a single form control.
  *
- * The accessibility wiring — `for`/`id`, `aria-describedby`, `aria-invalid`, and announcing
- * the error to assistive tech — is written once here, and every control reuses it through the
+ * The accessibility wiring, `for`/`id`, `aria-describedby`, `aria-invalid`, and announcing
+ * the error to assistive tech, is written once here, and every control reuses it through the
  * scoped slot. Repeating it per control is how one field ends up with an unlabelled input
  * that nobody notices until an audit.
  */
@@ -27,7 +27,7 @@ interface Props {
   /**
    * Whether the control can be the target of `<label for>`.
    *
-   * Native inputs can. Composite widgets — PrimeVue's Select, MultiSelect, DatePicker —
+   * Native inputs can. Composite widgets, PrimeVue's Select, MultiSelect, DatePicker
    * render a `<div>` or `<span>` root, and a label pointing at a non-labellable element
    * associates with *nothing*: the control looks labelled on screen and is anonymous to a
    * screen reader. Those pass `false` and consume `labelId` via `aria-labelledby` instead.

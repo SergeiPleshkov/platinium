@@ -10,7 +10,7 @@ import { sequentialId } from '@/mocks/fixtures/random'
  *
  * It behaves like a real one in the ways that matter for the client: it owns ids and
  * timestamps, it maintains derived counts, and it enforces referential integrity. Handlers
- * never mutate these arrays directly — they go through the helpers below, so the invariants
+ * never mutate these arrays directly. They go through the helpers below, so the invariants
  * hold no matter which endpoint is called.
  */
 

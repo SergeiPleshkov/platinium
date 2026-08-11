@@ -19,7 +19,7 @@ import { BaseBadge, BaseButton } from '@/shared/ui'
  *
  * Deliberately renders no navigation. `PortalLayout`'s sidebar is the single source of it,
  * driven by `NAVIGATION` in the router. This page previously repeated those destinations as
- * literal path strings — the only hardcoded routes in the codebase — because the boundary
+ * literal path strings, the only hardcoded routes in the codebase, because the boundary
  * rule stops a feature importing `app/`. That was working around the boundary rather than
  * respecting it, and it gave up the guarantee `RouteName` exists for: a renamed path would
  * have kept the sidebar working while silently 404ing here.
@@ -37,7 +37,7 @@ const number = new Intl.NumberFormat('en-GB')
 
 const stats = computed(() => dashboard.stats)
 
-/** One formatted amount per currency — never joined into a single figure. */
+/** One formatted amount per currency, never joined into a single figure. */
 const inventoryValues = computed(() =>
   (stats.value?.inventoryValue ?? []).map((entry) => formatMoney(entry.totalMinor, entry.currency)),
 )
@@ -48,7 +48,7 @@ const inventoryValues = computed(() =>
  * Every dashboard widget, whether it is a figure or a panel.
  *
  * One list, not two. Splitting the metrics from the panels would be simpler, and would also
- * mean a user could never move a panel above the figures — which is exactly the arrangement
+ * mean a user could never move a panel above the figures, which is exactly the arrangement
  * someone who cares more about upcoming events than about totals would want. The `span` keeps
  * the default layout identical to what it was: four one-column tiles fill the first row of the
  * four-column grid, two two-column panels fill the second.
@@ -179,7 +179,7 @@ async function saveArrangement(): Promise<void> {
  * Adopts the saved arrangement once the session is known.
  *
  * Watched rather than read in `onMounted`, because on a page reload the user is restored
- * asynchronously — the dashboard renders before `/auth/me` answers, and reading preferences
+ * asynchronously. The dashboard renders before `/auth/me` answers, and reading preferences
  * at mount would find nothing and silently leave the account's layout unapplied.
  */
 watch(
@@ -251,8 +251,8 @@ watch(
 
       <!--
         One grid for every widget, with each declaring its span. The defaults reproduce the
-        previous layout exactly — four single-column tiles fill row one of four, two
-        double-column panels fill row two — while allowing any arrangement of the six.
+        previous layout exactly, four single-column tiles fill row one of four, two
+        double-column panels fill row two, while allowing any arrangement of the six.
 
         `items-stretch` plus `h-full` on the child is what makes a short tile match a tall one
         beside it. Grid stretches the `<li>` by default; without the `h-full` the card inside

@@ -9,7 +9,7 @@ import { renderWithApp } from '@tests/utils/renderWithApp'
  * The navigation overlay, rendered rather than merely computed.
  *
  * `useRouteLoading.spec.ts` covers the timing rules against a bare router. What this adds is
- * that `App.vue` actually shows something — and that it sits *above* the router outlet, so it
+ * that `App.vue` actually shows something, and that it sits *above* the router outlet, so it
  * survives the view swap it exists to cover. Mounted inside a routed view it would unmount at
  * the exact moment the incoming chunk resolved.
  */
@@ -63,7 +63,7 @@ describe('lazy route navigation', () => {
     await waitFor(() => screen.getByText('Loading page'))
     /*
      * The overlay is a bare spinner, so this hidden label is the *only* thing a screen
-     * reader gets — without it the page would simply appear to stop. One live region, not
+     * reader gets, without it the page would simply appear to stop. One live region, not
      * two nested ones announcing the same wait twice.
      */
     const regions = screen.getAllByRole('status')

@@ -17,9 +17,9 @@ import { MOBILE_WIDTH, setViewportWidth } from '@tests/utils/viewport'
  * removing them from the accessibility tree, and that the collapse preference does not follow
  * the user down to the mobile drawer.
  *
- * Mounts `App`, not `PortalLayout`. Mounting the layout directly renders it *twice* — the
+ * Mounts `App`, not `PortalLayout`. Mounting the layout directly renders it *twice*: the
  * router still matches it at depth 0, so the component's own `<RouterView>` resolves to
- * itself — and a duplicated shell is precisely what the first assertion here is meant to
+ * itself, and a duplicated shell is precisely what the first assertion here is meant to
  * catch. A fixture that manufactures the bug it is testing for is worse than no fixture.
  */
 
@@ -66,7 +66,7 @@ describe('PortalLayout', () => {
 
       const nav = screen.getByRole('navigation', { name: 'Primary' })
       for (const item of NAVIGATION) {
-        // The label is visually hidden, not deleted — a name-based query must still find it.
+        // The label is visually hidden, not deleted, so a name-based query must still find it.
         expect(within(nav).getByRole('link', { name: item.label })).toBeInTheDocument()
       }
     })
@@ -114,7 +114,7 @@ describe('PortalLayout', () => {
     it('shows full labels in the drawer even when the desktop rail is collapsed', async () => {
       /*
        * The stored preference is about the rail only. Honouring it here would overlay the page
-       * with an unlabelled strip of glyphs — a faithful reading of the flag, and a worse
+       * with an unlabelled strip of glyphs: a faithful reading of the flag, and a worse
        * experience than ignoring it.
        */
       useSidebar().setCollapsed(true)

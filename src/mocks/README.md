@@ -1,20 +1,20 @@
 # Mock API
 
 A fake backend, built to behave like a real one. It is the only data source this application
-has — there is no separate server — so it ships in the production image too.
+has, since there is no separate server, so it ships in the production image too.
 
 ## Why MSW
 
 Handlers are written once and run in two places: a Service Worker in the browser, and a Node
-server in Vitest. Tests therefore exercise **the same request handling the app does**, rather
-than a parallel set of stubs that can drift. MirageJS or json-server would have meant two
-implementations, or tests that never touch the real request path.
+server in Vitest. Tests exercise the same request handling the app does, not a parallel set of
+stubs that can drift out of agreement with it. MirageJS or json-server would have meant either
+two implementations or tests that never touch the real request path.
 
 ## Layout
 
 ```
 mocks/
-  fixtures/       seed data + a seeded PRNG (deterministic — see below)
+  fixtures/       seed data + a seeded PRNG (deterministic, see below)
   handlers/       one file per resource, plus index.ts composing them
   db.ts           in-memory store, id/timestamp ownership, derived counts
   query.ts        the search → filter → sort → paginate engine
@@ -57,14 +57,14 @@ filters, and returns `{ data, meta: { total, page, perPage, totalPages } }`.
 ## Things it does deliberately
 
 **Querying is server-side.** Search, filtering, sorting and pagination all happen in the
-handler, in that order. A response never contains more than `perPage` rows and `meta.total`
-describes the *filtered* set. Returning whole collections would look identical in the UI and
-would be the wrong answer to the brief's scaling question. `perPage` is capped at 100.
+handler, in that order. A response never contains more than `perPage` rows, and `meta.total`
+describes the filtered set. Returning whole collections would look identical in the UI and would
+be the wrong answer to the brief's scaling question. `perPage` is capped at 100.
 
 **Auth is mocked but enforced.** A token is issued, stored, checked on every entity request
-and invalidated on logout — so the client's 401 handling and session restore are exercised
-against real behaviour rather than assumed. Login returns the same message for an unknown
-account and a wrong password, so the endpoint cannot be used to enumerate accounts.
+and invalidated on logout, so the client's 401 handling and session restore run against real
+behaviour instead of an assumption. Login returns the same message for an unknown account and a
+wrong password, so the endpoint cannot be used to enumerate accounts.
 
 **Validation uses the same zod schemas as the forms.** A 422 comes back as
 `{ message, errors: { field: message } }`, which the client maps straight onto form fields.
@@ -78,8 +78,8 @@ inventory. Creating a ticket against a non-existent event returns a field-level 
 recomputed after every ticket mutation, so it cannot drift.
 
 **Fixtures are deterministic.** A fixed seed, fixed ids and a frozen `SEED_NOW` mean two runs
-produce identical data — which is what allows tests to assert on specific rows and page
-boundaries. `Math.random()` anywhere in here would make the suite flaky.
+produce identical data, which is what lets tests assert on specific rows and page boundaries.
+`Math.random()` anywhere in here would make the suite flaky.
 
 ## Credentials
 

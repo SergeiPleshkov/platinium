@@ -13,7 +13,7 @@ export interface TableColumn {
    * Fixed track width, e.g. `'12rem'`. Columns without one share what is left over.
    *
    * Only consulted in virtual mode, which lays the table out with `table-layout: fixed`.
-   * Automatic layout sizes columns from the rows currently in the DOM — and virtual scrolling
+   * Automatic layout sizes columns from the rows currently in the DOM, and virtual scrolling
    * keeps replacing those, so the columns visibly resize as you scroll. Declaring the widths
    * is what makes them hold still.
    */
@@ -25,6 +25,6 @@ export interface TableColumn {
    * rows. Below `md` a table becomes a card list, so every column needs to know its role.
    */
   priority?: 'primary' | 'secondary' | undefined
-  /** Omit from the mobile card entirely — for columns that only make sense in a grid. */
+  /** Omit from the mobile card entirely, for columns that only make sense in a grid. */
   hideOnMobile?: boolean | undefined
 }

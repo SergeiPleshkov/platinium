@@ -1,5 +1,5 @@
 ---
-description: Quality gate — typecheck, lint, format, tests and production build must all pass
+description: Quality gate. Typecheck, lint, format, tests and production build must all pass
 allowed-tools: Bash, Read, Edit, Glob, Grep
 ---
 
@@ -18,7 +18,7 @@ pnpm build
 Rules:
 
 - **Fix what fails.** Do not report work complete with a red gate, and do not weaken a
-  check to make it pass — no loosening `tsconfig`, no disabling a lint rule, no `.skip` on
+  check to make it pass. No loosening `tsconfig`, no disabling a lint rule, no `.skip` on
   a failing test, no deleting an assertion. If a check is genuinely wrong, say so and
   explain why before changing it.
 - A skipped or filtered test run is not a pass. Full suite, every time.

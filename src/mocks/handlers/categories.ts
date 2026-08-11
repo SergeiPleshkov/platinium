@@ -33,7 +33,7 @@ function findDuplicateName(name: string, exceptId?: string): Category | undefine
 /**
  * Deletes one category, or explains why not.
  *
- * The same referential-integrity rule the single-record endpoint applies — stated once, used
+ * The same referential-integrity rule the single-record endpoint applies, stated once, used
  * by both, so a bulk delete cannot become a way around it.
  */
 function dependentTicketCount(categoryId: string): number {
@@ -57,7 +57,7 @@ export const categoryHandlers: RequestHandler[] = [
   /**
    * Bulk operations.
    *
-   * Declared before `/:id` so `bulk` is not captured as an id — the same ordering trap the
+   * Declared before `/:id` so `bulk` is not captured as an id, the same ordering trap the
    * tickets export endpoint has.
    */
   http.post(`${RESOURCE}/bulk`, async ({ request }) => {

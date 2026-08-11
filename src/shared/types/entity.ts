@@ -1,6 +1,6 @@
 /**
  * Fields every persisted record carries. Timestamps are ISO-8601 strings at the boundary and
- * stay strings in the store — they are parsed only inside formatting helpers, so no `Date`
+ * stay strings in the store. They are parsed only inside formatting helpers, so no `Date`
  * ever leaks into state where it would break serialisation and equality checks.
  */
 export interface BaseEntity {

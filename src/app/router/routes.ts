@@ -2,7 +2,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 /**
  * Route names are referenced by tests, guards and navigation, so they live here as a const
- * map rather than as string literals scattered through the app — a rename is then a type
+ * map rather than as string literals scattered through the app. A rename is then a type
  * error, not a silent 404.
  */
 export const RouteName = {
@@ -21,7 +21,7 @@ declare module 'vue-router' {
     title?: string
     /** Requires a signed-in user. Enforced by the guard in `router/guards.ts`. */
     requiresAuth?: boolean
-    /** Only reachable while signed out — the login page redirects away once authenticated. */
+    /** Only reachable while signed out, the login page redirects away once authenticated. */
     guestOnly?: boolean
   }
 }

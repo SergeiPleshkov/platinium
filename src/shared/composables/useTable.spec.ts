@@ -5,7 +5,7 @@ import { useTable, type UseTable, type UseTableOptions } from '@/shared/composab
 import type { ListQuery } from '@/shared/types/api'
 
 /**
- * `useTable` owns query state and nothing else — the rows live in the store. These tests
+ * `useTable` owns query state and nothing else; the rows live in the store. These tests
  * therefore assert on *what was asked for*, not on what came back.
  */
 

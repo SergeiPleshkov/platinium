@@ -64,7 +64,7 @@ export interface CollectionState<TEntity> {
    *
    * **Only the first window drives the collection's status.** Calling `beginLoad` per page put
    * the whole collection into `loading` on every scroll, flashing the skeleton and re-rendering
-   * the grid — the exact thing virtual scrolling exists to avoid. Later pages are background
+   * the grid, the exact thing virtual scrolling exists to avoid. Later pages are background
    * fills whose failures are rethrown, so the scroller can retry without disturbing the rows.
    */
   loadWindow: (
@@ -77,7 +77,7 @@ export interface CollectionState<TEntity> {
   /** Applies a server-returned record to the cached list without a full refetch. */
   upsert: (entity: TEntity & { id: string }) => void
   removeById: (id: string) => void
-  /** Applies part of a record and returns the version it replaced — the rollback snapshot. */
+  /** Applies part of a record and returns the version it replaced, the rollback snapshot. */
   patch: (id: string, changes: Partial<TEntity>) => TEntity | null
   /**
    * Shows a change before the server agrees, and undoes it if the server refuses.
@@ -148,7 +148,7 @@ export function useCollectionState<TEntity extends { id: string }>(
   function setWindow(response: ListResponse<TEntity>): void {
     /*
      * Re-seed on a changed total rather than patching in place. A total that moved means rows
-     * shifted, so every previously fetched page is now potentially off by one — and a buffer
+     * shifted, so every previously fetched page is now potentially off by one, and a buffer
      * that is quietly wrong is worse than one that reloads.
      */
     if (buffer.value.length !== response.meta.total) {
@@ -157,7 +157,7 @@ export function useCollectionState<TEntity extends { id: string }>(
 
     /*
      * In place, deliberately. Replacing the array changes its identity, and a virtual scroller
-     * watches that reference to decide when to re-measure — so every arriving page tore the
+     * watches that reference to decide when to re-measure, so every arriving page tore the
      * grid down mid-scroll. Index writes stay reactive without moving the reference.
      */
     const offset = (response.meta.page - 1) * response.meta.perPage
@@ -242,7 +242,7 @@ export function useCollectionState<TEntity extends { id: string }>(
 
     /*
      * Safe on the buffer as well as the list, because an edit replaces a row in place. A
-     * *delete* is not — it shifts every later row — so `removeById` deliberately invalidates
+     * *delete* is not: it shifts every later row, so `removeById` deliberately invalidates
      * the buffer instead of trying to patch it.
      */
     upsert(entity) {

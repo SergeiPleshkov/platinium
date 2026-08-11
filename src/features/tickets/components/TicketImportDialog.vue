@@ -11,13 +11,13 @@ import { BaseButton, BaseModal, BaseSpinner } from '@/shared/ui'
 /**
  * Import tickets from a CSV.
  *
- * Three states, in order: choose a file, read the report, commit. The middle one is the point
- * — nothing is written until the admin has seen what *would* be written, and the preview is
+ * Three states, in order: choose a file, read the report, commit. The middle one is the point.
+ * Nothing is written until the admin has seen what *would* be written, and the preview is
  * produced by the real endpoint in dry-run mode rather than by a second validator that could
  * disagree with it.
  *
  * The file is parsed in the browser only to turn text into rows. Every judgement about those
- * rows — does this event exist, is this a valid status — belongs to the server.
+ * rows, does this event exist, is this a valid status, belongs to the server.
  */
 
 const props = defineProps<{ open: boolean }>()
@@ -155,7 +155,7 @@ async function commit(): Promise<void> {
 
         <template v-else>
           <p class="mt-1 text-sm text-content-muted">
-            {{ preview.errors.length }} problem{{ preview.errors.length === 1 ? '' : 's' }} — these
+            {{ preview.errors.length }} problem{{ preview.errors.length === 1 ? '' : 's' }}, these
             rows will be skipped.
           </p>
 

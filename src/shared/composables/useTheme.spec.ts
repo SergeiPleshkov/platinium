@@ -75,7 +75,7 @@ describe('useTheme', () => {
   it('toggles from the currently resolved appearance', () => {
     setPrefersDark(true)
     const theme = useTheme()
-    // Preference is `system`, resolving to dark — toggling must go to light, not to dark.
+    // Preference is `system`, resolving to dark, toggling must go to light, not to dark.
     theme.toggle()
 
     expect(theme.preference.value).toBe('light')

@@ -6,14 +6,14 @@ import Dialog from 'primevue/dialog'
  *
  * Full-screen below `sm`: a centred 32rem card on a 375px phone leaves no usable room for a
  * form. PrimeVue supplies the focus trap, `Esc` handling and focus restoration; the wrapper
- * fixes the parts that are easy to get wrong — a labelled heading, and a dialog that cannot
+ * fixes the parts that are easy to get wrong, a labelled heading, and a dialog that cannot
  * be dismissed out from under an in-flight save.
  */
 
 interface Props {
   title: string
   description?: string | undefined
-  /** Blocks the close button, `Esc` and backdrop dismissal — use while saving. */
+  /** Blocks the close button, `Esc` and backdrop dismissal, use while saving. */
   busy?: boolean | undefined
   width?: string | undefined
 }

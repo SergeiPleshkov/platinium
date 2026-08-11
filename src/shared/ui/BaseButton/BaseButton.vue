@@ -21,7 +21,7 @@ interface Props {
   /** A PrimeIcons class, e.g. `pi pi-plus`. */
   icon?: string | undefined
   iconPosition?: 'left' | 'right' | undefined
-  /** Stretch to the width of the container — useful for mobile and dialog footers. */
+  /** Stretch to the width of the container, useful for mobile and dialog footers. */
   block?: boolean | undefined
   /**
    * Visible text, as an alternative to the default slot.
@@ -71,8 +71,8 @@ const isInteractionBlocked = computed(() => props.disabled || props.loading)
 
 <template>
   <!--
-    A button never shrinks below its label and never wraps it. In a tight flex row — a page
-    header on a narrow viewport — the default `flex-shrink: 1` squeezed "New category" down
+    A button never shrinks below its label and never wraps it. In a tight flex row, a page
+    header on a narrow viewport, the default `flex-shrink: 1` squeezed "New category" down
     to 40px and clipped it mid-word.
   -->
   <PrimeButton

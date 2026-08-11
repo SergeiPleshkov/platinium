@@ -5,7 +5,7 @@ import { SEED_PASSWORD } from '@/mocks/fixtures'
 import type { ApiErrorBody } from '@/shared/types/api'
 import { get, patch, post, signIn } from '@tests/utils/apiClient'
 
-describe('mock API — auth', () => {
+describe('mock API, auth', () => {
   let token: string
 
   beforeEach(async () => {
@@ -144,7 +144,7 @@ describe('mock API — auth', () => {
  * The distinction is the whole point of the endpoint: a dashboard arrangement should follow
  * the person to another machine, which `localStorage` cannot do.
  */
-describe('mock API — user preferences', () => {
+describe('mock API, user preferences', () => {
   it('starts with none', async () => {
     const token = await signIn()
     const me = await get<{ preferences?: { dashboardOrder?: string[] } }>('/api/auth/me', token)
@@ -207,7 +207,7 @@ describe('mock API — user preferences', () => {
     expect(other.body.preferences).toBeUndefined()
   })
 
-  it('is allowed for every role — a layout is not a privileged change', async () => {
+  it('is allowed for every role, a layout is not a privileged change', async () => {
     const viewer = await signIn('viewer@ticketing.test')
     const response = await patch('/api/me/preferences', { dashboardOrder: ['events'] }, viewer)
 

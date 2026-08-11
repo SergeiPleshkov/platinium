@@ -50,7 +50,7 @@ onMounted(() => {
   void store.fetchCountries()
 })
 
-/* Widths are for virtual mode's fixed layout — see the note in CategoriesPage. */
+/* Widths are for virtual mode's fixed layout, see the note in CategoriesPage. */
 const columns: TableColumn[] = [
   { field: 'name', header: 'Name', sortable: true, priority: 'primary' },
   { field: 'startDate', header: 'Dates', sortable: true, width: '13rem' },

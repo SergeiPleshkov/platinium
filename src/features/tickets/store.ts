@@ -51,7 +51,7 @@ export const useTicketsStore = defineStore('tickets', () => {
   /**
    * Downloads every ticket matching `query` as CSV.
    *
-   * Rethrows so the page can tell the admin the export failed — a download that silently does
+   * Rethrows so the page can tell the admin the export failed, a download that silently does
    * nothing is indistinguishable from a browser blocking it.
    */
   async function exportCsv(query: ListQuery): Promise<void> {
@@ -76,7 +76,7 @@ export const useTicketsStore = defineStore('tickets', () => {
    *
    * The case optimism is actually for: a frequent, low-risk, one-click change where the user
    * stays on the page and a 200ms pause reads as lag. Contrast the edit dialog, which stays
-   * open until the server agrees — there, optimism would buy nothing and cost the field-level
+   * open until the server agrees. There, optimism would buy nothing and cost the field-level
    * error messages a 422 carries.
    *
    * `collection.optimistic` owns the snapshot and the rollback; this only says what changes
@@ -88,7 +88,7 @@ export const useTicketsStore = defineStore('tickets', () => {
 
     await collection.optimistic(id, { status }, async () => {
       try {
-        // The whole payload, because the endpoint validates against the full schema — the
+        // The whole payload, because the endpoint validates against the full schema and the
         // mock backend is deliberately not more forgiving than a real one would be.
         const updated = await ticketsApi.update(id, {
           name: ticket.name,
@@ -119,7 +119,7 @@ export const useTicketsStore = defineStore('tickets', () => {
   /**
    * Validates rows from a file, and writes them unless this is a dry run.
    *
-   * Never throws on *row* problems — those are the report, not an error. It throws only when
+   * Never throws on *row* problems, those are the report, not an error. It throws only when
    * the request itself failed, which the page distinguishes because the two need different
    * words.
    */
