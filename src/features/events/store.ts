@@ -68,9 +68,9 @@ export const useEventsStore = defineStore('events', () => {
   /**
    * Loads relation-picker options.
    *
-   * Capped at 200 by name. With 30 seeded events this returns everything; at real scale the
-   * picker would need a server-backed type-ahead instead. Recorded as accepted debt in
-   * docs/DECISIONS.md rather than pretended away.
+   * Capped by name. At the seeded data size this returns everything; at real scale the picker
+   * would need a server-backed type-ahead instead, because a truncated list omits options
+   * silently. Recorded as accepted debt in TECHNICAL_REVIEW.md §3 rather than pretended away.
    */
   async function fetchOptions(): Promise<void> {
     try {

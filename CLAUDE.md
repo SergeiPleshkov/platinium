@@ -15,8 +15,8 @@ strategy and craftsmanship count as much as features.
   requirements from the brief; do not substitute.
 - No `any`, no `@ts-expect-error`, no `eslint-disable` without a comment explaining why.
 - Every change lands green: typecheck, lint, format, tests, production build — `/verify`.
-- Non-obvious decisions go in [docs/DECISIONS.md](docs/DECISIONS.md) **when made**, with what
-  they cost. `TECHNICAL_REVIEW.md` is assembled from it, not reconstructed from memory.
+- Reasoning lives next to the code it explains: a comment above the surprising line, or the
+  README of the layer it describes. Say what the decision cost, not just what it was.
 
 ## Stack
 
@@ -99,13 +99,30 @@ pnpm test:coverage  # coverage report
 
 ## Working agreement
 
-- Run `/verify` before declaring anything complete. It is the quality gate.
-- `/feature <what>` drives a change end to end; `/audit-brief` checks the whole thing against
-  the assessment brief.
+Work enters through one of two doors and leaves through the same two gates.
+
+```
+new work ──▶ system-design ──▶ [design review] ──▶ approved ──▶ /feature ──┐
+                                                                            ├─▶ code-review ─▶ /verify
+bug report ─▶ bug-fix (repro ▸ root cause ▸ red-then-green) ────────────────┘
+```
+
+| Skill / command | Use it for |
+|---|---|
+| `system-design` | Anything touching more than one layer. Produces a plan, then a task list. Nothing is built before the plan is approved. |
+| `/feature <what>` | Implementation. Plans, orients, builds, verifies, reviews, commits. |
+| `bug-fix` | Anything broken. Reproduce first; the regression test is written before the fix. |
+| `code-review` | Hard-facts audit of a diff. Findings cite a rule or a line, or they are not raised. |
+| `/verify` | The quality gate. Run it before declaring anything complete. |
+| `/audit-brief` | Checks the whole thing against the assessment brief. |
+| `vue-feature` `crud-entity` `testing-vue` | The architecture, the entity-slice shape, and the testing strategy. |
+
+- Audits run at most **two cycles**, then escalate to a person. Never a third.
+- Heavy phases (codebase analysis, audits) run as subagents and hand off through `plans/`,
+  which is git-ignored and deleted once the summary is acknowledged.
+- **Search `src/shared/` before adding a composable or primitive.** Most of what a new screen
+  needs already exists; the inventory is in the `vue-feature` skill. Extract on the third real
+  consumer, not the second.
 - Commit per meaningful unit of work with a conventional-commit subject. The commit history
   is part of what the reviewer reads — keep it clean and legible.
-- **Search `src/shared/` before adding a composable or primitive.** Most of what a new screen
-  needs already exists; the inventory is in the `vue-feature` skill.
-- When you make a decision worth defending (or a trade-off worth admitting), append a note
-  to `docs/DECISIONS.md` right then. `TECHNICAL_REVIEW.md` is assembled from those notes at
-  the end, not reconstructed from memory.
+- When a review finding repeats, it belongs in a skill rather than in another review.

@@ -42,3 +42,6 @@ pnpm-debug.log*
 
 # claude code local overrides
 .claude/settings.local.json
+
+# Ephemeral planning and audit artefacts (see .claude/rules/audit-skill.md)
+plans/

@@ -7,7 +7,7 @@
  * call site. What survives is `Resource<T, P>`, the interface each feature's `api.ts`
  * implements, so cross-cutting behaviour is written once.
  *
- * `./README.md` documents the layer in full; docs/DECISIONS.md §4 has the measurement.
+ * `./README.md` documents the layer in full, including the measurement behind that choice.
  */
 export { ApiError, asApiError, isAbortError, type ApiErrorKind } from '@/shared/api/errors'
 export { withSignal, type Resource } from '@/shared/api/types'

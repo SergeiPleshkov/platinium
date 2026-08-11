@@ -7,9 +7,8 @@ the Senior Frontend Developer technical assessment.
 |---|---|
 | **Stack** | Vue 3 · Pinia · Vue Router · TypeScript (strict) · Vite · PrimeVue · Tailwind · Docker |
 | **Mock API** | MSW — one handler set for the browser *and* the tests |
-| **Tests** | 690, across 47 files, in six layers with distinct jobs |
-| **Type safety** | `strict` + `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess`; zero `any`, zero suppressions |
-| **Size** | ~11,000 lines of source, ~8,200 of tests |
+| **Tests** | six layers, each with a distinct job — unit, composable, store, component, integration, architecture |
+| **Type safety** | `strict` + `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess`; no `any`, no suppressions |
 
 ---
 
@@ -37,7 +36,7 @@ entities from list screens that search, filter, sort and paginate **on the serve
 Written as the foundation of a platform that keeps evolving rather than as a demo: the module
 boundaries are enforced by lint and asserted by tests, the mock backend behaves like a real one
 (tokens, 401s, 422s with field errors, 409s on referential integrity), and every architectural
-decision is recorded in [docs/DECISIONS.md](docs/DECISIONS.md) as it was made.
+decision that is not obvious from the code is written down beside the code it explains.
 
 ### What is in it
 
@@ -79,9 +78,9 @@ Every line of the brief is tracked with evidence in
 | Brief asks for | Answer |
 |---|---|
 | Scalable folder organization | vertical feature slices; [§7](#7-project-structure) |
-| Reusable components | 20 `Base*` primitives with our own prop APIs; [`src/shared/ui`](src/shared/ui) |
+| Reusable components | `Base*` primitives with our own prop APIs; [`src/shared/ui`](src/shared/ui) |
 | Separation of concerns | markup / behaviour / server state / transport each have one home |
-| Reusable composables | 14 shared composables; the query, collection and bulk logic is written once |
+| Reusable composables | query, collection, selection and bulk logic each written once in [`src/shared/composables`](src/shared/composables) |
 | Clean state management | Pinia owns server data, `useTable` owns the query, neither duplicates the other |
 | **Reusable API layer** | [`src/shared/api`](src/shared/api) — one client, one `ApiError`, one `Resource<T, P>` contract. **[Documented here.](src/shared/api/README.md)** |
 | Maintainable project structure | boundaries enforced by ESLint and asserted by tests |
@@ -137,8 +136,7 @@ docker compose up prod
 ```
 
 Serves at **http://localhost:8080**. Non-root (uid 101), SPA fallback, gzip, immutable caching
-for hashed assets, and a `/healthz` endpoint driving the container healthcheck. The image is
-~57 MB.
+for hashed assets, and a `/healthz` endpoint driving the container healthcheck.
 
 **Development** — the Vite dev server with hot reload, source bind-mounted:
 
@@ -193,7 +191,7 @@ types, so a build that "passes" would prove nothing.
 
 | Command | What it does |
 |---|---|
-| `pnpm test` | The full suite — 690 tests |
+| `pnpm test` | The full suite |
 | `pnpm test:unit` | Unit and component tests only (colocated in `src/`) |
 | `pnpm test:integration` | Integration flows only (`tests/integration/`) |
 | `pnpm test:watch` | Vitest in watch mode |
@@ -214,7 +212,7 @@ src/
     composables/        useTable, useListView, useCollectionState, useVirtualRows,
                         useRowSelection, useBulkAction, useSortableList, useAsyncAction,
                         useNotifications, useRouteLoading, useBreakpoint, useTheme, useSidebar
-    ui/                 20 components — the only place PrimeVue is imported
+    ui/                 Base* primitives — the only place PrimeVue is imported
     utils/              money, dates, CSV — pure and fully unit-tested
     types/              API envelope and entity contracts
     validation/         our zod ↔ vee-validate adapter
@@ -298,17 +296,17 @@ gets it free.
 ### Querying is server-side
 
 Search, filtering, sorting and pagination all happen in the handler, in that order, behind a
-`{ data, meta }` envelope with `perPage` capped at 100.
+`{ data, meta }` envelope, with `perPage` capped.
 [`tests/mock-api/querying.spec.ts`](tests/mock-api/querying.spec.ts) proves it rather than
-assuming: pages are disjoint, walking all 25 pages yields exactly 250 distinct ids, and sorting
-picks the global extreme rather than the page's.
+assuming: pages are disjoint, walking every page returns the whole seeded set with no
+duplicates, and sorting picks the global extreme rather than the current page's.
 
-This is the difference between a UI that looks right at 250 rows and one that still works at
-250,000.
+This is the difference between a UI that looks right at demo scale and one that still works
+when the table is large.
 
 ### PrimeVue is a replaceable dependency
 
-Feature code consumes 20 shared components with our own prop APIs. Tests query by role, label
+Feature code consumes shared components with our own prop APIs. Tests query by role, label
 and visible text — never PrimeVue classnames — so the suite would survive replacing the kit.
 The boundary has already earned itself twice: it caught a direct PrimeVue import in a new
 dashboard component, and it forced `BaseButton` to stop leaking PrimeVue's icon-only semantics.
@@ -326,7 +324,7 @@ assert on specific rows and page boundaries.
 
 ### Testing strategy
 
-690 tests across six kinds, each with a distinct job and none duplicating another's:
+Six kinds of test, each with a distinct job and none duplicating another's:
 
 | Kind | Job |
 |---|---|
@@ -344,8 +342,9 @@ a test needing six mocks is a design problem, not a testing problem.
 
 ## 9. Technical decisions
 
-Every architectural decision, grouped by the question it answers, is in
-[docs/DECISIONS.md](docs/DECISIONS.md). The ones that shaped the most code:
+The decisions that shaped the most code. The rest live as comments beside the code they
+explain, and the layer-level reasoning sits in the README of the layer it describes.
+[TECHNICAL_REVIEW.md](TECHNICAL_REVIEW.md) covers the architecture end to end.
 
 **PrimeVue 4.5.5, pinned — not 5.x.** PrimeVue 5 is no longer open source: it carries the
 PrimeTek dual licence, requires a licence key, ships an offline verifier as a runtime
@@ -356,9 +355,8 @@ dependency, and may display a licence notice without one. 4.5.5 is the last MIT 
 application vocabulary. Evidence the boundary sits in the right place: swapping a hand-rolled
 `fetch` wrapper for axios changed one file, and every test in the layer passed unmodified.
 
-**No generic CRUD-resource factory.** Written out across three entities, the factory version was
-62 lines against 25 for direct calls — it cost 2.5× what it saved, and it had zero consumers
-when it was written. What survives is the `Resource<T, P>` *interface*, so cross-cutting
+**No generic CRUD-resource factory.** Written out across three entities, the factory version
+cost more than twice the code it replaced, and it had no consumers at all when it was written. What survives is the `Resource<T, P>` *interface*, so cross-cutting
 behaviour can still be written once.
 
 **Money is integer minor units.** Writing the tests caught a real bug in the first
@@ -366,7 +364,7 @@ implementation: `Math.round(1.005 * 100)` is 100, not 101, because `1.005 * 100`
 `100.49999999999999`. The conversion now shifts the decimal on the string form.
 
 **Our own zod ↔ vee-validate adapter.** `@vee-validate/zod` peer-depends on zod 3 and reads Zod 3
-internals; any schema using `.default()` throws at form setup. Forty lines of adapter beat
+internals; any schema using `.default()` throws at form setup. A small adapter of ours beat
 downgrading every schema to satisfy a dependency that cannot follow us forward.
 
 **Maximal TypeScript strictness**, including `exactOptionalPropertyTypes` and
@@ -394,11 +392,11 @@ live region per announcement.
 
 **Trade-offs taken knowingly**
 
-- **Relation pickers load up to 200 options** and filter client-side. Correct at this size, wrong
-  past a few hundred events, where it would silently omit some. The clearest piece of intentional
+- **Relation pickers load a bounded page of options** and filter client-side. Correct at the
+  seeded data size, wrong past a few hundred events, where it would silently omit some. The clearest piece of intentional
   debt here — see [TECHNICAL_REVIEW.md](TECHNICAL_REVIEW.md).
-- **MSW is ~164 kB gzipped** in the production bundle. It is lazy-imported behind an env flag and
-  only loads because this application intentionally ships its own backend.
+- **MSW ships in the production bundle.** It is lazy-imported behind an env flag and only loads
+  because this application intentionally ships its own backend.
 - **Drag ordering is scoped to the dashboard tiles**, not table rows: a manual row order fights
   the mandated sortable column headers, and what a hand-placed row should do once the user sorts
   by price is a product question nobody has answered.
@@ -413,7 +411,6 @@ live region per announcement.
 | Document | Purpose |
 |---|---|
 | [TECHNICAL_REVIEW.md](TECHNICAL_REVIEW.md) | Architecture, debt, scaling, standards, AI workflow — the brief's seven questions |
-| [docs/DECISIONS.md](docs/DECISIONS.md) | Every architectural decision, grouped by the question it answers |
 | [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) | Every brief requirement, with evidence |
 | [src/shared/api/README.md](src/shared/api/README.md) | The reusable API layer in detail |
 | [src/features/README.md](src/features/README.md) | Feature slice anatomy and boundaries |

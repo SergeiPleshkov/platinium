@@ -13,7 +13,7 @@ import { ApiError, http } from '@/shared/api'
 /**
  * Endpoints live beside the state that uses them rather than in a separate `api.ts`. At three
  * calls, the indirection cost a file and an import hop and bought nothing — the URL being
- * visible at the call site is worth more. See docs/DECISIONS.md.
+ * visible at the call site is worth more. See src/shared/api/README.md.
  */
 const authApi = {
   login: (payload: LoginPayload) => http.post<AuthSession>('/auth/login', payload),

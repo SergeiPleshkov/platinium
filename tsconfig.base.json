@@ -13,7 +13,7 @@
     "noEmit": true,
     "skipLibCheck": true,
 
-    /* Strictness is deliberately maximal — see docs/DECISIONS.md. */
+    /* Strictness is deliberately maximal — see TECHNICAL_REVIEW.md §6. */
     "strict": true,
     /*
      * `noUnusedLocals` / `noUnusedParameters` are deliberately off: tsc has no ignore-pattern

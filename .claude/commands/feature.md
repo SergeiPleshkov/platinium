@@ -1,26 +1,34 @@
 ---
-description: Build one feature end to end in this repo — orient, implement behind the right skill, verify, commit, record the decision
+description: Build one feature end to end — plan, implement behind the right skill, verify, review, commit
 argument-hint: <what to build, e.g. "venue management" or "saved filters">
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Skill, TaskCreate, TaskUpdate, TaskList
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Skill, Agent, TaskCreate, TaskUpdate, TaskList
 ---
 
 Build: **$1**
 
-The phased plan this repo was built to is finished and deleted. This is the command for
-everything after it.
+This is the implementation phase. It sits between a plan and a review, and it does not skip
+either.
 
-## 1. Orient before writing
+## 1. Plan, unless it is genuinely small
 
-- Read [CLAUDE.md](../../CLAUDE.md) for conventions and the command table.
-- Read the relevant section of [docs/DECISIONS.md](../../docs/DECISIONS.md). Several obvious
-  implementations were tried and rejected here for reasons that are written down — check
-  whether yours is one of them before spending the time.
+If this change adds a layer, crosses a boundary, introduces a dependency, or touches more than
+one feature slice, run the `system-design` skill first and come back with an approved
+`plans/tasks.md`. The tell: if you cannot name every file you will touch before starting, you
+need the plan.
+
+A one-file change, a copy fix, an extra test case — carry on.
+
+## 2. Orient
+
+- Read [CLAUDE.md](../../CLAUDE.md) for the conventions and the command table.
 - Load the skill that matches: `crud-entity` for an entity slice, `vue-feature` for
-  components/composables/stores/API, `testing-vue` for tests.
+  components / composables / stores / API, `testing-vue` for tests.
+- Read the layer README for anything you are about to touch — `src/shared/api/README.md`,
+  `src/features/README.md`, `src/mocks/README.md`.
 - **Find the nearest existing example and read it.** This codebase is deliberately repetitive
   across its three entity slices; matching them is usually right.
 
-## 2. Check what already exists
+## 3. Check what already exists
 
 Before adding a composable or a primitive, search `src/shared/`. There is a good chance the
 building block is there:
@@ -32,21 +40,33 @@ building block is there:
 - toasts → `useNotifications` (never a PrimeVue toast directly)
 - roles → `usePermissions` / `ROLE_PERMISSIONS`
 
-## 3. Implement
+New abstractions need a third real consumer. Name them, or do not extract.
 
-- Respect the layering: `app → features → shared`. Lint enforces it; do not work around it.
-  A rule that is inconvenient usually means the thing belongs somewhere else.
+## 4. Implement
+
+- Work in dependency order: `shared → mocks → features → app`.
+- Respect the layering. Lint enforces it; do not work around it. A rule that is inconvenient
+  usually means the thing belongs somewhere else.
+- Run `pnpm typecheck` and `pnpm lint` continuously, not once at the end.
 - Anything a user can do must be reachable by keyboard and announced to assistive tech.
-- If the change is user-visible, run it in the browser and look at it. Tests passing is not
-  the same as it working.
+- If the change is user-visible, run it in the browser and look at it. Tests passing is not the
+  same as it working.
 
-## 4. Verify
+## 5. Verify
 
 Run `/verify`. Report each result honestly — a failing step is information, not an obstacle.
 
-## 5. Record and commit
+## 6. Review
 
-- If a decision was non-obvious, or an obvious alternative was rejected, add it to the right
-  section of `docs/DECISIONS.md`. Say what it cost.
-- Update `docs/REQUIREMENTS.md` if this touched a listed requirement.
+Dispatch the `code-review` skill as a subagent over the diff. Apply every Required correction,
+re-review at cycle 2 if it came back with issues, escalate to the user at the cap. Do not argue
+with a finding that cites a rule; either fix it or change the rule deliberately.
+
+## 7. Commit
+
+- Update [docs/REQUIREMENTS.md](../../docs/REQUIREMENTS.md) if this touched a listed requirement.
+- If a decision was non-obvious, or an obvious alternative was rejected, write it as a comment
+  above the code it explains — or, if it is architecture-level, in the README of the layer it
+  describes. Say what it cost.
+- Delete the `plans/` files once the user has acknowledged the summary.
 - Commit with a conventional-commit subject and a body explaining *why*, not what.

@@ -51,8 +51,8 @@ doing a component's job.
 
 ## Shared UI primitives (`shared/ui`)
 
-Eighteen `Base*` primitives, plus two composed ones. Check `src/shared/ui/index.ts` for the
-current list before adding anything — the barrel is the inventory.
+Check `src/shared/ui/index.ts` before adding anything — the barrel is the inventory, and it is
+the only list that cannot go stale.
 
 Form and input · `BaseInput` `BaseSelect` `BaseTextarea` `BaseDatePicker` `BaseMoneyInput`
 `BaseSearchInput` `BaseFormField` `BaseSegmentedControl`
@@ -62,9 +62,10 @@ Bulk · `BaseBulkBar` `BaseBulkFailures`
 Composed · `TableViewModeSwitch`
 
 Not every one wraps PrimeVue. `BaseBadge`, `BaseSpinner` and `BaseSegmentedControl` are
-hand-written where the wrapper would have been fighting its wrapped component — see
-`docs/DECISIONS.md` §1. That the kit is *allowed* to contain hand-written primitives is the
-point of the kit being ours.
+hand-written where the wrapper would have been fighting its wrapped component — PrimeVue's
+`SelectButton`, for instance, renders `aria-pressed` toggles, which announce as three
+independent buttons rather than one choice of three. That the kit is *allowed* to contain
+hand-written primitives is the point of the kit being ours.
 
 These are **adapters over PrimeVue**, not re-exports. The point of the layer is that the
 rest of the app is written against our API, so PrimeVue can be replaced by in-house
@@ -130,7 +131,7 @@ third caller needed it; adding a fourth caller to an existing one is nearly alwa
   re-deciding what to do with an `unknown` per store.
 - Endpoints live in each feature's `api.ts`, implementing `Resource<T, P>` widened by
   intersection for anything entity-specific. There is no generic CRUD-resource *factory* —
-  see `docs/DECISIONS.md` §4 for the measurement, and for why the `api.ts` modules came back.
+  see `src/shared/api/README.md` for the measurement, and for why the `api.ts` modules came back.
 
 Nothing outside `shared/api` calls `fetch` or imports axios. Both are lint-blocked.
 
@@ -184,4 +185,4 @@ silently is a regression the tests are written to catch:
 - [ ] No cross-feature imports, no `fetch` outside `shared/api`
 - [ ] Keyboard-reachable, labelled, focus-visible, one live region
 - [ ] Works at 375px
-- [ ] Non-obvious decisions recorded in `docs/DECISIONS.md`
+- [ ] Non-obvious reasoning recorded beside the code, or in the layer's README

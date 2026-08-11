@@ -108,8 +108,7 @@ entities, a `createResource()` factory came to 62 lines against 25 for direct ca
 code it replaced, with zero consumers at the time it was written, and it pushed the URL being
 called out of the file doing the calling. What survives is the contract, which is the part that
 actually pays: `useCollectionState`, the bulk composable and the optimistic-update helper are
-all written once against `Resource<T, P>` rather than three times. See
-[`docs/DECISIONS.md`](../../../docs/DECISIONS.md) § "Abstraction, only where it was measured".
+all written once against `Resource<T, P>` rather than three times.
 
 ## Adding an endpoint
 

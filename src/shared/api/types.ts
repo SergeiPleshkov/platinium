@@ -4,7 +4,7 @@ import type { ListQuery, ListResponse } from '@/shared/types/api'
  * The contract every feature's `api.ts` implements.
  *
  * Deliberately an interface, not a factory. A factory measured worse than the direct calls it
- * replaced (see docs/DECISIONS.md), but the *contract* is worth keeping: it guarantees all
+ * replaced (see ./README.md), but the *contract* is worth keeping: it guarantees all
  * three entities expose the same five operations with the same signatures, which is what lets
  * cross-cutting behaviour — optimistic updates, bulk operations, retry policies — be written
  * once against `Resource<T, P>` instead of three times. Each feature still spells out its own

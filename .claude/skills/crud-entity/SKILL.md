@@ -88,7 +88,8 @@ including why ids are `encodeURIComponent`-wrapped and why nothing here needs a 
 
 > An earlier version of this skill said there was no per-feature `api.ts`. That was true when
 > measured against three entities with five endpoints each, and stopped being true as soon as
-> they grew `exportCsv`, `import`, `bulk` and `listCountries`. See `docs/DECISIONS.md` §4.
+> they grew `exportCsv`, `import`, `bulk` and `listCountries`. The lesson kept is not "measure
+> less" but that a file is a cheaper place to be wrong than an abstraction is.
 
 ### 6. Store — `src/features/foos/store.ts`
 

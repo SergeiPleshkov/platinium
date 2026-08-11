@@ -25,7 +25,7 @@ const features = existsSync(featuresDir)
  * Feature code consumes our own `Base*` components, so replacing PrimeVue with
  * in-house components later is a change confined to one directory.
  *
- * See docs/DECISIONS.md — "PrimeVue behind an in-house adapter layer".
+ * See TECHNICAL_REVIEW.md §1 — "PrimeVue behind an adapter layer".
  */
 const uiKitRestriction = {
   group: ['primevue', 'primevue/*', '@primeuix/*', 'primeicons/*'],
