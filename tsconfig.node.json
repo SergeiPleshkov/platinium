@@ -24,6 +24,7 @@
     "eslint.config.js",
     "playwright.config.ts",
     ".storybook/main.ts",
+    ".storybook/fixOptionalPrimitiveControls.ts",
     "e2e/**/*.ts"
   ]
 }

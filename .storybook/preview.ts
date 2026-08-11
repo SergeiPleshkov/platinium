@@ -2,6 +2,8 @@ import { setup, type Preview } from '@storybook/vue3-vite'
 
 import { installPrimeVue } from '@/app/plugins/primevue'
 
+import { fixOptionalPrimitiveControls } from './fixOptionalPrimitiveControls'
+
 import '@/app/assets/main.css'
 import './preview.css'
 
@@ -39,6 +41,8 @@ function applyScheme(scheme: string): void {
 }
 
 const preview: Preview = {
+  argTypesEnhancers: [fixOptionalPrimitiveControls],
+
   globalTypes: {
     scheme: {
       description: 'Colour scheme',
