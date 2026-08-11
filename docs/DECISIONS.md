@@ -673,3 +673,58 @@ back to the default rather than breaking the page.
 — what should a hand-placed row do when the user then sorts by price? That is a product
 question nobody has answered, and inventing an answer here would be worse than leaving the
 tables alone.
+
+## 2026-08-10 — One dashboard grid, spans instead of two grids
+
+**Chose:** every dashboard widget — the four figures and the two panels — in a single
+sortable four-column grid, each declaring a `span`.
+**Over:** two independent arrangements, one per group, which was the first instinct and is
+simpler.
+
+The panels shipped in a grid of their own with no drag handles, so a user could rearrange the
+numbers but could not push "Upcoming events" above them. That is precisely the arrangement
+somebody who cares more about their calendar than their totals would want, which makes the
+restriction the wrong one. Two lists would have "fixed" the missing handles while keeping the
+part that mattered impossible.
+
+The spans reproduce the previous layout exactly — four one-column tiles fill row one, two
+two-column panels fill row two — so nothing moved for anyone who never drags. The cost is that
+an interleaved arrangement can leave a hole in the grid. That is the user's own choice made
+visible, and `grid-auto-flow: dense` would "fix" it by silently overriding the order they
+asked for, which is worse.
+
+**Equal heights.** The cards were sized by their content, so "Inventory value" with three
+currency lines stood 60px taller than "Events" beside it. Grid already stretches the `<li>`;
+what was missing was `h-full` on the card *inside* it, so it filled the cell rather than
+keeping its own height.
+
+**One `DragHandle`, shared.** The figures and the panels sit in one arrangement, and a widget
+that reordered differently depending on its shape would be a quirk the user has to learn. The
+handle, its accessible name and its arrow-key handling now exist once.
+
+## 2026-08-10 — Layout is saved to the account; theme and sidebar are not
+
+**Chose:** `PATCH /api/me/preferences`, an explicit "Save layout" button, and `localStorage`
+for everything else.
+**Over:** persisting the arrangement only locally, and over auto-saving it to the server.
+
+**Where a preference lives should follow what it is about.** Theme and sidebar collapse are
+properties of *this screen* — a laptop at night and an office desktop reasonably differ, and
+syncing them would be an annoyance dressed as a feature. A dashboard arrangement is a
+property of the person's judgement about their own work, and should meet them on a new
+machine. So it goes on the account.
+
+**Explicit save, not autosave.** Dragging is exploratory; an autosave writes every
+intermediate state, including the ones the user was in the middle of undoing. The button is
+offered only when the on-screen order actually differs from the stored one — not merely when
+something has been dragged — so moving a widget away and back withdraws it rather than
+inviting a pointless request and a misleading "saved".
+
+**The endpoint merges.** An omitted key must not erase a stored preference, or one screen's
+save quietly resets another's setting. That is a `PATCH`, and the `undefined` keys are
+filtered out rather than spread through.
+
+**Read on a watcher, not at mount.** After a reload the user is restored asynchronously, so
+the dashboard renders before `/auth/me` answers. Reading preferences in `onMounted` finds
+nothing and leaves the account's layout silently unapplied — a bug that only appears on
+refresh, never during navigation.

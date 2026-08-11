@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import type { AuthSession, User } from '@/features/auth/types'
 import { SEED_PASSWORD } from '@/mocks/fixtures'
 import type { ApiErrorBody } from '@/shared/types/api'
-import { get, post, signIn } from '@tests/utils/apiClient'
+import { get, patch, post, signIn } from '@tests/utils/apiClient'
 
 describe('mock API — auth', () => {
   let token: string
@@ -135,5 +135,101 @@ describe('mock API — auth', () => {
         expect((await get<ApiErrorBody>(path)).status).toBe(401)
       },
     )
+  })
+})
+
+/**
+ * Preferences that belong to the account rather than the browser.
+ *
+ * The distinction is the whole point of the endpoint: a dashboard arrangement should follow
+ * the person to another machine, which `localStorage` cannot do.
+ */
+describe('mock API — user preferences', () => {
+  it('starts with none', async () => {
+    const token = await signIn()
+    const me = await get<{ preferences?: { dashboardOrder?: string[] } }>('/api/auth/me', token)
+
+    expect(me.body.preferences).toBeUndefined()
+  })
+
+  it('saves an arrangement against the account', async () => {
+    const token = await signIn()
+
+    const response = await patch<{ dashboardOrder: string[] }>(
+      '/api/me/preferences',
+      { dashboardOrder: ['tickets', 'events'] },
+      token,
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.body.dashboardOrder).toEqual(['tickets', 'events'])
+  })
+
+  it('returns it on the next /auth/me, which is how a reload restores it', async () => {
+    const token = await signIn()
+    await patch('/api/me/preferences', { dashboardOrder: ['inventory'] }, token)
+
+    const me = await get<{ preferences: { dashboardOrder: string[] } }>('/api/auth/me', token)
+
+    expect(me.body.preferences.dashboardOrder).toEqual(['inventory'])
+  })
+
+  it('survives signing out and back in', async () => {
+    const first = await signIn()
+    await patch('/api/me/preferences', { dashboardOrder: ['busiest-events'] }, first)
+    await post('/api/auth/logout', {}, first)
+
+    const second = await signIn()
+    const me = await get<{ preferences: { dashboardOrder: string[] } }>('/api/auth/me', second)
+
+    // The point of storing it server-side rather than in the browser.
+    expect(me.body.preferences.dashboardOrder).toEqual(['busiest-events'])
+  })
+
+  it('merges rather than replacing, so one screen cannot reset another', async () => {
+    const token = await signIn()
+    await patch('/api/me/preferences', { dashboardOrder: ['events'] }, token)
+
+    // An empty PATCH must not erase what is already stored.
+    await patch('/api/me/preferences', {}, token)
+
+    const me = await get<{ preferences: { dashboardOrder: string[] } }>('/api/auth/me', token)
+    expect(me.body.preferences.dashboardOrder).toEqual(['events'])
+  })
+
+  it('keeps each account separate', async () => {
+    const admin = await signIn('admin@ticketing.test')
+    const editor = await signIn('editor@ticketing.test')
+
+    await patch('/api/me/preferences', { dashboardOrder: ['tickets'] }, admin)
+
+    const other = await get<{ preferences?: object }>('/api/auth/me', editor)
+    expect(other.body.preferences).toBeUndefined()
+  })
+
+  it('is allowed for every role — a layout is not a privileged change', async () => {
+    const viewer = await signIn('viewer@ticketing.test')
+    const response = await patch('/api/me/preferences', { dashboardOrder: ['events'] }, viewer)
+
+    expect(response.status).toBe(200)
+  })
+
+  it('requires a session', async () => {
+    const response = await patch('/api/me/preferences', { dashboardOrder: ['events'] })
+    expect(response.status).toBe(401)
+  })
+
+  it('rejects a shape it does not recognise', async () => {
+    const token = await signIn()
+    const response = await patch('/api/me/preferences', { dashboardOrder: [1, 2, 3] }, token)
+
+    expect(response.status).toBe(422)
+  })
+
+  it('caps the list, because this is user-supplied and persisted', async () => {
+    const token = await signIn()
+    const huge = Array.from({ length: 51 }, (_unused, index) => `w${index}`)
+
+    expect((await patch('/api/me/preferences', { dashboardOrder: huge }, token)).status).toBe(422)
   })
 })

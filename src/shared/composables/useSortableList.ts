@@ -35,6 +35,11 @@ export interface UseSortableList {
   moveTo: (id: string, index: number) => void
   /** Nudge one place. `-1` and `+1` are what the arrow keys send. */
   moveBy: (id: string, delta: number) => void
+  /**
+   * Adopts an order wholesale — restoring one saved against the user's account, most
+   * obviously. Reconciled like any other, so a stale saved order cannot hide a new widget.
+   */
+  setOrder: (ids: readonly string[]) => void
   reset: () => void
   /** Spread onto each draggable item. */
   dragHandlers: (id: string) => {
@@ -131,6 +136,7 @@ export function useSortableList(options: UseSortableListOptions): UseSortableLis
 
     moveTo: apply,
     moveBy: (id, delta) => apply(id, order.value.indexOf(id) + delta),
+    setOrder: (ids) => persist(reconcile(ids, options.ids())),
 
     reset() {
       persist([])

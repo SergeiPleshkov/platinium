@@ -1,7 +1,13 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-import type { AuthSession, LoginPayload, User, UserRole } from '@/features/auth/types'
+import type {
+  AuthSession,
+  LoginPayload,
+  User,
+  UserPreferences,
+  UserRole,
+} from '@/features/auth/types'
 import { ApiError, http } from '@/shared/api'
 
 /**
@@ -14,6 +20,8 @@ const authApi = {
   /** Validates a restored token against the server. */
   me: () => http.get<User>('/auth/me'),
   logout: () => http.post<void>('/auth/logout'),
+  savePreferences: (preferences: UserPreferences) =>
+    http.patch<UserPreferences>('/me/preferences', preferences),
 }
 
 const TOKEN_STORAGE_KEY = 'app.auth.token'
@@ -50,6 +58,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => token.value !== null && user.value !== null)
   const role = computed<UserRole | null>(() => user.value?.role ?? null)
   const displayName = computed(() => user.value?.name ?? '')
+  const preferences = computed<UserPreferences>(() => user.value?.preferences ?? {})
   const initials = computed(() =>
     (user.value?.name ?? '')
       .split(' ')
@@ -127,6 +136,19 @@ export const useAuthStore = defineStore('auth', () => {
     clearSession()
   }
 
+  /**
+   * Persists preferences against the account, so they follow the user to another machine.
+   *
+   * Rethrows. The caller is a button the user pressed deliberately, and a save that silently
+   * did nothing is the worst outcome available — they would carry on believing it was kept.
+   */
+  async function savePreferences(changes: UserPreferences): Promise<void> {
+    const saved = await authApi.savePreferences(changes)
+
+    // Reflect the server's answer rather than the request, so `user` matches what was stored.
+    if (user.value) user.value = { ...user.value, preferences: saved }
+  }
+
   return {
     token,
     user,
@@ -136,9 +158,11 @@ export const useAuthStore = defineStore('auth', () => {
     role,
     displayName,
     initials,
+    preferences,
     login,
     logout,
     restore,
+    savePreferences,
     endExpiredSession,
   }
 })

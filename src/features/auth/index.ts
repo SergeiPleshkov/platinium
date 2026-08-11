@@ -17,5 +17,6 @@ export {
   type AuthSession,
   type LoginPayload,
   type User,
+  type UserPreferences,
   type UserRole,
 } from '@/features/auth/types'
