@@ -252,7 +252,13 @@ async function confirmDelete(): Promise<void> {
         </div>
         <p class="mt-1 text-sm text-content-muted">Pricing, inventory and availability.</p>
       </div>
-      <div class="flex gap-2">
+      <!--
+        `flex-wrap`, because this row carries three actions. Buttons never shrink below their
+        label (see `BaseButton`), so at 375px three of them are ~400px wide and pushed the
+        whole page into horizontal scroll. Wrapping is the only option that keeps every label
+        readable.
+      -->
+      <div class="flex flex-wrap gap-2">
         <BaseButton
           v-if="permissions.canImport.value"
           variant="secondary"

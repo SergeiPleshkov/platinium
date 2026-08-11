@@ -49,9 +49,11 @@ decision-making, overall software craftsmanship — not only "does it work".
 
 ### Responsive
 - [x] Desktop (1280) — collapsible content-width rail, full grid; verified in a browser
-- [x] Tablet (768) — grid retained, nav becomes a drawer, no horizontal scroll; verified
-- [x] Mobile (375) — table becomes a card list, off-canvas drawer; verified, and the card
-      branch is covered by `BaseDataTable.spec.ts`
+- [x] Tablet (768) — grid retained inside its own scroller, nav becomes a drawer; the *page*
+      never scrolls sideways. Measured on all four screens.
+- [x] Mobile (375) — table becomes a card list, off-canvas drawer, view switch hidden; the
+      card branch is covered by `BaseDataTable.spec.ts`. Measured `scrollWidth == clientWidth`
+      on all four screens, which caught the tickets header overflowing with three actions.
 
 ## Technical
 
