@@ -66,11 +66,15 @@ export const useEventsStore = defineStore('events', () => {
   }
 
   /**
-   * Loads relation-picker options.
+   * Loads the options for the Event picker in the ticket form.
    *
-   * Capped by name. At the seeded data size this returns everything; at real scale the picker
-   * would need a server-backed type-ahead instead, because a truncated list omits options
-   * silently. Recorded as accepted debt in TECHNICAL_REVIEW.md §3 rather than pretended away.
+   * One page, sorted by name. The request asks for 200 and the server caps `perPage` at 100
+   * (`src/mocks/query.ts`), so 100 is the real ceiling. With the seeded events that is all of
+   * them, and `filterable` on `BaseSelect` narrows the list in the browser as the user types.
+   *
+   * Past 100 events this becomes wrong rather than slow: the picker would hold the first 100
+   * alphabetically, and typing the name of the 340th would show "no results", which is
+   * indistinguishable from the event not existing. Accepted debt, see TECHNICAL_REVIEW.md §3.
    */
   async function fetchOptions(): Promise<void> {
     try {

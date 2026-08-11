@@ -433,10 +433,13 @@ announcing.
 
 **Trade-offs taken knowingly**
 
-- **Relation pickers load a bounded page of options** and filter client-side. This is correct at
-  the seeded data size and wrong past a few hundred events, where it would omit some without
-  saying so. It is the clearest piece of intentional debt here; see
-  [TECHNICAL_REVIEW.md](TECHNICAL_REVIEW.md).
+- **The Event and Category pickers in the ticket form load one page of options and filter in
+  the browser.** With the seeded data every event fits on that page, so the dropdown is
+  complete. Past 100 events it would hold only the first 100 by name, and searching for a later
+  one would say "no results", which looks exactly like the event not existing. It is wrong
+  rather than slow, and nothing warns anyone, which is what makes it the clearest piece of
+  intentional debt here. The fix is a server-backed type-ahead; see
+  [TECHNICAL_REVIEW.md §3](TECHNICAL_REVIEW.md).
 - **MSW ships in the production bundle.** It is lazy-imported behind an env flag, and it only
   loads because this application deliberately ships its own backend.
 - **Drag ordering covers the dashboard tiles, not table rows.** A manual row order fights the

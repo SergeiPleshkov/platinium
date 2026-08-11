@@ -148,17 +148,68 @@ work that would make me comfortable putting this in front of real administrators
 7. **Decide what the view-mode switch is.** It ships labelled "DEMO" because shipping both
    rendering strategies is a demonstration, not a product decision. A real portal picks one per
    screen, and that choice needs data I do not have.
+8. **An audit trail on events.** See below; this is the one item here that is a feature rather
+   than a hardening task, and the one I would argue hardest for.
+
+### The audit trail, in more detail
+
+Events carry money and inventory. Once more than one person can edit them, "who moved this
+event to a different venue, and when" stops being a nice-to-have. Today a change overwrites its
+predecessor and leaves nothing behind, so a disputed price or a cancelled event has no history
+to appeal to.
+
+The shape:
+
+- Every mutating handler writes an entry: entity type and id, the actor's user id, a timestamp,
+  and a field-level diff of before and after. The mock backend already funnels every mutation
+  through `parseBody` and the permission preamble, so there is one place to hook it rather than
+  a change in every handler.
+- `GET /api/events/:id/history` returns the entries newest first, paginated through the same
+  `{ data, meta }` envelope every other list uses, which means `useTable` and `BaseDataTable`
+  work unchanged.
+- The UI is a drawer on the event row, rendering "Ada Okonjo changed Venue from Accor Arena to
+  Ziggo Dome" rather than a raw JSON patch. Diffing is a pure function, so it is unit-testable
+  without mounting anything.
+- Entries are append-only and have no delete endpoint. A log that can be edited by the people
+  it logs is not evidence.
+
+**Who sees it: administrators only.** The history names staff and timestamps their activity,
+which makes it personal data about employees and, in the wrong hands, a performance-monitoring
+tool nobody agreed to. Viewers may be external stakeholders such as promoters with read access,
+and there is no version of "which of your colleagues changed this price at 14:02" that they
+need.
+
+Editors are the interesting case, because they have a real problem the log looks like it would
+solve: knowing that a colleague just changed the record they are editing. That is a different
+requirement, though. It is about *right now*, not about history, and it is already answered by
+the optimistic-concurrency design in §5, where a stale `If-Match` returns a 409 and the form
+says so. Solving a live-coordination problem by exposing a permanent audit log is the wrong
+tool, and it leaks more than it fixes.
+
+So: a new `audit` capability in `ROLE_PERMISSIONS`, granted to `admin` alone. A capability
+rather than a role check, for the same reason as everything else in that matrix, and it leaves
+room for a future compliance role that can read the log without being able to change anything.
 
 ---
 
 ## 3. Technical debt I accepted deliberately
 
-**Relation pickers cap their option list.** `fetchOptions()` loads a bounded page of
-`{id, name}` pairs and the picker filters client-side. At the seeded data size that is
-everything. Past a few hundred it omits some without saying so, which is worse than being slow.
-This is the clearest piece of debt in the codebase and the first thing I would fix. The remedy
-is localised: `BaseSelect` already supports `filterable`, so the work is making that filter
-server-backed and pinning the selected option so it survives falling outside the result page.
+**The relation pickers cap their option list.** Creating a ticket means choosing an Event and
+a Category from dropdowns. `fetchOptions()` fills those by asking for a single page of
+`{id, name}` pairs sorted by name, and `BaseSelect`'s `filterable` then narrows the list in the
+browser as the user types. The request asks for 200 and the server caps `perPage` at 100, so
+100 is the real ceiling. The seeded data fits inside it.
+
+At 500 events it stops being a performance question and becomes a correctness one. The picker
+would hold the first 100 names alphabetically, so typing "Winter Gala" when that event sorts
+340th would return "no results", which is indistinguishable from the event not existing. Nothing
+errors and nothing logs; the user is simply told something false. That is why this is the first
+thing I would fix rather than the cheapest.
+
+The remedy is localised. Make the filter server-backed, so each keystroke queries
+`GET /api/events?search=…&perPage=20`, and pin the currently selected option into the list so
+that editing a ticket whose event falls outside the result page does not silently blank the
+field.
 
 **MSW ships in the production bundle,** lazy-imported behind an env flag. This application has
 no other backend and the brief asks for a demonstrable one. A real deployment sets
