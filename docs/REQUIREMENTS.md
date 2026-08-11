@@ -120,10 +120,15 @@ Selected for this submission (phase 8, in build order — all after mandatory wo
 - [x] Role-based permissions — a capability matrix imported by both the UI and the mock
       backend; every forbidden call is tested against the API, not just hidden in the UI
 
+- [x] Drag & drop ordering — dashboard tiles, persisted, with an equal keyboard path through
+      the same reorder function; HTML5 DnD has no keyboard equivalent, so drag alone would
+      mean the feature does not exist for keyboard and switch users
+
 Also built, beyond the brief's list:
 
 - [x] Virtual scrolling — selectable against pagination from a switch on every list page, so
       both strategies can be compared over the identical server-side query
 
-Not selected: drag & drop ordering — a manual order conflicts with the mandated sortable
-column headers, and reconciling the two would be a product decision nobody has made.
+Scoped deliberately: drag ordering applies to the dashboard tiles, not to table rows. A
+manual row order fights the mandated sortable column headers — what a hand-placed row should
+do once the user sorts by price is a product question nobody has answered.

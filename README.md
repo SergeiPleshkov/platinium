@@ -74,7 +74,7 @@ docker run --rm -p 8080:8080 ticket-admin-portal
 | `pnpm typecheck` | `vue-tsc` across app, test and config projects |
 | `pnpm lint` | ESLint, including the architectural boundary rules |
 | `pnpm format` / `pnpm format:check` | Prettier |
-| `pnpm test` | Full suite — 617 tests |
+| `pnpm test` | Full suite — 669 tests |
 | `pnpm test:unit` | Unit and component tests only (`src/`) |
 | `pnpm test:integration` | Integration flows only (`tests/integration/`) |
 | `pnpm test:watch` | Vitest in watch mode |
@@ -200,7 +200,7 @@ assert on specific rows and page boundaries.
 
 ### Testing strategy
 
-617 tests across six kinds, each with a distinct job:
+669 tests across six kinds, each with a distinct job:
 
 | Kind | Job |
 |---|---|
@@ -218,7 +218,7 @@ MSW is the only mock. No stubbed stores, no stubbed API modules, no stubbed chil
 
 ## Technical decisions
 
-Twenty-nine entries with full reasoning are in [docs/DECISIONS.md](docs/DECISIONS.md). The ones
+Thirty entries with full reasoning are in [docs/DECISIONS.md](docs/DECISIONS.md). The ones
 that shaped the most code:
 
 **PrimeVue 4.5.5, pinned — not 5.x.** PrimeVue 5 is no longer open source: it carries the
@@ -269,10 +269,10 @@ beat downgrading every schema to satisfy a dependency that cannot follow us forw
   intentional debt here — see [TECHNICAL_REVIEW.md](TECHNICAL_REVIEW.md).
 - **MSW is ~162 kB gzipped** in the production bundle. It is lazy-imported behind an env flag
   and only loads because this application intentionally ships its own backend.
-- **Only drag & drop ordering was left unbuilt** from the bonus list. A manual order fights
-  the mandated sortable column headers, and reconciling the two is a product decision nobody
-  has made. Everything else selected — dark mode, dashboard statistics, CSV export and import,
-  bulk actions, optimistic updates, role-based permissions, plus virtual scrolling — shipped.
+- **Every bonus on the brief's list shipped**, plus virtual scrolling. Drag ordering is scoped
+  to the dashboard tiles rather than table rows: a manual row order fights the mandated
+  sortable column headers, and what a hand-placed row should do once the user sorts by price
+  is a product question nobody has answered.
 - **No E2E layer.** The integration tests drive the real router, real stores and real mock
   backend in jsdom, which covers the same journeys; Playwright would add real-browser
   fidelity and CI time.
