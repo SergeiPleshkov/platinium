@@ -69,7 +69,8 @@ that is not obvious from the code sits in a comment above the code it explains.
 | Infinite scrolling | virtual scroller over a sparse buffer, switchable against pagination from the toolbar |
 
 Also: WCAG-AA contrast pinned by a test, request cancellation on superseded queries, and a
-`/verify` quality gate that CI runs on every push.
+`pnpm verify` quality gate (also available as the agent `/verify` command) that CI runs on
+every push.
 
 ### Requirements coverage
 
@@ -160,7 +161,9 @@ docker run --rm -p 8080:8080 ticket-admin-portal
 
 CI goes further than building the image. It starts the container and curls the healthcheck, the
 root, and a client-side deep link, because a Dockerfile can build cleanly and still serve
-nothing.
+nothing. The production nginx config also applies security headers (`X-Content-Type-Options`,
+`X-Frame-Options`, `Referrer-Policy`, `Cross-Origin-Opener-Policy`) on every location via
+[`docker/security-headers.conf`](docker/security-headers.conf).
 
 ---
 
@@ -173,7 +176,8 @@ nothing.
 | `pnpm lint:fix` | ESLint with autofix |
 | `pnpm format` | Prettier, write |
 | `pnpm format:check` | Prettier, check only. This is what CI runs. |
-| `pnpm typecheck` | `vue-tsc` across the app, test and config TypeScript projects |
+| `pnpm typecheck` | `vue-tsc --build --force` across the app, test and config TypeScript projects |
+| `pnpm verify` | The full quality gate: typecheck → lint → format:check → test → build |
 
 ---
 
@@ -198,9 +202,12 @@ types, so a green build would tell you nothing about whether the code compiles.
 | `pnpm test:integration` | Integration flows only, in `tests/integration/` |
 | `pnpm test:watch` | Vitest in watch mode |
 | `pnpm test:coverage` | Coverage report |
+| `pnpm test:e2e` | Playwright smoke + axe against a production preview (MSW on). Run `pnpm test:e2e:install` once first. |
 
-The quality gate is all five steps in order: **typecheck → lint → format → test → build**. CI
-runs the same five before it touches the Docker image.
+The quality gate is all five steps in order: **typecheck → lint → format → test → build**.
+Run them with `pnpm verify`. CI runs the same five in the `verify` job before the `docker`
+job (`needs: verify`), so a broken suite never marks the image smoke as green on its own.
+An agent `/verify` command exists too; it is the same gate, not a separate script.
 
 ---
 
@@ -211,9 +218,10 @@ src/
   app/                  bootstrap: entry, router + guards, layouts, theme tokens, plugins
   shared/               cross-feature and domain-agnostic
     api/                axios client, ApiError normalisation, query serialisation  ← README
-    composables/        useTable, useListView, useCollectionState, useVirtualRows,
-                        useRowSelection, useBulkAction, useSortableList, useAsyncAction,
-                        useNotifications, useRouteLoading, useBreakpoint, useTheme, useSidebar
+    composables/        useTable, useListView, useCollectionState, useEntityPage,
+                        useVirtualRows, useRowSelection, useBulkAction, useSortableList,
+                        useAsyncAction, useNotifications, useRouteLoading, useBreakpoint,
+                        useTheme, useSidebar
     ui/                 Base* primitives. The only place PrimeVue is imported.
     utils/              money, dates, CSV. Pure and fully unit-tested.
     types/              API envelope and entity contracts

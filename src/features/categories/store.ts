@@ -8,6 +8,7 @@ import { useCollectionState } from '@/shared/composables/useCollectionState'
 import { createListQuery, type ListQuery } from '@/shared/types/api'
 import type { BulkRequest, BulkResult } from '@/shared/types/bulk'
 import type { EntityRef } from '@/shared/types/entity'
+import { mergePinnedOption, RELATION_OPTIONS_PER_PAGE } from '@/shared/utils/options'
 
 /**
  * The single source of truth for category data.
@@ -64,15 +65,37 @@ export const useCategoriesStore = defineStore('categories', () => {
     )
   }
 
-  /** Loads relation-picker options. See the note on the events store about scale. */
-  async function fetchOptions(): Promise<void> {
+  /**
+   * Loads options for Category relation pickers. Same server-backed contract as
+   * `useEventsStore().fetchOptions`, see that comment for why search + pin exist.
+   */
+  async function fetchOptions(
+    args: {
+      search?: string
+      pin?: EntityRef | null
+      signal?: AbortSignal
+    } = {},
+  ): Promise<void> {
+    const { search = '', pin = null, signal } = args
+
     try {
       const response = await categoriesApi.list(
-        createListQuery({ sort: 'name', order: 'asc', perPage: 200 }),
+        createListQuery({
+          search,
+          sort: 'name',
+          order: 'asc',
+          perPage: RELATION_OPTIONS_PER_PAGE,
+        }),
+        signal,
       )
-      options.value = response.data.map((category) => ({ id: category.id, name: category.name }))
-    } catch {
-      options.value = []
+      const mapped = response.data.map((category) => ({
+        id: category.id,
+        name: category.name,
+      }))
+      options.value = mergePinnedOption(mapped, pin)
+    } catch (caught) {
+      if (isAbortError(caught)) return
+      options.value = pin ? [pin] : []
     }
   }
 

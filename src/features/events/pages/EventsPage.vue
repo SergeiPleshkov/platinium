@@ -10,8 +10,13 @@ import {
   type Event,
 } from '@/features/events/types'
 import { usePermissions } from '@/features/auth'
-import { ApiError } from '@/shared/api'
-import { useBulkAction, useListView, useNotifications, useRowSelection } from '@/shared/composables'
+import {
+  useBulkAction,
+  useEntityPage,
+  useListView,
+  useNotifications,
+  useRowSelection,
+} from '@/shared/composables'
 import { formatDateRange } from '@/shared/utils/date'
 import {
   BaseBadge,
@@ -112,66 +117,33 @@ async function applyBulkStatus(status: string): Promise<void> {
   await bulk.execute({ action: 'status', ids: selection.selectedIds.value, status }, 'updated')
 }
 
-/* ---- create / edit ---- */
-
-const formOpen = ref(false)
-const editing = ref<Event | null>(null)
-
-function openCreate(): void {
-  editing.value = null
-  formOpen.value = true
-}
-
-function openEdit(event: Event): void {
-  editing.value = event
-  formOpen.value = true
-}
-
-async function onSaved(): Promise<void> {
-  await Promise.all([table.refresh(), store.fetchCountries()])
-}
-
-/* ---- delete ---- */
-
-const deleting = ref<Event | null>(null)
-const deletePending = ref(false)
-const deleteError = ref<string | null>(null)
+const {
+  formOpen,
+  editing,
+  openCreate,
+  openEdit,
+  onSaved,
+  deleting,
+  deletePending,
+  deleteError,
+  askDelete,
+  closeDelete,
+  confirmDelete,
+} = useEntityPage<Event>({
+  refresh: () => table.refresh(),
+  adoptPage: (page) => table.adoptPage(page),
+  currentPage: () => store.meta.page,
+  remove: (id) => store.remove(id),
+  entityLabel: 'Event',
+  success: notifications.success,
+  afterSave: () => store.fetchCountries(),
+})
 
 const confirmMessage = computed(() =>
   deleting.value
     ? `“${deleting.value.name}” will be permanently deleted. This cannot be undone.`
     : '',
 )
-
-function askDelete(event: Event): void {
-  deleting.value = event
-  deleteError.value = null
-}
-
-async function confirmDelete(): Promise<void> {
-  const target = deleting.value
-  if (!target) return
-
-  deletePending.value = true
-  deleteError.value = null
-
-  try {
-    await store.remove(target.id)
-    notifications.success('Event deleted', `“${target.name}” has been removed.`)
-    deleting.value = null
-    await table.refresh()
-    table.adoptPage(store.meta.page)
-  } catch (caught) {
-    /*
-     * An event with tickets cannot be deleted. The server says how many; showing that in the
-     * dialog tells the admin what to do next, which a generic failure toast would not.
-     */
-    deleteError.value =
-      caught instanceof ApiError ? caught.message : 'Could not delete the event. Try again.'
-  } finally {
-    deletePending.value = false
-  }
-}
 </script>
 
 <template>
@@ -331,7 +303,7 @@ async function confirmDelete(): Promise<void> {
       confirm-label="Delete event"
       :busy="deletePending"
       :error-message="deleteError ?? undefined"
-      @update:open="deleting = null"
+      @update:open="closeDelete"
       @confirm="confirmDelete"
     />
   </div>

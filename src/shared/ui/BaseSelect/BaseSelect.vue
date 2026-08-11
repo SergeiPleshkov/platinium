@@ -1,6 +1,7 @@
 <script setup lang="ts" generic="TValue extends string | number">
 import MultiSelect from 'primevue/multiselect'
 import Select from 'primevue/select'
+import { onScopeDispose } from 'vue'
 
 import BaseFormField from '@/shared/ui/BaseFormField/BaseFormField.vue'
 
@@ -15,6 +16,10 @@ import BaseFormField from '@/shared/ui/BaseFormField/BaseFormField.vue'
  * pointing at a non-labellable element associates with nothing, the control ends up
  * unlabelled for assistive tech while looking correct on screen. `inputId` puts the id on the
  * inner focusable element, which is what the label needs.
+ *
+ * When `onFilter` is set, keystrokes are debounced and handed to the caller so options can be
+ * loaded from the server. Local filtering still runs on whatever options are currently
+ * provided; that is fine when those options already match the query the server returned.
  */
 
 export interface SelectOption<T> {
@@ -36,9 +41,14 @@ interface Props {
   multiple?: boolean | undefined
   /** Adds a type-ahead box inside the overlay, worth it past roughly ten options. */
   filterable?: boolean | undefined
+  /**
+   * Remote search hook. Fired (debounced) whenever the filter box changes. Callers replace
+   * `options` from the server; leave unset for purely client-side filtering.
+   */
+  onFilter?: ((query: string) => void) | undefined
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   required: false,
   disabled: false,
   labelHidden: false,
@@ -49,6 +59,25 @@ withDefaults(defineProps<Props>(), {
 })
 
 const model = defineModel<TValue | TValue[] | null | undefined>()
+
+/** Same cadence as `useTable` search so typing feels consistent across the app. */
+const FILTER_DEBOUNCE_MS = 300
+
+let filterTimer: ReturnType<typeof setTimeout> | undefined
+
+function emitFilter(query: string): void {
+  props.onFilter?.(query)
+}
+
+function onSelectFilter(event: { value: string }): void {
+  if (!props.onFilter) return
+  clearTimeout(filterTimer)
+  filterTimer = setTimeout(() => emitFilter(event.value ?? ''), FILTER_DEBOUNCE_MS)
+}
+
+onScopeDispose(() => {
+  clearTimeout(filterTimer)
+})
 </script>
 
 <template>
@@ -77,6 +106,7 @@ const model = defineModel<TValue | TValue[] | null | undefined>()
         :aria-describedby="describedBy"
         display="chip"
         fluid
+        @filter="onSelectFilter"
       />
       <Select
         v-else
@@ -93,6 +123,7 @@ const model = defineModel<TValue | TValue[] | null | undefined>()
         :filter="filterable"
         :aria-describedby="describedBy"
         fluid
+        @filter="onSelectFilter"
       />
     </template>
   </BaseFormField>

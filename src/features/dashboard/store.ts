@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 import type { DashboardStats } from '@/features/dashboard/types'
-import { ApiError, http, isAbortError } from '@/shared/api'
+import { asApiError, http, isAbortError, type ApiError } from '@/shared/api'
 import type { AsyncStatus } from '@/shared/types/api'
 
 /** Dashboard statistics, fetched whole from the server. */
@@ -24,15 +24,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
       status.value = 'success'
     } catch (caught) {
       if (isAbortError(caught)) return
-      error.value =
-        caught instanceof ApiError
-          ? caught
-          : new ApiError({
-              kind: 'network',
-              status: 0,
-              message: 'Could not load the dashboard. Try again.',
-              cause: caught,
-            })
+      error.value = asApiError(caught, 'Could not load the dashboard. Try again.')
       status.value = 'error'
     }
   }

@@ -132,4 +132,39 @@ describe('events store', () => {
       expect(store.items.some((event) => event.id === created.id)).toBe(false)
     })
   })
+
+  describe('relation options', () => {
+    it('loads a small searchable page and pins a selected ref outside it', async () => {
+      await store.fetchList(createListQuery({ sort: 'name', order: 'asc', perPage: 100 }))
+      const sorted = [...store.items].sort((a, b) => a.name.localeCompare(b.name))
+      expect(sorted.length).toBeGreaterThan(20)
+
+      const outsideFirstPage = sorted[20]
+      expect(outsideFirstPage).toBeDefined()
+
+      await store.fetchOptions()
+      expect(store.options).toHaveLength(20)
+      expect(store.options.some((option) => option.id === outsideFirstPage!.id)).toBe(false)
+
+      const pin = { id: outsideFirstPage!.id, name: outsideFirstPage!.name }
+      await store.fetchOptions({ pin })
+      expect(store.options[0]).toEqual(pin)
+      expect(store.options).toHaveLength(21)
+
+      await store.fetchOptions({ search: outsideFirstPage!.name })
+      expect(store.options.some((option) => option.id === outsideFirstPage!.id)).toBe(true)
+    })
+
+    it('degrades to the pin alone when the request fails', async () => {
+      server.use(
+        mswHttp.get(`${ORIGIN}/api/events`, () =>
+          HttpResponse.json({ message: 'Unavailable' }, { status: 503 }),
+        ),
+      )
+
+      const pin = { id: 'evt_pin', name: 'Pinned Event' }
+      await store.fetchOptions({ pin })
+      expect(store.options).toEqual([pin])
+    })
+  })
 })

@@ -20,8 +20,8 @@ import { BaseButton, BaseModal, BaseSpinner } from '@/shared/ui'
  * rows, does this event exist, is this a valid status, belongs to the server.
  */
 
-const props = defineProps<{ open: boolean }>()
-const emit = defineEmits<{ 'update:open': [value: boolean]; imported: [] }>()
+const emit = defineEmits<{ imported: [] }>()
+const open = defineModel<boolean>('open', { required: true })
 
 const store = useTicketsStore()
 const notifications = useNotifications()
@@ -35,12 +35,9 @@ const parseError = ref<string | null>(null)
 const canCommit = computed(() => preview.value !== null && preview.value.accepted > 0)
 
 // A dialog reopened after an import must not still be showing the last one's report.
-watch(
-  () => props.open,
-  (open) => {
-    if (!open) reset()
-  },
-)
+watch(open, (isOpen) => {
+  if (!isOpen) reset()
+})
 
 function reset(): void {
   fileName.value = null
@@ -107,7 +104,7 @@ async function commit(): Promise<void> {
       result.errors.length > 0 ? `${result.errors.length} rows were skipped.` : undefined,
     )
     emit('imported')
-    emit('update:open', false)
+    open.value = false
   } catch (caught) {
     notifications.fromError(caught, 'Could not import the file. Try again.')
   } finally {
@@ -117,7 +114,7 @@ async function commit(): Promise<void> {
 </script>
 
 <template>
-  <BaseModal :open="open" title="Import tickets" @update:open="emit('update:open', $event)">
+  <BaseModal v-model:open="open" title="Import tickets">
     <div class="space-y-4">
       <div>
         <label for="ticket-import-file" class="text-sm font-medium text-content">CSV file</label>
@@ -178,9 +175,7 @@ async function commit(): Promise<void> {
     </div>
 
     <template #footer>
-      <BaseButton variant="secondary" :disabled="busy" @click="emit('update:open', false)">
-        Cancel
-      </BaseButton>
+      <BaseButton variant="secondary" :disabled="busy" @click="open = false">Cancel</BaseButton>
       <BaseButton :disabled="!canCommit || busy" :loading="busy" @click="commit">
         Import {{ preview?.accepted ?? 0 }} tickets
       </BaseButton>

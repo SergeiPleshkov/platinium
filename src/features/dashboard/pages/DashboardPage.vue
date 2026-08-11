@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { useAuthStore } from '@/features/auth'
 import DashboardPanel from '@/features/dashboard/components/DashboardPanel.vue'
@@ -29,8 +29,20 @@ const auth = useAuthStore()
 const dashboard = useDashboardStore()
 const notifications = useNotifications()
 
+let statsAbort: AbortController | undefined
+
+function loadStats(): void {
+  statsAbort?.abort()
+  statsAbort = new AbortController()
+  void dashboard.fetchStats(statsAbort.signal)
+}
+
 onMounted(() => {
-  void dashboard.fetchStats()
+  loadStats()
+})
+
+onBeforeUnmount(() => {
+  statsAbort?.abort()
 })
 
 const number = new Intl.NumberFormat('en-GB')
@@ -216,7 +228,7 @@ watch(
         variant="secondary"
         icon="pi pi-refresh"
         label="Try again"
-        @click="dashboard.fetchStats()"
+        @click="loadStats"
       />
     </div>
 

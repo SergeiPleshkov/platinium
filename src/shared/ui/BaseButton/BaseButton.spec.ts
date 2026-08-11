@@ -66,4 +66,12 @@ describe('BaseButton', () => {
       expect(screen.getByRole('button', { name: 'Action' })).toBeEnabled()
     },
   )
+
+  it('uses the label as the accessible name when both icon and label are set', async () => {
+    await renderWithApp(BaseButton, {
+      props: { icon: 'pi pi-plus', label: 'New ticket' },
+    })
+
+    expect(screen.getByRole('button', { name: 'New ticket' })).toBeInTheDocument()
+  })
 })

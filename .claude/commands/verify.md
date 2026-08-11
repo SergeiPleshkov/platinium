@@ -8,12 +8,11 @@ Run the full quality gate. This is the definition of "done" for any change.
 Run these in order and report each result honestly:
 
 ```bash
-pnpm typecheck
-pnpm lint
-pnpm format:check
-pnpm test
-pnpm build
+pnpm verify
 ```
+
+(`pnpm verify` is typecheck → lint → format:check → test → build. You may also run the
+five steps individually if you need to see which gate failed.)
 
 Rules:
 

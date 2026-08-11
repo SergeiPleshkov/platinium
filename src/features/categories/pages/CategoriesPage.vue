@@ -5,8 +5,13 @@ import CategoryFormDialog from '@/features/categories/components/CategoryFormDia
 import { useCategoriesStore } from '@/features/categories/store'
 import type { Category } from '@/features/categories/types'
 import { usePermissions } from '@/features/auth'
-import { ApiError } from '@/shared/api'
-import { useBulkAction, useListView, useNotifications, useRowSelection } from '@/shared/composables'
+import {
+  useBulkAction,
+  useEntityPage,
+  useListView,
+  useNotifications,
+  useRowSelection,
+} from '@/shared/composables'
 import {
   BaseBadge,
   BaseBulkBar,
@@ -23,8 +28,8 @@ import {
  * Ticket categories.
  *
  * Wires the store (which owns the rows) to `useTable` (which owns the query) to
- * `BaseDataTable` (which renders). The page itself holds only what is genuinely local: which
- * dialog is open, and which record it is about.
+ * `BaseDataTable` (which renders). Dialog open/close and single-delete live in
+ * `useEntityPage`; this page keeps columns, bulk actions and permissions.
  */
 
 const store = useCategoriesStore()
@@ -90,69 +95,32 @@ async function confirmBulkDelete(): Promise<void> {
   await bulk.execute({ action: 'delete', ids: selection.selectedIds.value }, 'deleted')
 }
 
-/* ---- create / edit ---- */
-
-const formOpen = ref(false)
-const editing = ref<Category | null>(null)
-
-function openCreate(): void {
-  editing.value = null
-  formOpen.value = true
-}
-
-function openEdit(category: Category): void {
-  editing.value = category
-  formOpen.value = true
-}
-
-async function onSaved(): Promise<void> {
-  // A new record may belong on another page under the current sort, so re-query.
-  await table.refresh()
-}
-
-/* ---- delete ---- */
-
-const deleting = ref<Category | null>(null)
-const deletePending = ref(false)
-const deleteError = ref<string | null>(null)
+const {
+  formOpen,
+  editing,
+  openCreate,
+  openEdit,
+  onSaved,
+  deleting,
+  deletePending,
+  deleteError,
+  askDelete,
+  closeDelete,
+  confirmDelete,
+} = useEntityPage<Category>({
+  refresh: () => table.refresh(),
+  adoptPage: (page) => table.adoptPage(page),
+  currentPage: () => store.meta.page,
+  remove: (id) => store.remove(id),
+  entityLabel: 'Category',
+  success: notifications.success,
+})
 
 const confirmMessage = computed(() =>
   deleting.value
     ? `“${deleting.value.name}” will be permanently deleted. This cannot be undone.`
     : '',
 )
-
-function askDelete(category: Category): void {
-  deleting.value = category
-  deleteError.value = null
-}
-
-async function confirmDelete(): Promise<void> {
-  const target = deleting.value
-  if (!target) return
-
-  deletePending.value = true
-  deleteError.value = null
-
-  try {
-    await store.remove(target.id)
-    notifications.success('Category deleted', `“${target.name}” has been removed.`)
-    deleting.value = null
-
-    /*
-     * Deleting the last row on a page leaves it empty; the server clamps to the last valid
-     * page and `adoptPage` follows it, so the user never lands on a blank table.
-     */
-    await table.refresh()
-    table.adoptPage(store.meta.page)
-  } catch (caught) {
-    // Kept in the dialog rather than a toast: the explanation belongs next to the action.
-    deleteError.value =
-      caught instanceof ApiError ? caught.message : 'Could not delete the category. Try again.'
-  } finally {
-    deletePending.value = false
-  }
-}
 </script>
 
 <template>
@@ -285,7 +253,7 @@ async function confirmDelete(): Promise<void> {
       confirm-label="Delete category"
       :busy="deletePending"
       :error-message="deleteError ?? undefined"
-      @update:open="deleting = null"
+      @update:open="closeDelete"
       @confirm="confirmDelete"
     />
   </div>

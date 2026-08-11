@@ -86,15 +86,21 @@ stay green through it.
 Keep this table accurate.
 
 ```bash
-pnpm dev            # vite dev server + MSW worker
-pnpm build          # type-check then production build
-pnpm typecheck      # vue-tsc --noEmit
-pnpm lint           # eslint
-pnpm format         # prettier --write
-pnpm test           # vitest run (unit + integration)
-pnpm test:unit      # unit only
-pnpm test:watch     # vitest watch
-pnpm test:coverage  # coverage report
+pnpm dev              # vite dev server + MSW worker
+pnpm build            # type-check then production build
+pnpm typecheck        # vue-tsc --build --force
+pnpm lint             # eslint
+pnpm lint:fix         # eslint --fix
+pnpm format           # prettier --write
+pnpm format:check     # prettier --check (what CI runs)
+pnpm test             # vitest run (unit + integration)
+pnpm test:unit        # unit only (`src/`)
+pnpm test:integration # integration only (`tests/integration`)
+pnpm test:watch       # vitest watch
+pnpm test:coverage    # coverage report
+pnpm verify           # typecheck → lint → format:check → test → build
+pnpm test:e2e         # Playwright smoke + axe against production preview
+pnpm test:e2e:install # install Chromium for Playwright (once per machine)
 ```
 
 ## Working agreement

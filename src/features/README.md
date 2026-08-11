@@ -8,11 +8,25 @@ features/<name>/
   index.ts        # the ONLY thing other layers may import from
   types.ts        # domain types
   schema.ts       # zod schemas, the single source of truth for validation
-  store.ts        # Pinia setup store: endpoint calls, server state, loading/error flags
+  api.ts          # Resource<T, P> endpoint module (CRUD slices)
+  store.ts        # Pinia setup store: server state, loading/error flags, actions
   composables/    # feature-specific reactive behaviour
   components/     # feature-specific components (forms, dialogs, cells)
   pages/          # route-level components, lazy-loaded by the router
 ```
+
+## Slice shapes
+
+**CRUD entities** (events, categories, tickets) follow the nine layers in
+`.claude/skills/crud-entity/SKILL.md`: types → schema → fixtures/handlers → `api.ts` → store →
+UI. They share `useCollectionState`, list pages via `useEntityPage`, and form dialogs via
+`useAsyncAction`.
+
+**Auth** and **dashboard** are intentionally thinner:
+
+- **Auth** inlines its three HTTP calls in the store (an `api.ts` bought nothing) and owns
+  session, preferences and the permissions matrix.
+- **Dashboard** fetches a single `/stats` aggregate; there is no schema or collection state.
 
 ## Boundaries, enforced by lint
 

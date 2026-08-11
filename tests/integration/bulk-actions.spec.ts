@@ -35,9 +35,11 @@ async function openTickets(role = 'admin'): Promise<Awaited<ReturnType<typeof re
 
 /** Ticks the first `count` row checkboxes. */
 async function selectRows(count: number): Promise<void> {
-  const boxes = screen
-    .getAllByRole('checkbox')
-    .filter((box) => box.getAttribute('aria-label')?.startsWith('Select row'))
+  // Row labels use the primary column (`Select Premium GA`), not a raw id.
+  const boxes = screen.getAllByRole('checkbox').filter((box) => {
+    const label = box.getAttribute('aria-label') ?? ''
+    return label.startsWith('Select ') && !label.startsWith('Select all ')
+  })
 
   for (const box of boxes.slice(0, count)) {
     await userEvent.click(box)
@@ -314,7 +316,7 @@ describe('bulk actions', () => {
     it('gives a viewer no checkboxes at all', async () => {
       await openTickets('viewer')
 
-      expect(screen.queryAllByRole('checkbox', { name: /Select row/ })).toHaveLength(0)
+      expect(screen.queryAllByRole('checkbox', { name: /^Select / })).toHaveLength(0)
     })
   })
 })

@@ -36,9 +36,15 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      '@axe-core/playwright':
+        specifier: ^4.12.1
+        version: 4.12.1(playwright-core@1.62.1)
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.8.1(jiti@2.7.0))
+      '@playwright/test':
+        specifier: ^1.62.1
+        version: 1.62.1
       '@tailwindcss/vite':
         specifier: ^4.1.10
         version: 4.3.3(vite@8.2.1(@types/node@24.13.3)(jiti@2.7.0))
@@ -130,6 +136,11 @@ packages:
 
   '@asamuzakjp/nwsapi@2.3.9':
     resolution: {integrity: sha512-n8GuYSrI9bF7FFZ/SjhwevlHc8xaVlb/7HmHelnc/PZXBD2ZR49NnN9sMMuDdEGPeeRQ5d0hqlSlEpgCX3Wl0Q==}
+
+  '@axe-core/playwright@4.12.1':
+    resolution: {integrity: sha512-rMd7xriptqKpP+w5265i4Hdkv2X5kbu6uiBi/B2I7uf3hieRBM3qDCfaKPtxfiYb2mKXfF+yLODJwIx+Jv1GDw==}
+    peerDependencies:
+      playwright-core: '>= 1.0.0'
 
   '@babel/code-frame@7.29.7':
     resolution: {integrity: sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw==}
@@ -360,6 +371,11 @@ packages:
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
+
+  '@playwright/test@1.62.1':
+    resolution: {integrity: sha512-DTcUc8qii+cpHvtOwggMtBRMjKZHXYWdw8syRYu2vtzuq4Wxphqq4NfCs5Zt44L6mA8rfDfj+PHnxFc/FeK6mQ==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   '@primeuix/styled@0.7.4':
     resolution: {integrity: sha512-QSO/NpOQg8e9BONWRBx9y8VGMCMYz0J/uKfNJEya/RGEu7ARx0oYW0ugI1N3/KB1AAvyGxzKBzGImbwg0KUiOQ==}
@@ -866,6 +882,10 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
+  axe-core@4.12.1:
+    resolution: {integrity: sha512-s7iGf5GaVMxEG0ENN9x+xTr7GFZCb1ZP/1uATUpCEK2X78nDB3RwbtFCo9pGAf9ru+VwoQ464DkaLEeRM08wJA==}
+    engines: {node: '>=4'}
+
   axios@1.19.0:
     resolution: {integrity: sha512-ht/iuYZXEjFxLH/Hkezgd7m6JKlHHXEUSneaDz8uZe1Gj5QZtCnpyDsckvAiEnT89OEbCLmnte4R4sn7P0EKFw==}
 
@@ -1233,6 +1253,11 @@ packages:
   form-data@4.0.6:
     resolution: {integrity: sha512-vKatAh4SlVfgbv+YtmhiRjhEMJsYpsG1Y2rMQtR+SVSbytsSD1YGzDIcrAJmdFec88u/+VoGmxnl+80gL1tRCQ==}
     engines: {node: '>= 6'}
+
+  fsevents@2.3.2:
+    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
+    os: [darwin]
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -1834,6 +1859,16 @@ packages:
       typescript:
         optional: true
 
+  playwright-core@1.62.1:
+    resolution: {integrity: sha512-wPYSwEBJY9GHraISXqyqtx0na0LpO3XEX7jNDhntbex7tzUS7kLnZsOlFruFJB4Hi/rhDMjXGqHewDZ68nYZVw==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.62.1:
+    resolution: {integrity: sha512-0M+L3LAD8/nm554LOla9Ayx0j0tmFZ0FBcoQ7F1VuVHpM/XpiC8RcDzBQB8W5+hA8L22THxELzeF+2WcUzvcLg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
     engines: {node: '>= 0.4'}
@@ -2341,6 +2376,11 @@ snapshots:
 
   '@asamuzakjp/nwsapi@2.3.9': {}
 
+  '@axe-core/playwright@4.12.1(playwright-core@1.62.1)':
+    dependencies:
+      axe-core: 4.12.1
+      playwright-core: 1.62.1
+
   '@babel/code-frame@7.29.7':
     dependencies:
       '@babel/helper-validator-identifier': 7.29.7
@@ -2537,6 +2577,10 @@ snapshots:
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
+
+  '@playwright/test@1.62.1':
+    dependencies:
+      playwright: 1.62.1
 
   '@primeuix/styled@0.7.4':
     dependencies:
@@ -3073,6 +3117,8 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
+  axe-core@4.12.1: {}
+
   axios@1.19.0:
     dependencies:
       follow-redirects: 1.16.0
@@ -3475,6 +3521,9 @@ snapshots:
       es-set-tostringtag: 2.1.0
       hasown: 2.0.4
       mime-types: 2.1.35
+
+  fsevents@2.3.2:
+    optional: true
 
   fsevents@2.3.3:
     optional: true
@@ -4030,6 +4079,14 @@ snapshots:
       vue: 3.5.41(typescript@5.9.3)
     optionalDependencies:
       typescript: 5.9.3
+
+  playwright-core@1.62.1: {}
+
+  playwright@1.62.1:
+    dependencies:
+      playwright-core: 1.62.1
+    optionalDependencies:
+      fsevents: 2.3.2
 
   possible-typed-array-names@1.1.0: {}
 

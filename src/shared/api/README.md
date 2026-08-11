@@ -87,6 +87,11 @@ code path the browser does instead of Node's `http` module.
 ```ts
 export interface Resource<TEntity, TPayload> {
   list(query: ListQuery, signal?: AbortSignal): Promise<ListResponse<TEntity>>
+  /**
+   * Detail fetch. Implemented on every CRUD `api.ts` so the contract stays complete; no
+   * store calls it yet because the UI is list-and-dialog rather than a detail route.
+   * Keep it — a detail view should not have to invent the endpoint.
+   */
   get(id: string, signal?: AbortSignal): Promise<TEntity>
   create(payload: TPayload, signal?: AbortSignal): Promise<TEntity>
   update(id: string, payload: TPayload, signal?: AbortSignal): Promise<TEntity>

@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { useForm } from 'vee-validate'
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 
 import { categorySchema } from '@/features/categories/schema'
 import { useCategoriesStore } from '@/features/categories/store'
 import type { Category } from '@/features/categories/types'
-import { ApiError } from '@/shared/api'
+import { useAsyncAction, useNotifications } from '@/shared/composables'
 import { zodSchema } from '@/shared/validation/zodSchema'
-import { useNotifications } from '@/shared/composables'
 import { BaseButton, BaseInput, BaseModal, BaseTextarea } from '@/shared/ui'
 
 /**
@@ -31,10 +30,6 @@ const open = defineModel<boolean>('open', { required: true })
 const store = useCategoriesStore()
 const notifications = useNotifications()
 
-const submitting = ref(false)
-/** A failure that belongs to no single field, a conflict, a 500, a dropped connection. */
-const formError = ref<string | null>(null)
-
 const isEdit = computed(() => props.category !== null)
 
 /*
@@ -50,6 +45,38 @@ const { defineField, handleSubmit, errors, setErrors, resetForm } = useForm({
 const [name] = defineField('name')
 const [description] = defineField('description')
 
+const save = useAsyncAction(
+  (values: { name: string; description: string }) =>
+    props.category ? store.update(props.category.id, values) : store.create(values),
+  {
+    onSuccess: (saved) => {
+      notifications.success(
+        isEdit.value ? 'Category updated' : 'Category created',
+        `“${saved.name}” has been saved.`,
+      )
+      open.value = false
+      emit('saved', saved)
+    },
+    onError: (error) => {
+      /*
+       * A 422 is projected back onto the fields that caused it, because the server knows things the
+       * client cannot, such as a name already being taken. Anything else is a form-level
+       * message via `save.error`.
+       */
+      if (error.isValidation) setErrors(error.fieldErrors)
+    },
+  },
+)
+
+/** Non-field failure only; validation errors sit next to their inputs. */
+const formError = computed(() => {
+  const error = save.error.value
+  if (!error || error.isValidation) return null
+  return error.message
+})
+
+const submitting = computed(() => save.pending.value)
+
 /*
  * Re-seed whenever the dialog opens. Without this, opening "edit" after a previous edit shows
  * the last record's values for a frame, and a cancelled create leaves its text behind.
@@ -58,7 +85,7 @@ watch(
   () => [open.value, props.category] as const,
   ([isOpen, category]) => {
     if (!isOpen) return
-    formError.value = null
+    save.reset()
     resetForm({
       values: {
         name: category?.name ?? '',
@@ -69,37 +96,7 @@ watch(
   { immediate: true },
 )
 
-const onSubmit = handleSubmit(async (values) => {
-  submitting.value = true
-  formError.value = null
-
-  try {
-    const saved = props.category
-      ? await store.update(props.category.id, values)
-      : await store.create(values)
-
-    notifications.success(
-      isEdit.value ? 'Category updated' : 'Category created',
-      `“${saved.name}” has been saved.`,
-    )
-    open.value = false
-    emit('saved', saved)
-  } catch (caught) {
-    /*
-     * A 422 is projected back onto the fields that caused it, because the server knows things the
-     * client cannot, such as a name already being taken. Anything else is a form-level
-     * message, because no single field is at fault.
-     */
-    if (caught instanceof ApiError && caught.isValidation) {
-      setErrors(caught.fieldErrors)
-    } else {
-      formError.value =
-        caught instanceof ApiError ? caught.message : 'Could not save the category. Try again.'
-    }
-  } finally {
-    submitting.value = false
-  }
-})
+const onSubmit = handleSubmit((values) => save.run(values))
 </script>
 
 <template>

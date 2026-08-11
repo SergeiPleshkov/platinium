@@ -14,8 +14,14 @@ import {
   type TicketWithRelations,
 } from '@/features/tickets/types'
 import { usePermissions } from '@/features/auth'
-import { ApiError } from '@/shared/api'
-import { useBulkAction, useListView, useNotifications, useRowSelection } from '@/shared/composables'
+import {
+  useBulkAction,
+  useEntityPage,
+  useListView,
+  useNotifications,
+  useRelationOptionsLoader,
+  useRowSelection,
+} from '@/shared/composables'
 import { formatMoney } from '@/shared/utils/money'
 import {
   BaseBadge,
@@ -54,11 +60,6 @@ const { table, viewMode, onRangeChange } = useListView({
   defaultSort: 'createdAt',
   defaultOrder: 'desc',
   filterKeys: ['status', 'eventId', 'categoryId'],
-})
-
-onMounted(() => {
-  void eventsStore.fetchOptions()
-  void categoriesStore.fetchOptions()
 })
 
 /* ---- bulk actions ---- */
@@ -140,6 +141,23 @@ const categoryOptions = computed(() =>
   categoriesStore.options.map((option) => ({ value: option.id, label: option.name })),
 )
 
+const { load: loadEventFilterOptions } = useRelationOptionsLoader({
+  fetchOptions: (args) => eventsStore.fetchOptions(args),
+  selectedId: () => eventFilter.value,
+  currentOptions: () => eventsStore.options,
+})
+
+const { load: loadCategoryFilterOptions } = useRelationOptionsLoader({
+  fetchOptions: (args) => categoriesStore.fetchOptions(args),
+  selectedId: () => categoryFilter.value,
+  currentOptions: () => categoriesStore.options,
+})
+
+onMounted(() => {
+  loadEventFilterOptions()
+  loadCategoryFilterOptions()
+})
+
 /* ---- inline status ---- */
 
 /**
@@ -157,24 +175,34 @@ async function onStatusChange(row: TicketWithRelations, event: Event): Promise<v
   }
 }
 
-/* ---- create / edit ---- */
+/* ---- create / edit / delete ---- */
 
-const formOpen = ref(false)
-const editing = ref<TicketWithRelations | null>(null)
+const {
+  formOpen,
+  editing,
+  openCreate,
+  openEdit,
+  onSaved,
+  deleting,
+  deletePending,
+  deleteError,
+  askDelete,
+  closeDelete,
+  confirmDelete,
+} = useEntityPage<TicketWithRelations>({
+  refresh: () => table.refresh(),
+  adoptPage: (page) => table.adoptPage(page),
+  currentPage: () => store.meta.page,
+  remove: (id) => store.remove(id),
+  entityLabel: 'Ticket',
+  success: notifications.success,
+})
 
-function openCreate(): void {
-  editing.value = null
-  formOpen.value = true
-}
-
-function openEdit(ticket: TicketWithRelations): void {
-  editing.value = ticket
-  formOpen.value = true
-}
-
-async function onSaved(): Promise<void> {
-  await table.refresh()
-}
+const confirmMessage = computed(() =>
+  deleting.value
+    ? `“${deleting.value.name}” for ${deleting.value.event.name} will be permanently deleted.`
+    : '',
+)
 
 /* ---- import ---- */
 
@@ -199,44 +227,6 @@ async function exportCsv(): Promise<void> {
     notifications.fromError(caught, 'Could not export the tickets. Try again.')
   } finally {
     exporting.value = false
-  }
-}
-
-/* ---- delete ---- */
-
-const deleting = ref<TicketWithRelations | null>(null)
-const deletePending = ref(false)
-const deleteError = ref<string | null>(null)
-
-const confirmMessage = computed(() =>
-  deleting.value
-    ? `“${deleting.value.name}” for ${deleting.value.event.name} will be permanently deleted.`
-    : '',
-)
-
-function askDelete(ticket: TicketWithRelations): void {
-  deleting.value = ticket
-  deleteError.value = null
-}
-
-async function confirmDelete(): Promise<void> {
-  const target = deleting.value
-  if (!target) return
-
-  deletePending.value = true
-  deleteError.value = null
-
-  try {
-    await store.remove(target.id)
-    notifications.success('Ticket deleted', `“${target.name}” has been removed.`)
-    deleting.value = null
-    await table.refresh()
-    table.adoptPage(store.meta.page)
-  } catch (caught) {
-    deleteError.value =
-      caught instanceof ApiError ? caught.message : 'Could not delete the ticket. Try again.'
-  } finally {
-    deletePending.value = false
   }
 }
 </script>
@@ -301,6 +291,7 @@ async function confirmDelete(): Promise<void> {
         :options="eventOptions"
         clearable
         filterable
+        :on-filter="loadEventFilterOptions"
       />
       <BaseSelect
         v-model="categoryFilter"
@@ -310,6 +301,7 @@ async function confirmDelete(): Promise<void> {
         :options="categoryOptions"
         clearable
         filterable
+        :on-filter="loadCategoryFilterOptions"
       />
     </div>
 
@@ -464,7 +456,7 @@ async function confirmDelete(): Promise<void> {
       confirm-label="Delete ticket"
       :busy="deletePending"
       :error-message="deleteError ?? undefined"
-      @update:open="deleting = null"
+      @update:open="closeDelete"
       @confirm="confirmDelete"
     />
   </div>

@@ -174,6 +174,46 @@ describe('categories store', () => {
     })
   })
 
+  describe('relation options', () => {
+    it('loads a small searchable page and pins a selected ref outside it', async () => {
+      // Seed past RELATION_OPTIONS_PER_PAGE so pinning outside the first page is observable.
+      for (let index = 0; index < 15; index += 1) {
+        await store.create({ name: `Rel Opt ${String(index).padStart(2, '0')}`, description: '' })
+      }
+
+      await store.fetchList(createListQuery({ sort: 'name', order: 'asc', perPage: 100 }))
+      const sorted = [...store.items].sort((a, b) => a.name.localeCompare(b.name))
+      expect(sorted.length).toBeGreaterThan(20)
+
+      const outsideFirstPage = sorted[20]
+      expect(outsideFirstPage).toBeDefined()
+
+      await store.fetchOptions()
+      expect(store.options).toHaveLength(20)
+      expect(store.options.some((option) => option.id === outsideFirstPage!.id)).toBe(false)
+
+      const pin = { id: outsideFirstPage!.id, name: outsideFirstPage!.name }
+      await store.fetchOptions({ pin })
+      expect(store.options[0]).toEqual(pin)
+      expect(store.options).toHaveLength(21)
+
+      await store.fetchOptions({ search: outsideFirstPage!.name })
+      expect(store.options.some((option) => option.id === outsideFirstPage!.id)).toBe(true)
+    })
+
+    it('degrades to the pin alone when the request fails', async () => {
+      server.use(
+        mswHttp.get(`${ORIGIN}/api/categories`, () =>
+          HttpResponse.json({ message: 'Unavailable' }, { status: 503 }),
+        ),
+      )
+
+      const pin = { id: 'cat_pin', name: 'Pinned Category' }
+      await store.fetchOptions({ pin })
+      expect(store.options).toEqual([pin])
+    })
+  })
+
   describe('remove', () => {
     it('drops the row from the cache and decrements the total', async () => {
       const created = await store.create({ name: 'Temporary', description: '' })

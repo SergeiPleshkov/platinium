@@ -8,6 +8,7 @@ import { useCollectionState } from '@/shared/composables/useCollectionState'
 import { createListQuery, type ListQuery } from '@/shared/types/api'
 import type { BulkRequest, BulkResult } from '@/shared/types/bulk'
 import type { EntityRef } from '@/shared/types/entity'
+import { mergePinnedOption, RELATION_OPTIONS_PER_PAGE } from '@/shared/utils/options'
 
 /**
  * The single source of truth for event data.
@@ -66,24 +67,36 @@ export const useEventsStore = defineStore('events', () => {
   }
 
   /**
-   * Loads the options for the Event picker in the ticket form.
+   * Loads options for Event relation pickers (ticket form, ticket filters).
    *
-   * One page, sorted by name. The request asks for 200 and the server caps `perPage` at 100
-   * (`src/mocks/query.ts`), so 100 is the real ceiling. With the seeded events that is all of
-   * them, and `filterable` on `BaseSelect` narrows the list in the browser as the user types.
-   *
-   * Past 100 events this becomes wrong rather than slow: the picker would hold the first 100
-   * alphabetically, and typing the name of the 340th would show "no results", which is
-   * indistinguishable from the event not existing. Accepted debt, see TECHNICAL_REVIEW.md §3.
+   * Server-backed search, not a one-shot dump: each call takes a search string and a small
+   * page so names past the first hundred stay reachable. `pin` keeps the currently selected
+   * ref visible when it falls outside the returned page (edit forms, active filters).
    */
-  async function fetchOptions(): Promise<void> {
+  async function fetchOptions(
+    args: {
+      search?: string
+      pin?: EntityRef | null
+      signal?: AbortSignal
+    } = {},
+  ): Promise<void> {
+    const { search = '', pin = null, signal } = args
+
     try {
       const response = await eventsApi.list(
-        createListQuery({ sort: 'name', order: 'asc', perPage: 200 }),
+        createListQuery({
+          search,
+          sort: 'name',
+          order: 'asc',
+          perPage: RELATION_OPTIONS_PER_PAGE,
+        }),
+        signal,
       )
-      options.value = response.data.map((event) => ({ id: event.id, name: event.name }))
-    } catch {
-      options.value = []
+      const mapped = response.data.map((event) => ({ id: event.id, name: event.name }))
+      options.value = mergePinnedOption(mapped, pin)
+    } catch (caught) {
+      if (isAbortError(caught)) return
+      options.value = pin ? [pin] : []
     }
   }
 

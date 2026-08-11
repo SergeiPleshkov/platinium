@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { useForm } from 'vee-validate'
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 
-import { eventSchema } from '@/features/events/schema'
+import { eventSchema, type EventFormValues } from '@/features/events/schema'
 import { useEventsStore } from '@/features/events/store'
 import { EVENT_STATUS_OPTIONS, type Event } from '@/features/events/types'
-import { ApiError } from '@/shared/api'
-import { useNotifications } from '@/shared/composables'
+import { useAsyncAction, useNotifications } from '@/shared/composables'
 import { zodSchema } from '@/shared/validation/zodSchema'
 import { BaseButton, BaseDatePicker, BaseInput, BaseModal, BaseSelect } from '@/shared/ui'
 
@@ -24,9 +23,6 @@ const open = defineModel<boolean>('open', { required: true })
 
 const store = useEventsStore()
 const notifications = useNotifications()
-
-const submitting = ref(false)
-const formError = ref<string | null>(null)
 
 const isEdit = computed(() => props.event !== null)
 
@@ -54,11 +50,37 @@ const [status] = defineField('status')
 
 const countryOptions = computed(() => store.countries.map((value) => ({ value, label: value })))
 
+const save = useAsyncAction(
+  (values: EventFormValues) =>
+    props.event ? store.update(props.event.id, values) : store.create(values),
+  {
+    onSuccess: (saved) => {
+      notifications.success(
+        isEdit.value ? 'Event updated' : 'Event created',
+        `“${saved.name}” has been saved.`,
+      )
+      open.value = false
+      emit('saved', saved)
+    },
+    onError: (error) => {
+      if (error.isValidation) setErrors(error.fieldErrors)
+    },
+  },
+)
+
+const formError = computed(() => {
+  const error = save.error.value
+  if (!error || error.isValidation) return null
+  return error.message
+})
+
+const submitting = computed(() => save.pending.value)
+
 watch(
   () => [open.value, props.event] as const,
   ([isOpen, event]) => {
     if (!isOpen) return
-    formError.value = null
+    save.reset()
     const range = defaultRange()
     resetForm({
       values: {
@@ -74,32 +96,7 @@ watch(
   { immediate: true },
 )
 
-const onSubmit = handleSubmit(async (values) => {
-  submitting.value = true
-  formError.value = null
-
-  try {
-    const saved = props.event
-      ? await store.update(props.event.id, values)
-      : await store.create(values)
-
-    notifications.success(
-      isEdit.value ? 'Event updated' : 'Event created',
-      `“${saved.name}” has been saved.`,
-    )
-    open.value = false
-    emit('saved', saved)
-  } catch (caught) {
-    if (caught instanceof ApiError && caught.isValidation) {
-      setErrors(caught.fieldErrors)
-    } else {
-      formError.value =
-        caught instanceof ApiError ? caught.message : 'Could not save the event. Try again.'
-    }
-  } finally {
-    submitting.value = false
-  }
-})
+const onSubmit = handleSubmit((values) => save.run(values))
 </script>
 
 <template>

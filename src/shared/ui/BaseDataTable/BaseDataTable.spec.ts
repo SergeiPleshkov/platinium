@@ -246,6 +246,30 @@ describe('BaseDataTable, below md', () => {
 
     expect(screen.getAllByRole('button', { name: 'Edit' })).toHaveLength(2)
   })
+
+  it('gives mobile selection checkboxes a 44px touch target', async () => {
+    await renderTable({ selectable: true, selectedIds: [] })
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Select Summer Gala' })
+    const hitTarget = checkbox.closest('label')
+    expect(hitTarget).not.toBeNull()
+    // min-h/w-11 = 2.75rem = 44px. jsdom does not layout, so assert the classes.
+    expect(hitTarget).toHaveClass('min-h-11', 'min-w-11')
+  })
+})
+
+describe('BaseDataTable selection (desktop)', () => {
+  it('renders selectable checkboxes labelled by the primary column', async () => {
+    const { emitted } = await renderTable({ selectable: true, selectedIds: [] })
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Select Summer Gala' })
+    await userEvent.click(checkbox)
+
+    expect(emitted()['toggleRow']?.[0]).toEqual(['1'])
+    expect(
+      screen.getByRole('checkbox', { name: 'Select all events on this page' }),
+    ).toBeInTheDocument()
+  })
 })
 
 /** Keeps the unused import honest, `h` documents that slots may be render functions. */

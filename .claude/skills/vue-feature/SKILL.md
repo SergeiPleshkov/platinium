@@ -106,6 +106,8 @@ The core ones this app leans on:
 | `useVirtualRows` | which pages have been requested. **No rows.** |
 | `useRowSelection` | ticked ids (ids, never records) |
 | `useBulkAction` | the three-outcome rule for a partial success |
+| `useEntityPage` | list-page create/edit dialog + single-delete confirm + refresh/`adoptPage` |
+| `useRelationOptionsLoader` | abortable search+pin loads for relation pickers |
 | `useSortableList` | a user-arranged order, drag *and* keyboard |
 | `useAsyncAction` | `{ run, pending, error }`, pending unwinds on both paths |
 | `useNotifications` | the only way to raise a toast |

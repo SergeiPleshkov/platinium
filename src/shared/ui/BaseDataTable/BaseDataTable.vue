@@ -1,9 +1,4 @@
 <script setup lang="ts" generic="TRow extends { id: string }">
-import Column from 'primevue/column'
-import DataTable, { type DataTablePageEvent, type DataTableSortEvent } from 'primevue/datatable'
-import Paginator, { type PageState } from 'primevue/paginator'
-import Skeleton from 'primevue/skeleton'
-import type { VirtualScrollerLazyEvent } from 'primevue/virtualscroller'
 import { computed } from 'vue'
 
 import { useResponsiveLayout } from '@/shared/composables/useBreakpoint'
@@ -11,6 +6,8 @@ import { isPendingRow, type BufferRow } from '@/shared/composables/useCollection
 import type { ListMeta, SortOrder } from '@/shared/types/api'
 import type { TableColumn, TableViewMode } from '@/shared/ui/BaseDataTable/types'
 import BaseButton from '@/shared/ui/BaseButton/BaseButton.vue'
+import BaseDataTableCards from '@/shared/ui/BaseDataTable/BaseDataTableCards.vue'
+import BaseDataTableGrid from '@/shared/ui/BaseDataTable/BaseDataTableGrid.vue'
 import BaseEmptyState from '@/shared/ui/BaseEmptyState/BaseEmptyState.vue'
 
 /**
@@ -94,12 +91,6 @@ defineSlots<{
   emptyAction?: () => unknown
 }>()
 
-/**
- * The scroller positions row *n* at `n × itemSize`, so a taller row makes the scrollbar lie
- * and drifts further with every screen. Enforced on the cells rather than left to content.
- */
-const VIRTUAL_ROW_HEIGHT = 52
-
 const { isMobile } = useResponsiveLayout()
 
 const skeletonRows = computed(() =>
@@ -118,23 +109,11 @@ const cardColumns = computed(() =>
   ),
 )
 
-/** PrimeVue reports sort direction as 1 / -1; our contract is 'asc' / 'desc'. */
-const primeSortOrder = computed(() => (props.sortOrder === 'asc' ? 1 : -1))
-
 const firstRecord = computed(() => (props.meta.page - 1) * props.meta.perPage)
 
 /** Default cell rendering, for columns with no `cell-<field>` slot. */
 function cellValue(row: TRow, field: string): unknown {
   return (row as Record<string, unknown>)[field]
-}
-
-function onSort(event: DataTableSortEvent): void {
-  if (typeof event.sortField === 'string') emit('sort', event.sortField)
-}
-
-function onPage(event: DataTablePageEvent | PageState): void {
-  if (event.rows !== props.meta.perPage) emit('update:perPage', event.rows)
-  else emit('update:page', event.page + 1)
 }
 
 const showEmptyState = computed(
@@ -148,58 +127,33 @@ const showEmptyState = computed(
  */
 const useVirtualGrid = computed(() => props.mode === 'virtual' && !isMobile.value)
 
-const virtualScrollerOptions = computed(() => ({
-  lazy: true,
-  itemSize: VIRTUAL_ROW_HEIGHT,
-  /*
-   * Rows rendered beyond the viewport. Enough that a flick-scroll lands on real rows rather
-   * than placeholders, not so many that the DOM advantage is given back.
-   */
-  numToleratedItems: 10,
-  showLoader: false,
-  onLazyLoad: (event: VirtualScrollerLazyEvent) => {
-    emit('rangeChange', Number(event.first), Number(event.last))
-  },
-}))
-
-/**
- * Fixed, not automatic. Automatic layout measures the rows *currently in the DOM*, and virtual
- * scrolling keeps swapping those, so the columns jittered as the user scrolled. The cost is
- * that widths must be declared; columns that declare none share what is left.
- */
-const virtualTableStyle = { tableLayout: 'fixed', width: '100%' } as const
-
-/** Two icon buttons, and it must not absorb the slack the text columns need. */
-const VIRTUAL_ACTIONS_WIDTH = '6rem'
-
-/**
- * Padding zeroed and height fixed, so a row is exactly `VIRTUAL_ROW_HEIGHT` whatever it holds.
- * Without this a long venue name wraps and the scroller's arithmetic stops matching the page.
- */
-const virtualCellStyle = {
-  height: `${VIRTUAL_ROW_HEIGHT}px`,
-  paddingTop: '0',
-  paddingBottom: '0',
-}
-
-/**
- * A template cannot apply a generic type guard inline, so the check and the narrowing are
- * split: `pending` gates the branch, `asRow` states the conclusion. Correct only together.
- */
-function pending(row: BufferRow<TRow>): boolean {
-  return isPendingRow(row)
-}
-
-function asRow(row: unknown): TRow {
-  return row as TRow
-}
-
 /* ---- selection ---- */
 
 const selectedSet = computed(() => new Set(props.selectedIds))
 
 function isRowSelected(id: string): boolean {
   return selectedSet.value.has(id)
+}
+
+/**
+ * Prefer the primary column's visible text over a raw id so the checkbox announces what
+ * the user actually sees on the row.
+ */
+function rowSelectLabel(row: TRow): string {
+  const primary = primaryColumn.value
+  if (primary) {
+    const value = cellValue(row, primary.field)
+    if (typeof value === 'string' && value.trim() !== '') return `Select ${value}`
+    if (
+      value !== null &&
+      typeof value === 'object' &&
+      'name' in value &&
+      typeof value.name === 'string'
+    ) {
+      return `Select ${value.name}`
+    }
+  }
+  return `Select row ${row.id}`
 }
 
 /**
@@ -263,219 +217,72 @@ const someSelected = computed(
     </template>
 
     <!-- Mobile: cards, not a grid. -->
-    <template v-else-if="isMobile">
-      <ul v-if="initialising" class="divide-y divide-border">
-        <li v-for="placeholder in skeletonRows" :key="placeholder.id" class="p-4">
-          <Skeleton width="60%" height="1.1rem" />
-          <Skeleton class="mt-2" width="40%" height="0.8rem" />
-        </li>
-      </ul>
-
-      <ul v-else class="divide-y divide-border" :aria-label="label">
-        <li v-for="row in rows" :key="row.id" class="p-4">
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0 flex-1">
-              <p class="truncate font-medium text-content">
-                <slot v-if="primaryColumn" :name="`cell-${primaryColumn.field}`" :row="row">
-                  {{ cellValue(row, primaryColumn.field) }}
-                </slot>
-              </p>
-              <dl class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
-                <template v-for="column in cardColumns" :key="column.field">
-                  <dt class="text-xs text-content-muted">{{ column.header }}</dt>
-                  <dd class="truncate text-right text-xs text-content">
-                    <slot :name="`cell-${column.field}`" :row="row">
-                      {{ cellValue(row, column.field) }}
-                    </slot>
-                  </dd>
-                </template>
-              </dl>
-            </div>
-            <div v-if="$slots.actions" class="shrink-0">
-              <slot name="actions" :row="row" />
-            </div>
-          </div>
-        </li>
-      </ul>
-
-      <Paginator
-        v-if="meta.total > 0"
-        :first="firstRecord"
-        :rows="meta.perPage"
-        :total-records="meta.total"
-        :rows-per-page-options="[...rowsPerPageOptions]"
-        @page="onPage"
-      />
-    </template>
-
-    <!--
-      Tablet and up, virtual mode: one scroll surface over the whole result set. No paginator
-      the scrollbar *is* the position indicator, and pages arrive as their rows come into view.
-    -->
-    <!--
-      No loading overlay here. The placeholder rows already say "this is arriving" exactly
-      where it is arriving, and a banner on top of them said the same thing a second time
-      while covering rows the user could otherwise read.
-    -->
-    <DataTable
-      v-else-if="useVirtualGrid"
-      :value="virtualRows"
-      scrollable
-      :scroll-height="scrollHeight"
-      :virtual-scroller-options="virtualScrollerOptions"
-      :table-style="virtualTableStyle"
-      :sort-field="sortField"
-      :sort-order="primeSortOrder"
-      :aria-label="label"
-      data-key="id"
-      lazy
-      removable-sort
-      @sort="onSort"
+    <BaseDataTableCards
+      v-else-if="isMobile"
+      :rows="rows"
+      :primary-column="primaryColumn"
+      :card-columns="cardColumns"
+      :skeleton-rows="skeletonRows"
+      :meta="meta"
+      :initialising="initialising"
+      :selectable="selectable"
+      :label="label"
+      :rows-per-page-options="rowsPerPageOptions"
+      :first-record="firstRecord"
+      :all-selected="allSelected"
+      :some-selected="someSelected"
+      :selectable-ids="selectableIds"
+      :is-row-selected="isRowSelected"
+      :row-select-label="rowSelectLabel"
+      @update:page="emit('update:page', $event)"
+      @update:per-page="emit('update:perPage', $event)"
+      @toggle-row="emit('toggleRow', $event)"
+      @toggle-all="(ids, selected) => emit('toggleAll', ids, selected)"
     >
-      <!--
-        A plain checkbox, not PrimeVue's selection column: theirs owns the selection state,
-        which would put a second copy beside the one `useRowSelection` already holds.
-      -->
-      <Column v-if="selectable" :style="{ width: '3rem' }" :body-style="virtualCellStyle">
-        <template #header>
-          <input
-            type="checkbox"
-            class="size-4 cursor-pointer accent-brand-600"
-            :checked="allSelected"
-            :indeterminate="someSelected"
-            :aria-label="
-              allSelected
-                ? `Deselect all ${label.toLowerCase()} on this page`
-                : `Select all ${label.toLowerCase()} on this page`
-            "
-            @change="emit('toggleAll', selectableIds, !allSelected)"
-          />
-        </template>
-        <template #body="{ data }">
-          <div class="flex h-full items-center">
-            <input
-              v-if="!pending(data as BufferRow<TRow>)"
-              type="checkbox"
-              class="size-4 cursor-pointer accent-brand-600"
-              :checked="isRowSelected(asRow(data).id)"
-              :aria-label="`Select row ${asRow(data).id}`"
-              @change="emit('toggleRow', asRow(data).id)"
-            />
-          </div>
-        </template>
-      </Column>
+      <template v-for="col in columns" :key="col.field" #[`cell-${col.field}`]="{ row }">
+        <slot :name="`cell-${col.field}`" :row="row" />
+      </template>
+      <template v-if="$slots.actions" #actions="{ row }">
+        <slot name="actions" :row="row" />
+      </template>
+    </BaseDataTableCards>
 
-      <Column
-        v-for="column in columns"
-        :key="column.field"
-        :field="column.field"
-        :header="column.header"
-        :sortable="column.sortable ?? false"
-        :body-class="column.cellClass"
-        :body-style="virtualCellStyle"
-        :style="column.width ? { width: column.width } : undefined"
-      >
-        <template #body="{ data }">
-          <div class="flex h-full items-center overflow-hidden whitespace-nowrap">
-            <!--
-              The one loading affordance in this mode: a skeleton in the cell whose page has
-              not arrived. It appears exactly where the row will be, at the row's own height,
-              so nothing moves when the data lands.
-            -->
-            <Skeleton v-if="pending(data as BufferRow<TRow>)" width="70%" height="1rem" />
-            <span v-else class="truncate">
-              <slot :name="`cell-${column.field}`" :row="asRow(data)">
-                {{ cellValue(asRow(data), column.field) }}
-              </slot>
-            </span>
-          </div>
-        </template>
-      </Column>
-
-      <Column
-        v-if="$slots.actions"
-        header="Actions"
-        :style="{ width: VIRTUAL_ACTIONS_WIDTH }"
-        :body-style="virtualCellStyle"
-      >
-        <template #body="{ data }">
-          <div class="flex h-full items-center justify-end">
-            <Skeleton v-if="pending(data as BufferRow<TRow>)" width="4rem" height="1rem" />
-            <slot v-else name="actions" :row="asRow(data)" />
-          </div>
-        </template>
-      </Column>
-    </DataTable>
-
-    <!-- Tablet and up: a real grid, with server-driven paging and sorting. -->
-    <DataTable
+    <!-- Tablet and up: grid (virtual or paginated). -->
+    <BaseDataTableGrid
       v-else
-      :value="initialising ? skeletonRows : rows"
-      lazy
-      :loading="loading && !initialising"
-      :paginator="!initialising && meta.total > 0"
-      :rows="meta.perPage"
-      :first="firstRecord"
-      :total-records="meta.total"
-      :rows-per-page-options="[...rowsPerPageOptions]"
+      :rows="rows"
+      :columns="columns"
+      :meta="meta"
+      :loading="loading"
+      :initialising="initialising"
       :sort-field="sortField"
-      :sort-order="primeSortOrder"
-      :aria-label="label"
-      data-key="id"
-      removable-sort
-      @sort="onSort"
-      @page="onPage"
+      :sort-order="sortOrder"
+      :label="label"
+      :rows-per-page-options="rowsPerPageOptions"
+      :mode="mode"
+      :virtual-rows="virtualRows"
+      :scroll-height="scrollHeight"
+      :selectable="selectable"
+      :skeleton-rows="skeletonRows"
+      :use-virtual-grid="useVirtualGrid"
+      :all-selected="allSelected"
+      :some-selected="someSelected"
+      :selectable-ids="selectableIds"
+      :is-row-selected="isRowSelected"
+      :row-select-label="rowSelectLabel"
+      @sort="emit('sort', $event)"
+      @update:page="emit('update:page', $event)"
+      @update:per-page="emit('update:perPage', $event)"
+      @range-change="(first, last) => emit('rangeChange', first, last)"
+      @toggle-row="emit('toggleRow', $event)"
+      @toggle-all="(ids, selected) => emit('toggleAll', ids, selected)"
     >
-      <Column v-if="selectable" :style="{ width: '3rem' }">
-        <template #header>
-          <input
-            type="checkbox"
-            class="size-4 cursor-pointer accent-brand-600"
-            :checked="allSelected"
-            :indeterminate="someSelected"
-            :aria-label="
-              allSelected
-                ? `Deselect all ${label.toLowerCase()} on this page`
-                : `Select all ${label.toLowerCase()} on this page`
-            "
-            @change="emit('toggleAll', selectableIds, !allSelected)"
-          />
-        </template>
-        <template #body="{ data }">
-          <Skeleton v-if="initialising" width="1rem" height="1rem" />
-          <input
-            v-else
-            type="checkbox"
-            class="size-4 cursor-pointer accent-brand-600"
-            :checked="isRowSelected((data as TRow).id)"
-            :aria-label="`Select row ${(data as TRow).id}`"
-            @change="emit('toggleRow', (data as TRow).id)"
-          />
-        </template>
-      </Column>
-
-      <Column
-        v-for="column in columns"
-        :key="column.field"
-        :field="column.field"
-        :header="column.header"
-        :sortable="column.sortable ?? false"
-        :body-class="column.cellClass"
-      >
-        <template #body="{ data }">
-          <Skeleton v-if="initialising" width="70%" height="1rem" />
-          <slot v-else :name="`cell-${column.field}`" :row="data as TRow">
-            {{ cellValue(data as TRow, column.field) }}
-          </slot>
-        </template>
-      </Column>
-
-      <Column v-if="$slots.actions" header="Actions" :style="{ width: '1%' }">
-        <template #body="{ data }">
-          <Skeleton v-if="initialising" width="4rem" height="1rem" />
-          <slot v-else name="actions" :row="data as TRow" />
-        </template>
-      </Column>
-    </DataTable>
+      <template v-for="col in columns" :key="col.field" #[`cell-${col.field}`]="{ row }">
+        <slot :name="`cell-${col.field}`" :row="row" />
+      </template>
+      <template v-if="$slots.actions" #actions="{ row }">
+        <slot name="actions" :row="row" />
+      </template>
+    </BaseDataTableGrid>
   </div>
 </template>

@@ -57,6 +57,7 @@ jobs:
     name: Docker image
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: verify
 
     steps:
       - uses: actions/checkout@v4

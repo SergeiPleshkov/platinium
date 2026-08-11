@@ -23,6 +23,12 @@ export {
   type UseListViewOptions,
 } from '@/shared/composables/useListView'
 export {
+  useRelationOptionsLoader,
+  type RelationOptionsFetchArgs,
+  type UseRelationOptionsLoader,
+  type UseRelationOptionsLoaderOptions,
+} from '@/shared/composables/useRelationOptionsLoader'
+export {
   resetRouteLoading,
   trackRouteLoading,
   useRouteLoading,
@@ -34,6 +40,12 @@ export {
   type UseBulkAction,
   type UseBulkActionOptions,
 } from '@/shared/composables/useBulkAction'
+export {
+  useEntityPage,
+  type EntityPageRecord,
+  type UseEntityPage,
+  type UseEntityPageOptions,
+} from '@/shared/composables/useEntityPage'
 export { useRowSelection, type UseRowSelection } from '@/shared/composables/useRowSelection'
 export { resetSidebar, useSidebar, type UseSidebar } from '@/shared/composables/useSidebar'
 export {
