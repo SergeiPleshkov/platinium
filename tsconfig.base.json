@@ -29,7 +29,8 @@
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
 
-    "baseUrl": ".",
+    /* Path values are relative to this config file. `baseUrl` is deprecated in TS 6
+     * and removed in TS 7 — keep prefixes on the path entries instead. */
     "paths": {
       "@/*": ["./src/*"],
       "@tests/*": ["./tests/*"]

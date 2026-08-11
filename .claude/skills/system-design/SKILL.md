@@ -107,6 +107,7 @@ in `plans/codebase-analysis.md`, link to them.
 
 ## Test plan
 - <layer>: <what is asserted>, per `testing-vue SKILL §The split`
+- <new `shared/ui` primitive>: the stories that document its variants and states
 
 ## Decisions and trade-offs
 - **D-1**: <choice>. Rejected: <alternative>, because <one clause>.

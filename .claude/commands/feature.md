@@ -51,6 +51,9 @@ New abstractions need a third real consumer. Name them, or do not extract.
 - Anything a user can do must be reachable by keyboard and announced to assistive tech.
 - If the change is user-visible, run it in the browser and look at it. Tests passing is not the
   same as it working.
+- A new or changed `shared/ui` primitive gets its `*.stories.ts` in the same commit, and you
+  look at it in `pnpm storybook` before moving on. See `vue-feature SKILL §Every primitive
+  ships with stories`.
 
 ## 5. Verify
 

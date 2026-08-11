@@ -23,6 +23,16 @@ setup((app) => {
  */
 function applyScheme(scheme: string): void {
   document.documentElement.classList.toggle('dark', scheme === 'dark')
+
+  /*
+   * The page surfaces go on `<body>`, not on a wrapper around the story.
+   *
+   * A wrapper that stretches to fill the canvas also stretches inside a Docs page, where
+   * every story is one block among many, so each one became a viewport-tall mostly-empty
+   * box and the page read as blank. On the body the background fills the canvas in story
+   * view and the blocks size to their content in docs view.
+   */
+  document.body.classList.add('bg-surface-50', 'text-content', 'dark:bg-surface-950')
 }
 
 const preview: Preview = {
@@ -46,13 +56,8 @@ const preview: Preview = {
   decorators: [
     (story, context) => {
       applyScheme(String(context.globals['scheme']))
-      return {
-        components: { story },
-        // The same surfaces the app shell uses, so a component is judged against the
-        // background it will actually sit on rather than a neutral white card.
-        template:
-          '<div class="min-h-dvh bg-surface-50 p-6 text-content dark:bg-surface-950"><story /></div>',
-      }
+      // Padding only. The surfaces live on `<body>` so this stays compact inside a Docs page.
+      return { components: { story }, template: '<div class="p-6"><story /></div>' }
     },
   ],
 

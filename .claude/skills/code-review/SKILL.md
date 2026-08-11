@@ -108,7 +108,17 @@ Treated as correctness here, per `vue-feature SKILL §Accessibility`:
   something that is always defined, an empty `expect` block. Blocking; this suite has shipped
   that bug before.
 
-### 9. Validation run
+### 9. Stories
+Per `vue-feature SKILL §Every primitive ships with stories`:
+
+- A new component under `src/shared/ui/**` with no `*.stories.ts` beside it. Blocking.
+- A new variant, size or state prop on an existing primitive with no story covering it.
+  Blocking; the variants are the API, and an undocumented one is one nobody will find.
+- A story outside `src/shared/ui/**`. Blocking, and say which layer it belongs in instead.
+- A `meta` annotated with `Meta<...>`. Not blocking on its own, but flag it: it breaks on the
+  generic components, and the repo keeps one pattern.
+
+### 10. Validation run
 Run all of these and record the result:
 
 ```bash

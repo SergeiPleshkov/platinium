@@ -132,8 +132,9 @@ Compose, do not reimplement:
 | rendering | `BaseDataTable`, `BaseBulkBar`, `BaseBulkFailures` |
 
 Required states, all of them: loading skeleton, empty (+ create CTA), no-results-for-filters
-(+ clear filters), and error with retry. Gate every action on `permissions.*` and show the
-"Read only" badge when the session can change nothing.
+(+ clear filters), and error with retry. `BaseDataTable`'s stories show each of the four, so
+compare against those rather than guessing what a state should look like. Gate every action on
+`permissions.*` and show the "Read only" badge when the session can change nothing.
 
 ### 8. Form: `src/features/foos/components/FooFormDialog.vue`
 

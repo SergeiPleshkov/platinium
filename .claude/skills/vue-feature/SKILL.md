@@ -90,6 +90,25 @@ components later without touching a single feature.
 Tests target roles, labels and visible text, never PrimeVue's internal classnames or DOM
 structure. A test that would break when the UI kit is swapped is testing the wrong thing.
 
+### Every primitive ships with stories
+
+A `*.stories.ts` sits beside each component, and a new one is not finished without it. For a
+primitive the variants and states *are* the API, and a story is the cheapest place to see all
+of them at once. `pnpm storybook`.
+
+- Title the file by group: `Primitives/`, `Form/`, `Feedback/`, `Overlay/`, `Bulk/`, `Data/`.
+- Cover the states that are awkward to reach by clicking through the app: error, disabled,
+  loading, empty, refused-by-the-server, and the permission-restricted variant.
+- **Do not annotate `meta`.** Storybook's `Meta` type rejects Vue generic SFCs, so
+  `component: BaseSelect` fails to typecheck against it. Leave `meta` structurally inferred and
+  type stories as `StoryObj<typeof TheComponent>`; args stay fully checked and no cast is
+  needed. Copy `BaseButton.stories.ts` for a plain component, `BaseDataTable.stories.ts` for a
+  generic one.
+- When several stories share a wrapper, declare `type Story` *above* `meta` and type the shared
+  render as `Story['render']`, or its `args` parameter is implicitly `any`.
+- Stories are `shared/ui` only. Feature components need a store, a router and a mock backend to
+  render, which is an integration test with a worse assertion model.
+
 ## Composables
 
 Named `useX`, return a plain object. Accept refs or getters, not raw values, when the input
@@ -190,4 +209,5 @@ silently is a regression the tests are written to catch:
 - [ ] No cross-feature imports, no `fetch` outside `shared/api`
 - [ ] Keyboard-reachable, labelled, focus-visible, one live region
 - [ ] Works at 375px
+- [ ] A new `shared/ui` primitive has stories covering its variants and states
 - [ ] Non-obvious reasoning recorded beside the code, or in the layer's README
