@@ -9,8 +9,8 @@ strategy and craftsmanship count as much as features.
 
 ## Non-negotiables
 
-- **Requirements are tracked in [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md).** Tick boxes
-  as they land. Never mark something done that isn't verified.
+- **Never claim something is done that isn't verified.** Evidence is a file path, a passing
+  test, or something observed in a browser — not an intention.
 - Mandatory stack — Vue 3, Pinia, Vue Router, TypeScript, Docker. These are hard
   requirements from the brief; do not substitute.
 - No `any`, no `@ts-expect-error`, no `eslint-disable` without a comment explaining why.

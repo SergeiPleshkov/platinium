@@ -72,8 +72,8 @@ Plus: WCAG-AA contrast pinned by a test, request cancellation on superseded quer
 
 ### Requirements coverage
 
-Every line of the brief is tracked with evidence in
-[docs/REQUIREMENTS.md](docs/REQUIREMENTS.md). The architecture bullets in particular:
+Every functional and technical requirement in the brief is implemented, along with every
+bonus feature on its list. The architecture bullets in particular:
 
 | Brief asks for | Answer |
 |---|---|
@@ -411,7 +411,6 @@ live region per announcement.
 | Document | Purpose |
 |---|---|
 | [TECHNICAL_REVIEW.md](TECHNICAL_REVIEW.md) | Architecture, debt, scaling, standards, AI workflow — the brief's seven questions |
-| [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) | Every brief requirement, with evidence |
 | [src/shared/api/README.md](src/shared/api/README.md) | The reusable API layer in detail |
 | [src/features/README.md](src/features/README.md) | Feature slice anatomy and boundaries |
 | [src/mocks/README.md](src/mocks/README.md) | Mock API endpoints and behaviour |

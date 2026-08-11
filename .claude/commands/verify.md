@@ -24,8 +24,6 @@ Rules:
 - A skipped or filtered test run is not a pass. Full suite, every time.
 - If the build succeeds, report the bundle size of the main chunks and flag anything that
   looks unreasonable.
-- Then re-read [docs/REQUIREMENTS.md](../../docs/REQUIREMENTS.md) and tick only the boxes
-  you have actually verified in this run.
 
 Finish with a short summary: what passed, what failed, what you changed to fix it, and
 anything still outstanding. Do not pad it.

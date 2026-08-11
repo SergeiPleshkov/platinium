@@ -64,7 +64,6 @@ with a finding that cites a rule; either fix it or change the rule deliberately.
 
 ## 7. Commit
 
-- Update [docs/REQUIREMENTS.md](../../docs/REQUIREMENTS.md) if this touched a listed requirement.
 - If a decision was non-obvious, or an obvious alternative was rejected, write it as a comment
   above the code it explains — or, if it is architecture-level, in the README of the layer it
   describes. Say what it cost.

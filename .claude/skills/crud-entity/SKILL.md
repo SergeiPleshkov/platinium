@@ -158,7 +158,6 @@ MSW is the only mock. No stubbed stores, no stubbed API modules, no stubbed chil
 2. **`NAVIGATION` in the same file** — the sidebar reads it; never hardcode a path in a feature.
 3. Register handlers in `src/mocks/handlers/index.ts`.
 4. Public barrel `src/features/foos/index.ts` — other features import only from here.
-5. Tick the boxes in `docs/REQUIREMENTS.md`.
 
 ## Before calling a slice done
 

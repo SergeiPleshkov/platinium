@@ -8,14 +8,15 @@ goal is to find what's missing or weak while there's still time to fix it.
 
 ## Method
 
-Go through [docs/REQUIREMENTS.md](../../docs/REQUIREMENTS.md) line by line. For each item,
+Work from the brief itself — the functional requirements, the technical requirements, the
+architecture bullets, the testing requirements, and the documentation list. For each line,
 find the **evidence in the code** — a file path, a component, a test — and classify it:
 
 - **Done** — implemented and verified; name the file(s)
 - **Partial** — exists but shallow (e.g. filtering that only works on one column); say what's missing
 - **Missing** — not there
 
-A ticked box with no evidence behind it is a Missing. Untick it.
+A claim with no evidence behind it is Missing. Say so.
 
 ## Then check the things the brief grades implicitly
 
