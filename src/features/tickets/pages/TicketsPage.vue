@@ -22,6 +22,7 @@ import {
   useRelationOptionsLoader,
   useRowSelection,
 } from '@/shared/composables'
+import { formatNumber } from '@/shared/utils/locale'
 import { formatMoney } from '@/shared/utils/money'
 import {
   BaseBadge,
@@ -370,7 +371,7 @@ async function exportCsv(): Promise<void> {
       </template>
 
       <template #cell-quantity="{ row }">
-        <span class="tabular-nums">{{ row.quantity.toLocaleString('en-GB') }}</span>
+        <span class="tabular-nums">{{ formatNumber(row.quantity) }}</span>
       </template>
 
       <!--

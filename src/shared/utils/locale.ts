@@ -1,5 +1,5 @@
 /**
- * Display locale for money and dates.
+ * Display locale for money, dates and plain numbers.
  *
  * One locale for the whole UI, deliberately: mixing per-currency home locales in one table
  * makes readers switch number conventions between adjacent rows. The symbol distinguishes the
@@ -25,4 +25,9 @@ export function setAppLocale(locale: string): void {
 /** Test helper: restore the default after specs that change the locale. */
 export function resetAppLocale(): void {
   appLocale = DEFAULT_APP_LOCALE
+}
+
+/** Plain integer/decimal for counts and quantities — not money (see `formatMoney`). */
+export function formatNumber(value: number): string {
+  return new Intl.NumberFormat(getAppLocale()).format(value)
 }

@@ -109,8 +109,14 @@ product gaps, not invent core CRUD.
 4. **Pick a default view mode per screen** and drop or hide the DEMO pagination/virtual switch
    once there is usage data.
 5. **Locale preference UI.** Formatters already read `getAppLocale()`; wire `setAppLocale` from
-   bootstrap and clear remaining hard-coded `'en-GB'` call sites.
+   bootstrap when a signed-in preference exists.
 6. **An audit trail on events** (below) — the one net-new feature I would argue for hardest.
+
+**Beyond two days**
+
+7. **UI i18n.** Copy is English-only today. `getAppLocale()` covers number/date formatting, not
+   strings. Introduce a message catalog (e.g. vue-i18n) behind a thin wrapper, start with
+   `shared/ui` and auth, then feature pages — keep keys out of stores and API types.
 
 ### Audit trail (shape)
 
@@ -144,8 +150,11 @@ curl. The journeys are covered; automation of the browser gate is not.
 UI). Dashboard `/api/stats` holds the real totals. Keeping a convenient page sum avoids a second
 aggregation for a figure that already has a server source of truth.
 
-**Locale seam without a preference UI.** Defaults are `en-GB`. A few sites still format with a
-literal locale string.
+**Locale seam without a preference UI.** Defaults are `en-GB`. Money, dates and plain numbers
+all go through `getAppLocale()` / `formatNumber`; there is no UI to change the preference yet.
+
+**UI copy is English-only.** Formatting locale is plumbed; string translation (i18n) is not.
+Worth doing once a second language is real, not before.
 
 **Storage-blocked browsers degrade quietly.** If `localStorage` throws (Safari private mode),
 session and theme work for the tab but do not persist. Handled, not announced.
@@ -156,8 +165,8 @@ session and theme work for the tab but do not persist. Handled, not announced.
 
 ## 4. What I would refactor first
 
-1. **Locale end-to-end.** Persist a preference, call `setAppLocale` at bootstrap, replace
-   remaining hard-coded `'en-GB'` (dashboard number format, quantity columns).
+1. **Locale preference end-to-end.** Persist a preference and call `setAppLocale` at bootstrap.
+   Formatters already follow the live locale.
 
 2. **Delete the `zodSchema` adapter** when vee-validate supports Standard Schema. It exists
    only because `@vee-validate/zod` targets zod 3 internals. Zod itself stays — one schema for
@@ -282,5 +291,6 @@ Commands: `/verify` (gate), `/feature` (end-to-end change), `/audit-brief` (brie
 
 - Scaffolding a fourth entity via `crud-entity`
 - Locale preference + CI Playwright (well-specified, suite-backed)
+- UI i18n (message catalog + wrapper) once a second language is required
 - A future PrimeVue exit: one directory + role/label tests as the success criterion
 - Folding repeated review findings into skills so the workflow sharpens with use

@@ -359,8 +359,9 @@ announcement (`BaseSpinner` has `decorative` when nested).
 - **CSV import/export is tickets-only.** Bulk delete/status already ships on Events, Categories
   and Tickets; import/export for the other entities is wiring, not design.
 - **Playwright is local (`pnpm test:e2e`).** CI runs Vitest + Docker curl smoke.
-- **Locale defaults to `en-GB`** via `getAppLocale()`. There is no preference UI yet; a few
-  call sites still pass `'en-GB'` directly.
+- **Locale defaults to `en-GB`** via `getAppLocale()` / `formatNumber`. There is no preference
+  UI yet. UI copy is English-only; string i18n is a future improvement once a second language
+  is needed.
 - **View-mode switch is labelled DEMO.** Both pagination and virtual scroll ship for comparison;
   a product would pick one strategy per screen.
 - **`pageValueByCurrency` is page-scoped** (tickets store only; not shown in the UI). Dashboard

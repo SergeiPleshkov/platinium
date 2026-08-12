@@ -8,6 +8,7 @@ import { useDashboardStore } from '@/features/dashboard/store'
 import { EVENT_STATUS_LABELS } from '@/features/events'
 import { formatDate } from '@/shared/utils/date'
 import { reconcile, useNotifications, useSortableList } from '@/shared/composables'
+import { formatNumber } from '@/shared/utils/locale'
 import { formatMoney } from '@/shared/utils/money'
 import { BaseBadge, BaseButton } from '@/shared/ui'
 
@@ -44,8 +45,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   statsAbort?.abort()
 })
-
-const number = new Intl.NumberFormat('en-GB')
 
 const stats = computed(() => dashboard.stats)
 
@@ -84,7 +83,7 @@ const widgets = computed<WidgetDescriptor[]>(() => [
     label: 'Events',
     span: 1,
     icon: 'pi pi-calendar',
-    value: number.format(stats.value?.events.total ?? 0),
+    value: formatNumber(stats.value?.events.total ?? 0),
     detail: `${stats.value?.events.published ?? 0} published · ${stats.value?.events.upcoming ?? 0} upcoming`,
   },
   {
@@ -92,7 +91,7 @@ const widgets = computed<WidgetDescriptor[]>(() => [
     label: 'Tickets',
     span: 1,
     icon: 'pi pi-ticket',
-    value: number.format(stats.value?.tickets.total ?? 0),
+    value: formatNumber(stats.value?.tickets.total ?? 0),
     detail: `${stats.value?.tickets.onSale ?? 0} on sale · ${stats.value?.tickets.soldOut ?? 0} sold out`,
   },
   {
@@ -100,7 +99,7 @@ const widgets = computed<WidgetDescriptor[]>(() => [
     label: 'Inventory',
     span: 1,
     icon: 'pi pi-box',
-    value: number.format(stats.value?.tickets.inventory ?? 0),
+    value: formatNumber(stats.value?.tickets.inventory ?? 0),
     detail: 'Tickets remaining across all events',
   },
   {
