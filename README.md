@@ -72,7 +72,7 @@ as the local/CI quality gate.
 
 ## 2. Installation
 
-Requires **Node ≥ 20.19** and **pnpm** (`corepack enable`).
+Requires **Node ≥ 24** and **pnpm** (`corepack enable`).
 
 ```bash
 pnpm install
