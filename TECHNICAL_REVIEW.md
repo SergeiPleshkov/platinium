@@ -39,11 +39,12 @@ The kit may include hand-written primitives. `BaseSegmentedControl` is not a wra
 `SelectButton`: that renders `aria-pressed` toggles (three independent buttons). A radio group
 needs roving tabindex and arrow keys.
 
-Storybook documents the kit: 18 components, 79 stories, `pnpm storybook`. It renders through the
-app's own `installPrimeVue` and `main.css`, because a Storybook with its own copy of the theme
-is a second source of truth and the first thing it does is disagree with the app. The stories
-carry the states that are awkward to reach by clicking: a table mid-skeleton, a filtered list
-with no matches, a delete refused by a 409, a bulk bar as an editor who cannot delete.
+Storybook documents the kit: 18 primitives, 79 stories, `pnpm storybook` (`BaseToaster` and
+`TableViewModeSwitch` ship in the barrel without stories). It renders through the app's own
+`installPrimeVue` and `main.css`, because a Storybook with its own copy of the theme is a
+second source of truth and the first thing it does is disagree with the app. The stories carry
+the states that are awkward to reach by clicking: a table mid-skeleton, a filtered list with no
+matches, a delete refused by a 409, a bulk bar as an editor who cannot delete.
 
 The scope is `shared/ui` and nothing else, and that boundary is the same one the architecture
 already draws. Those components have no domain knowledge, so they render from props; a feature
@@ -53,8 +54,8 @@ different hat.
 ### One error type at the API boundary
 
 Every failure leaves `shared/api` as `ApiError` — network drop, timeout, 422, 500, deliberate
-abort — with `isValidation`, `isConflict`, `isRetryable`, `isAborted`. Stores ask
-`error.isValidation`, not HTTP status codes. See [`src/shared/api/README.md`](src/shared/api/README.md).
+abort — with `isValidation`, `isUnauthorized`, `isConflict`, `isRetryable`, `isAborted`. Stores
+ask `error.isValidation`, not HTTP status codes. See [`src/shared/api/README.md`](src/shared/api/README.md).
 
 `fetchList` never throws (a failed list is page state). Mutations always rethrow (the form must
 decide whether to close).
@@ -95,8 +96,8 @@ product gaps, not invent core CRUD.
 
 **Day one**
 
-1. **Widen bulk and CSV import** beyond tickets. The helpers are already generic; remaining work
-   is wiring Events and Categories.
+1. **Widen CSV import/export** beyond tickets. Bulk already ships on Events, Categories and
+   Tickets; remaining work is wiring import/export for the other two entities.
 2. **Put Playwright + axe in CI.** `pnpm test:e2e` already covers login, one create per entity,
    and axe on main screens against a production preview. CI today runs Vitest and a Docker curl
    smoke. Add a keyboard-only pass over dialogs beside it.
@@ -139,9 +140,9 @@ loads.
 **Playwright outside the CI gate.** The suite exists; the pipeline still stops at Vitest + Docker
 curl. The journeys are covered; automation of the browser gate is not.
 
-**`pageValueByCurrency` is page-scoped**, labelled as such. Dashboard `/api/stats` holds the
-real totals. Keeping a convenient page sum avoids a second aggregation for a column that already
-has the data.
+**`pageValueByCurrency` is page-scoped** (documented on the tickets store; not rendered in the
+UI). Dashboard `/api/stats` holds the real totals. Keeping a convenient page sum avoids a second
+aggregation for a figure that already has a server source of truth.
 
 **Locale seam without a preference UI.** Defaults are `en-GB`. A few sites still format with a
 literal locale string.

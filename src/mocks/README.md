@@ -18,6 +18,8 @@ mocks/
   handlers/       one file per resource, plus index.ts composing them
   db.ts           in-memory store, id/timestamp ownership, derived counts
   query.ts        the search → filter → sort → paginate engine
+  bulk.ts         multi-status bulk mutations (shared by entity handlers)
+  csv.ts          CSV serialisation for ticket export
   support.ts      latency, failure injection, auth, zod-backed validation
   config.ts       runtime knobs (latency, forced failures)
   browser.ts      Service Worker runtime (dev + production image)
@@ -30,12 +32,16 @@ mocks/
 POST   /api/auth/login          → { token, user }
 GET    /api/auth/me             → User            (401 without a valid token)
 POST   /api/auth/logout         → 204             (idempotent)
+PATCH  /api/me/preferences      → UserPreferences
+
+GET    /api/stats               → DashboardStats  (server-aggregated)
 
 GET    /api/categories          → { data, meta }
 GET    /api/categories/:id
 POST   /api/categories          → 201
 PATCH  /api/categories/:id
 DELETE /api/categories/:id      → 204, or 409 if tickets still reference it
+POST   /api/categories/bulk     → 200 or 207 Multi-Status
 
 GET    /api/events              → { data, meta }
 GET    /api/events/countries    → string[]        (for the filter control)
@@ -43,12 +49,16 @@ GET    /api/events/:id
 POST   /api/events              → 201
 PATCH  /api/events/:id
 DELETE /api/events/:id          → 204, or 409 if tickets still reference it
+POST   /api/events/bulk         → 200 or 207 Multi-Status
 
 GET    /api/tickets             → { data, meta }  (event + category embedded)
 GET    /api/tickets/:id
 POST   /api/tickets             → 201             (422 if a relation does not exist)
 PATCH  /api/tickets/:id
 DELETE /api/tickets/:id         → 204
+POST   /api/tickets/bulk        → 200 or 207 Multi-Status
+POST   /api/tickets/import      → ImportResult    (dry-run or commit)
+GET    /api/tickets/export      → text/csv        (current query, not current page)
 ```
 
 Every list endpoint accepts `search`, `sort`, `order`, `page`, `perPage` plus its own

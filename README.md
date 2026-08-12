@@ -7,7 +7,7 @@ A Vue 3 admin portal for managing **Events**, **Ticket Categories** and **Ticket
 | Stack | Vue 3 · Pinia · Vue Router · TypeScript (strict) · Vite · PrimeVue · Tailwind · Docker |
 | Mock API | MSW — one handler set for the browser and the tests |
 | Tests | Vitest (unit through architecture) · Playwright smoke + axe |
-| Component docs | Storybook, 18 `shared/ui` components with an a11y panel |
+| Component docs | Storybook, 18 documented `shared/ui` primitives (a11y panel) |
 | Type safety | `strict`, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` |
 
 ---
@@ -56,8 +56,8 @@ referential integrity.
 | Capability | Behaviour |
 |---|---|
 | Dark mode | System-aware, persisted, applied pre-paint |
-| Bulk actions | One request, `207 Multi-Status`, per-record outcomes |
-| CSV import/export | Export follows the current query; import dry-runs before commit |
+| Bulk actions | All three entities; one request, `207 Multi-Status`, per-record outcomes |
+| CSV import/export | Tickets only; export follows the current query; import dry-runs before commit |
 | Dashboard statistics | Six tiles, aggregated server-side |
 | Role-based permissions | One capability matrix shared by UI and mock server |
 | Optimistic UI | Applied immediately, rolled back on failure |
@@ -240,7 +240,8 @@ pass.
 
 Documented in [`src/shared/api/README.md`](src/shared/api/README.md):
 
-- Every failure is an `ApiError` (`isValidation`, `isConflict`, `isRetryable`, `isAborted`)
+- Every failure is an `ApiError` (`isValidation`, `isUnauthorized`, `isConflict`, `isRetryable`,
+  `isAborted`)
 - Auth token and 401 handler are injected at bootstrap
 - Calls take `AbortSignal`; superseded requests are dropped
 - Feature `api.ts` modules implement `Resource<T, P>` and widen for entity-specific endpoints
@@ -266,11 +267,12 @@ Search, filter, sort and pagination run in the mock handler, in that order, behi
 Features use `Base*` components. PrimeVue stays behind the adapter. Tests query by role, label
 and text — not PrimeVue internals.
 
-`pnpm storybook` documents all 18 of them, 79 stories, one file beside each component. Stories
-run through the app's own `installPrimeVue` and `main.css`, so they show the real tokens rather
-than a second approximation of the theme that would immediately start to disagree. A toolbar
-toggle flips the same `.dark` class the app's theme switch does, and the a11y addon runs axe on
-every story.
+`pnpm storybook` documents 18 primitives (79 stories), one file beside each. `BaseToaster` and
+`TableViewModeSwitch` live in the same kit barrel but have no stories — one is a singleton host,
+the other a demo-only view-mode switch. Stories run through the app's own `installPrimeVue` and
+`main.css`, so they show the real tokens rather than a second approximation of the theme that
+would immediately start to disagree. A toolbar toggle flips the same `.dark` class the app's
+theme switch does, and the a11y addon runs axe on every story.
 
 Only `shared/ui` has stories. That layer has no domain knowledge, so its components render from
 props alone; a feature component would need a store, a router and a mock backend to render,
@@ -354,14 +356,15 @@ announcement (`BaseSpinner` has `decorative` when nested).
 
 - **MSW in the production bundle**, lazy-loaded behind `VITE_ENABLE_MOCK_API`.
 - **Drag ordering on dashboard tiles only.** Manual row order would fight sortable columns.
-- **CSV import is tickets-only.** Bulk helpers are generic; other entities are wiring, not design.
+- **CSV import/export is tickets-only.** Bulk delete/status already ships on Events, Categories
+  and Tickets; import/export for the other entities is wiring, not design.
 - **Playwright is local (`pnpm test:e2e`).** CI runs Vitest + Docker curl smoke.
 - **Locale defaults to `en-GB`** via `getAppLocale()`. There is no preference UI yet; a few
   call sites still pass `'en-GB'` directly.
 - **View-mode switch is labelled DEMO.** Both pagination and virtual scroll ship for comparison;
   a product would pick one strategy per screen.
-- **`pageValueByCurrency` is page-scoped** and labelled as such. Dashboard stats are the
-  server totals.
+- **`pageValueByCurrency` is page-scoped** (tickets store only; not shown in the UI). Dashboard
+  stats are the server totals.
 
 ---
 

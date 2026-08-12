@@ -24,7 +24,7 @@ UI. They share `useCollectionState`, list pages via `useEntityPage`, and form di
 
 **Auth** and **dashboard** are intentionally thinner:
 
-- **Auth** inlines its three HTTP calls in the store (an `api.ts` bought nothing) and owns
+- **Auth** inlines its HTTP calls in the store (an `api.ts` bought nothing) and owns
   session, preferences and the permissions matrix.
 - **Dashboard** fetches a single `/stats` aggregate; there is no schema or collection state.
 
