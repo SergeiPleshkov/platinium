@@ -79,6 +79,10 @@ pnpm install
 pnpm dev
 ```
 
+`pnpm install` also runs `prepare`, which installs Husky git hooks. Commits then run
+lint-staged (ESLint `--fix` + Prettier `--write` on staged files). The full gate remains
+`pnpm verify` / CI.
+
 App: **http://localhost:5173**. No separate backend — MSW serves the API in the browser (and in
 Node for tests). For containers, see [Docker setup](#3-docker-setup).
 
@@ -143,6 +147,10 @@ broken SPA fallback fails the job.
 | `pnpm storybook` | Storybook for the UI kit at http://localhost:6006 |
 | `pnpm build:storybook` | Static Storybook into `storybook-static/` |
 | `pnpm verify` | typecheck → lint → format:check → test → build |
+| `pnpm precommit` | Same as the Husky pre-commit hook (lint-staged) |
+
+Pre-commit runs lint-staged only; it does not run typecheck, tests, or build. Use
+`pnpm verify` (or CI) for the full gate.
 
 ---
 

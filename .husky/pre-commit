@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+# Fast local gate: autofix + check only staged files.
+# Full suite (typecheck + tests + build) stays on `pnpm verify` / CI.
+set -e
+pnpm exec lint-staged

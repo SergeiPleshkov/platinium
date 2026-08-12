@@ -99,9 +99,13 @@ pnpm test:integration # integration only (`tests/integration`)
 pnpm test:watch       # vitest watch
 pnpm test:coverage    # coverage report
 pnpm verify           # typecheck → lint → format:check → test → build
+pnpm precommit        # Husky pre-commit: lint-staged (eslint --fix + prettier on staged files)
 pnpm test:e2e         # Playwright smoke + axe against production preview
 pnpm test:e2e:install # install Chromium for Playwright (once per machine)
 ```
+
+Git hooks install via `prepare` (`husky`) on `pnpm install`. Pre-commit is fast and
+staged-file-only; `pnpm verify` / CI remain the full quality gate.
 
 ## Working agreement
 
